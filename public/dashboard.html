@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <h1>Lab Management System</h1>
+        <div class="nav-links">
+            <span id="userRoleBadge" class="role-badge"></span>
+            <button id="themeToggle">🌓 Toggle Theme</button>
+            <button id="logoutBtn">Logout</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Left Sidebar -->
+        <div class="sidebar" id="sidebar">
+            <!-- Dynamic content based on user role -->
+            <div id="studentView" class="hidden">
+                <h3>Computers</h3>
+                <div id="computerList"></div>
+            </div>
+
+            <div id="staffView" class="hidden">
+                <h3>Quick Actions</h3>
+                <button onclick="showLabBooking()">Book Lab</button>
+                <button onclick="showAttendance()">View Attendance</button>
+            </div>
+
+            <div id="adminView" class="hidden">
+                <h3>Admin Tools</h3>
+                <button onclick="showRegistrationRequests()">Registration Requests</button>
+                <button onclick="showAllComputers()">All Computers</button>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="main-content">
+            <!-- Admin Dashboard -->
+            <div id="adminDashboard" class="hidden">
+                <!-- Registration Requests -->
+                <div class="card hidden" id="registrationRequests">
+                    <h2>Pending Registrations</h2>
+                    <table id="pendingComputersTable">
+                        <thead>
+                            <tr>
+                                <th>Computer Name</th>
+                                <th>IP Address</th>
+                                <th>Specs</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+
+                <!-- All Computers -->
+                <div class="card" id="allComputers">
+                    <h2>Lab Computers</h2>
+                    <table id="computersTable">
+                        <thead>
+                            <tr>
+                                <th>Computer ID</th>
+                                <th>Name</th>
+                                <th>Status</th>
+                                <th>Lab</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Student Dashboard -->
+            <div id="studentDashboard" class="hidden">
+                <div class="card">
+                    <h2>Book a Computer</h2>
+                    <form id="studentBookingForm">
+                        <div class="form-group">
+                            <label>Select Computer:</label>
+                            <select id="studentComputerSelect"></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Start Time:</label>
+                            <input type="datetime-local" id="studentStartTime" required>
+                        </div>
+                        <div class="form-group">
+                            <label>End Time:</label>
+                            <input type="datetime-local" id="studentEndTime" required>
+                        </div>
+                        <button type="submit">Book Now</button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h2>Report Issue</h2>
+                    <form id="studentIssueForm">
+                        <div class="form-group">
+                            <label>Computer:</label>
+                            <select id="issueComputerSelect"></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Description:</label>
+                            <textarea id="issueDescription" required></textarea>
+                        </div>
+                        <button type="submit">Submit Report</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Staff Dashboard -->
+            <div id="staffDashboard" class="hidden">
+                <div class="card">
+                    <h2>Lab Booking</h2>
+                    <form id="labBookingForm">
+                        <div class="form-group">
+                            <label>Lab Name:</label>
+                            <input type="text" id="labName" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Start Time:</label>
+                            <input type="datetime-local" id="labStartTime" required>
+                        </div>
+                        <div class="form-group">
+                            <label>End Time:</label>
+                            <input type="datetime-local" id="labEndTime" required>
+                        </div>
+                        <button type="submit">Book Lab</button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h2>Attendance Records</h2>
+                    <div id="attendanceControls">
+                        <input type="date" id="attendanceDate">
+                        <button onclick="downloadAttendance()">Export as PDF</button>
+                    </div>
+                    <table id="attendanceTable">
+                        <thead>
+                            <tr>
+                                <th>Student Name</th>
+                                <th>Status</th>
+                                <th>Time</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Real-Time Status Section -->
+            <div class="card" id="realtimeStatus">
+                <h2>Real-Time Monitor</h2>
+                <div id="speedDisplay">
+                    <p>Internet Speed: <span id="currentSpeed">0</span> Mbps</p>
+                </div>
+                <div id="computerStatusGrid"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Computer Details Modal -->
+    <div id="computerModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Computer Details</h2>
+            <div id="computerSpecs"></div>
+            <div id="computerIssues"></div>
+            <div class="modal-actions">
+                <button onclick="resolveIssue()">Resolve Issue</button>
+                <button onclick="changeStatus()">Change Status</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</body>
+</html>

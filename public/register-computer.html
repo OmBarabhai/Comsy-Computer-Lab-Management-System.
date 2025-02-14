@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Computer Registration</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="registration-container">
+        <h2>Computer Registration</h2>
+        <form id="computerRegistrationForm">
+            <div class="form-group">
+                <label>Computer Name:</label>
+                <input type="text" id="computerName" required>
+            </div>
+            
+            <div class="specs-display">
+                <h3>System Specifications</h3>
+                <div id="specsDetails">
+                    <p><strong>CPU:</strong> <span id="cpuInfo">Detecting...</span></p>
+                    <p><strong>RAM:</strong> <span id="ramInfo">Detecting...</span></p>
+                    <p><strong>OS:</strong> <span id="osInfo">Detecting...</span></p>
+                    <p><strong>Network:</strong> <span id="networkInfo">Detecting...</span></p>
+                    <p><strong>Storage:</strong> <span id="storageInfo">Detecting...</span></p>
+                </div>
+                <div id="storageList"></div>
+                <div id="devicesList"></div>
+            </div>
+            <button type="submit" id="submitButton">Submit Registration</button>
+        </form>
+        <div id="statusMessage" class="status-message" style="display: none;"></div>
+    </div>
+
+    <script src="js/computer-registration.js"></script>
+</body>
+</html>

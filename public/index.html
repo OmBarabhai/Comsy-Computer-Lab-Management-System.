@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab Login</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="login-container">
+        <h2>Lab Login</h2>
+        <form id="loginForm">
+            <input type="text" id="username" placeholder="Username" required>
+            <input type="password" id="password" placeholder="Password" required>
+            <button type="submit">Login</button>
+        </form>
+
+        <div class="registration-section">
+            <button id="registerComputerBtn">Register This Computer</button>
+        </div>
+    </div>
+    <script>
+        // Add event listener for the "Register This Computer" button
+        document.getElementById('registerComputerBtn').addEventListener('click', () => {
+            window.location.href = '/register-computer.html';
+        });
+    </script>
+
+    <script src="js/login.js"></script>
+</body>
+</html>

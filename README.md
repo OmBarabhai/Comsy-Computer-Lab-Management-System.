@@ -1,4 +1,4 @@
-# Bytelab
+# Comsy
 
 ## Setup
 1. Clone the repository.

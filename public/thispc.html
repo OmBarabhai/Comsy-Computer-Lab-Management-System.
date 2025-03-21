@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>This PC - Computer Lab Management System</title>
+    <link rel="stylesheet" href="css/pcstyle.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="page-title">This PC - <span id="computer-name">Loading...</span></div>
+            <div class="dark-mode-container">
+                <i class="fas fa-moon"></i>
+                <span>Theme</span>
+                <input type="checkbox" name="toggle" id="toggle" />
+                <label for="toggle">
+                    <div class="thumb">
+                        <div class="rotator">
+                            <div class="left side">
+                                <i class="fas fa-moon"></i>
+                            </div>
+                            <div class="right side">
+                                <i class="fas fa-sun"></i>
+                            </div>
+                        </div>
+                    </div>
+                </label>
+            </div>
+        </div>
+
+        <!-- Back button -->
+        <button class="back-btn" onclick="window.location.href='dashboard.html'">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </button>
+
+        <!-- System Specifications Card -->
+        <div class="card">
+            <h3><i class="fas fa-microchip"></i> System Specifications</h3>
+            <div class="specs-grid">
+                <!-- Detected Specs -->
+                <div class="spec-item">
+                    <div class="spec-name">Operating System</div>
+                    <div class="spec-value">
+                        <span class="spec-text" id="os-value">--</span>
+                        <input type="text" class="spec-input" id="os-input">
+                    </div>
+                </div>
+                <div class="spec-item">
+                    <div class="spec-name">Processor</div>
+                    <div class="spec-value">
+                        <span class="spec-text" id="processor-value">--</span>
+                        <input type="text" class="spec-input" id="processor-input">
+                    </div>
+                </div>
+                <div class="spec-item">
+                    <div class="spec-name">Memory</div>
+                    <div class="spec-value">
+                        <span class="spec-text" id="memory-value">--</span>
+                        <input type="text" class="spec-input" id="memory-input">
+                    </div>
+                </div>
+                <div class="spec-item">
+                    <div class="spec-name">Total Storage</div>
+                    <div class="spec-value">
+                        <span class="spec-text" id="storage-value">--</span>
+                        <input type="text" class="spec-input" id="storage-input">
+                    </div>
+                </div>
+                <div class="spec-item">
+                    <div class="spec-name">Graphics</div>
+                    <div class="spec-value">
+                        <span class="spec-text" id="graphics-value">--</span>
+                        <input type="text" class="spec-input" id="graphics-input">
+                    </div>
+                </div>
+                <div class="spec-item">
+                    <div class="spec-name">Screen Resolution</div>
+                    <div class="spec-value">
+                        <span class="spec-text" id="resolution-value">--</span>
+                        <input type="text" class="spec-input" id="resolution-input">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Network Speed Card -->
+        <div class="card">
+            <h3><i class="fas fa-wifi"></i> Network Speed</h3>
+            <div class="speed-meters">
+                <div class="speed-meter">
+                    <h4>Download Speed</h4>
+                    <div class="speed-value" id="download-speed">0.00</div>
+                    <div class="speed-unit">Mbps</div>
+                    <div class="progress-container">
+                        <div class="progress-bar" id="download-progress" style="width: 0%;"></div>
+                    </div>
+                </div>
+                <div class="speed-meter">
+                    <h4>Upload Speed</h4>
+                    <div class="speed-value" id="upload-speed">0.00</div>
+                    <div class="speed-unit">Mbps</div>
+                    <div class="progress-container">
+                        <div class="progress-bar" id="upload-progress" style="width: 0%;"></div>
+                    </div>
+                </div>
+                <div class="speed-meter">
+                    <h4>Ping</h4>
+                    <div class="speed-value" id="ping-value">0</div>
+                    <div class="speed-unit">ms</div>
+                    <div class="progress-container">
+                        <div class="progress-bar" id="ping-progress" style="width: 0%;"></div>
+                    </div>
+                </div>
+            </div>
+            <button id="test-speed-btn" class="refresh-btn">
+                <i class="fas fa-sync-alt"></i> Test Speed
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Function to fetch IP address
+        async function fetchIPAddress() {
+            try {
+                const response = await fetch('https://api.ipify.org?format=json');
+                const data = await response.json();
+                return data.ip;
+            } catch (error) {
+                console.error('Error fetching IP address:', error);
+                return null;
+            }
+        }
+
+        // Function to fetch computer details from database
+        async function fetchComputerDetails(ip) {
+            try {
+                const response = await fetch(`/api/computers?ip=${ip}`);
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('Error fetching computer details:', error);
+                return null;
+            }
+        }
+
+        // Function to fetch real-time system specs from Electron API
+        async function fetchRealTimeSpecs() {
+            try {
+                const response = await fetch('http://localhost:3000/api/specs');
+                if (!response.ok) throw new Error('Failed to fetch specs');
+                const specs = await response.json();
+                return specs;
+            } catch (error) {
+                console.error('Error fetching real-time specs:', error);
+                return null;
+            }
+        }
+
+        // Function to update system specifications
+        async function updateSystemSpecs() {
+            const ip = await fetchIPAddress();
+            if (ip) {
+                const computerDetails = await fetchComputerDetails(ip);
+                const realTimeSpecs = await fetchRealTimeSpecs();
+
+                // Update detected specs
+                const specsToUpdate = {
+                    'os': realTimeSpecs?.os || computerDetails?.os,
+                    'processor': realTimeSpecs?.cpu || computerDetails?.processor,
+                    'memory': realTimeSpecs?.ram || computerDetails?.memory,
+                    'storage': realTimeSpecs?.storage?.map(disk => disk.size).join(', ') || computerDetails?.storage,
+                    'graphics': computerDetails?.graphics,
+                    'resolution': computerDetails?.resolution
+                };
+
+                // Update UI and add edit buttons where needed
+                Object.entries(specsToUpdate).forEach(([key, value]) => {
+                    const element = document.getElementById(`${key}-value`);
+                    const input = document.getElementById(`${key}-input`);
+                    
+                    if (value) {
+                        element.textContent = value;
+                        input.value = value;
+                    } else {
+                        element.textContent = '--';
+                        addEditButton(key);
+                    }
+                });
+            }
+        }
+
+        // Function to add edit button for undetected specs
+        function addEditButton(specId) {
+            const specItem = document.getElementById(`${specId}-value`).closest('.spec-item');
+            const editHtml = `
+                <i class="fas fa-pencil-alt edit-icon" data-spec="${specId}"></i>
+                <i class="fas fa-save edit-icon" data-spec="${specId}" style="display: none"></i>
+            `;
+            specItem.insertAdjacentHTML('beforeend', editHtml);
+            
+            // Add event listeners
+            specItem.querySelector('.fa-pencil-alt').addEventListener('click', startEditing);
+            specItem.querySelector('.fa-save').addEventListener('click', saveEditing);
+        }
+
+        // Function to start editing a spec
+        function startEditing(e) {
+            const specItem = e.target.closest('.spec-item');
+            const specId = e.target.dataset.spec;
+            
+            specItem.classList.add('editing');
+            e.target.style.display = 'none';
+            specItem.querySelector('.fa-save').style.display = 'block';
+        }
+
+        // Function to save edited spec
+        function saveEditing(e) {
+            const specItem = e.target.closest('.spec-item');
+            const specId = e.target.dataset.spec;
+            const input = document.getElementById(`${specId}-input`);
+            const valueElement = document.getElementById(`${specId}-value`);
+            
+            valueElement.textContent = input.value || '--';
+            specItem.classList.remove('editing');
+            e.target.style.display = 'none';
+            specItem.querySelector('.fa-pencil-alt').style.display = 'block';
+            
+            // Here you would typically save to database
+        }
+
+        // Initialize everything when the page loads
+        window.addEventListener('load', async function() {
+            // Update system specifications
+            await updateSystemSpecs();
+
+            // Set up event listeners
+            document.getElementById('test-speed-btn').addEventListener('click', simulateSpeedTest);
+
+            // Dark mode toggle
+            const darkModeToggle = document.getElementById('toggle');
+            darkModeToggle.addEventListener('change', () => {
+                document.body.dataset.theme = darkModeToggle.checked ? 'dark' : 'light';
+            });
+        });
+
+        // Simulate network speed test
+        function simulateSpeedTest() {
+            const testSpeedBtn = document.getElementById("test-speed-btn");
+            testSpeedBtn.disabled = true;
+            testSpeedBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Testing...';
+
+            // Reset values
+            document.getElementById("download-speed").textContent = "0.00";
+            document.getElementById("upload-speed").textContent = "0.00";
+            document.getElementById("ping-value").textContent = "0";
+            document.getElementById("download-progress").style.width = "0%";
+            document.getElementById("upload-progress").style.width = "0%";
+            document.getElementById("ping-progress").style.width = "0%";
+
+            // Simulate download speed test
+            setTimeout(() => {
+                const downloadSpeed = (Math.random() * 100 + 50).toFixed(2);
+                document.getElementById("download-speed").textContent = downloadSpeed;
+                document.getElementById("download-progress").style.width = `${Math.min((downloadSpeed / 200) * 100, 100)}%`;
+
+                // Simulate upload speed test after download completes
+                setTimeout(() => {
+                    const uploadSpeed = (Math.random() * 30 + 10).toFixed(2);
+                    document.getElementById("upload-speed").textContent = uploadSpeed;
+                    document.getElementById("upload-progress").style.width = `${Math.min((uploadSpeed / 50) * 100, 100)}%`;
+
+                    // Simulate ping test after upload completes
+                    setTimeout(() => {
+                        const ping = Math.floor(Math.random() * 30 + 5);
+                        document.getElementById("ping-value").textContent = ping;
+                        document.getElementById("ping-progress").style.width = `${Math.min(100 - (ping / 100) * 100, 100)}%`;
+
+                        // Re-enable test button
+                        testSpeedBtn.disabled = false;
+                        testSpeedBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Test Speed';
+                    }, 500);
+                }, 1000);
+            }, 1500);
+        }
+    </script>
+</body>
+</html>

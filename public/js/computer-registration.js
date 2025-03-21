@@ -48,68 +48,46 @@ document.addEventListener('DOMContentLoaded', async () => {
     await updateSpecs();
 
     // Poll every 5 seconds
-    setInterval(updateSpecs, 5000);
+    setInterval(updateSpecs, 5050);
 });
 
 // Handle form submission
 document.getElementById('computerRegistrationForm').addEventListener('submit', async (e) => {
-    e.preventDefault(); // Prevent the default form submission behavior
+    e.preventDefault();
+
+    const formData = {
+        name: document.getElementById('computerName').value,
+        specs: {
+            cpu: document.getElementById('cpuInfo').textContent,
+            ram: document.getElementById('ramInfo').textContent,
+            storage: document.getElementById('storageInfo').textContent,
+            os: document.getElementById('osInfo').textContent,
+            network: document.getElementById('networkInfo').textContent
+        },
+        ipAddress: await getIPAddress()
+    };
 
     try {
-        // Disable the submit button to prevent multiple submissions
-        submitButton.disabled = true;
-        submitButton.textContent = 'Submitting...';
-
-        // Gather form data
-        const computerData = {
-            name: document.getElementById('computerName').value,
-            specs: {
-                cpu: document.getElementById('cpuInfo').textContent,
-                ram: document.getElementById('ramInfo').textContent,
-                storage: document.getElementById('storageInfo').textContent,
-                os: document.getElementById('osInfo').textContent,
-                network: document.getElementById('networkInfo').textContent,
-            },
-            ipAddress: await getIPAddress(),
-        };
-
-        console.log('Submitting computer data:', computerData); // Debugging: Log the data
-
-        // Send the data to the server
         const response = await fetch('/api/computers/register', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(computerData),
+            headers: {
+                'Content-Type': 'application/json' // Removed Authorization header
+            },
+            body: JSON.stringify(formData)
         });
 
-        console.log('Response status:', response.status); // Debugging: Log the response status
-
-        if (response.ok) {
-            // Show success message
-            statusMessage.textContent = 'Registration request sent to admin!';
-            statusMessage.className = 'status-message success';
-            statusMessage.style.display = 'block';
-
-            // Close the window after a short delay
-            setTimeout(() => window.close(), 1500);
-        } else {
-            // Handle server errors
-            const errorData = await response.json();
+        if (!response.ok) {
+            const errorData = await response.json(); // Log the error response
             console.error('Server error:', errorData);
-            statusMessage.textContent = 'Registration failed: ' + (errorData.message || 'Unknown error');
-            statusMessage.className = 'status-message error';
-            statusMessage.style.display = 'block';
+            throw new Error(errorData.message || 'Registration failed');
         }
+
+        const data = await response.json();
+        console.log('Registration successful:', data);
+        alert('Computer registered successfully!');
     } catch (error) {
-        // Handle network or other errors
         console.error('Registration failed:', error);
-        statusMessage.textContent = 'Registration failed: Check the console for details.';
-        statusMessage.className = 'status-message error';
-        statusMessage.style.display = 'block';
-    } finally {
-        // Re-enable the submit button
-        submitButton.disabled = false;
-        submitButton.textContent = 'Submit Registration';
+        alert(`Registration failed: ${error.message}`);
     }
 });
 

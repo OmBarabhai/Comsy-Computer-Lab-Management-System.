@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Computer Registration</title>
+    <title>Lab Login</title>
+    <link rel="icon" type="image/jpg" href="images/logo.jpg">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
@@ -17,16 +18,20 @@
             --danger: #e74c3c;
             --success: #2ecc71;
             --warning: #f39c12;
+            --sidebar-bg: #0F9E99;
+            --sidebar-text: white;
         }
 
         [data-theme="dark"] {
             --background: #262424;
-            --primary: #0F9E99;
+            --primary: #eee5da;
             --text: #EEE5DA;
             --secondary-bg: #333;
             --border: #444;
             --shadow: rgba(0, 0, 0, 0.3);
             --hover: #10b8b2;
+            --sidebar-bg: #1a1a1a;
+            --sidebar-text: #EEE5DA;
         }
 
         * {
@@ -40,20 +45,19 @@
             background-color: var(--background);
             color: var(--text);
             transition: all 0.3s ease;
+            height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
-            padding: 20px;
         }
 
-        .registration-container {
-            width: 100%;
-            max-width: 800px;
+        .login-container {
             background-color: var(--secondary-bg);
             border-radius: 10px;
-            box-shadow: 0 4px 12px var(--shadow);
             padding: 30px;
+            box-shadow: 0 4px 12px var(--shadow);
+            width: 100%;
+            max-width: 400px;
             transition: all 0.3s ease;
         }
 
@@ -61,128 +65,105 @@
             font-size: 24px;
             font-weight: bold;
             margin-bottom: 20px;
-            color: var(--text);
+            color: var(--primary);
             text-align: center;
         }
 
-        h3 {
-            font-size: 18px;
-            margin-bottom: 15px;
-            color: var(--text);
+        #loginForm {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
         }
 
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            color: var(--text);
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: 12px;
+        input[type="text"], 
+        input[type="password"] {
+            padding: 12px 15px;
             border: 1px solid var(--border);
             border-radius: 6px;
             background-color: var(--secondary-bg);
             color: var(--text);
-            font-size: 16px;
-            transition: all 0.3s ease;
+            width: 100%;
+            transition: all 0.3s;
         }
 
-        .form-group input:focus {
+        input[type="text"]:focus, 
+        input[type="password"]:focus {
             outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 2px rgba(15, 158, 153, 0.2);
+            box-shadow: 0 0 0 2px var(--primary);
         }
 
-        .specs-display {
-            background-color: var(--secondary-bg);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
+        .password-container {
+            position: relative;
+            width: 100%;
         }
 
-        #specsDetails p {
-            margin-bottom: 10px;
+        .toggle-password {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
             color: var(--text);
         }
 
-        #specsDetails strong {
-            font-weight: 600;
-            color: var(--primary);
-        }
-
-        #storageList, #devicesList {
-            margin-top: 15px;
-        }
-
-        button {
+        button[type="submit"] {
+            padding: 12px;
             background-color: var(--primary);
             color: white;
             border: none;
             border-radius: 6px;
-            padding: 12px 20px;
-            font-size: 16px;
-            font-weight: 500;
             cursor: pointer;
-            transition: all 0.3s ease;
-            width: 100%;
+            font-weight: 500;
+            transition: all 0.2s;
             margin-top: 10px;
         }
 
-        button:hover {
+        button[type="submit"]:hover {
             background-color: var(--hover);
         }
 
-        .status-message {
+        .registration-section {
             margin-top: 20px;
-            padding: 12px;
-            border-radius: 6px;
-            font-weight: 500;
             text-align: center;
         }
 
-        .status-success {
-            background-color: rgba(46, 204, 113, 0.1);
-            color: var(--success);
+        #registerComputerBtn {
+            padding: 10px 15px;
+            background-color: transparent;
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
         }
 
-        .status-error {
-            background-color: rgba(231, 76, 60, 0.1);
-            color: var(--danger);
-        }
-
-        .status-warning {
-            background-color: rgba(243, 156, 18, 0.1);
-            color: var(--warning);
+        #registerComputerBtn:hover {
+            background-color: var(--border);
         }
 
         /* Dark mode toggle */
         .dark-mode-toggle {
-            position: fixed;
+            position: absolute;
             top: 20px;
             right: 20px;
             display: flex;
             align-items: center;
-            z-index: 100;
         }
 
         .dark-mode-toggle label {
             display: block;
             width: 50px;
             height: 26px;
-            background: #cacaca;
+            background: rgb(202, 202, 202);
             border-radius: 30mm;
             position: relative;
             cursor: pointer;
             overflow: hidden;
             z-index: 1;
-            box-shadow: 0 0 10px 2px #53b4e580;
+            box-shadow: 0 0 10px 2px rgba(83, 180, 229, 0.5);
             margin-left: 10px;
         }
 
@@ -241,18 +222,10 @@
         #toggle:checked + label {
             box-shadow: 0 0 10px 2px rgba(229, 83, 83, 0.5);
         }
-
-        /* Responsive styles */
-        @media (max-width: 768px) {
-            .registration-container {
-                padding: 20px;
-            }
-        }
     </style>
 </head>
 <body>
     <div class="dark-mode-toggle">
-        <span>Theme</span>
         <input type="checkbox" name="toggle" id="toggle" />
         <label for="toggle">
             <div class="thumb">
@@ -268,38 +241,41 @@
         </label>
     </div>
 
-    <div class="registration-container">
-        <h2>Computer Registration</h2>
-        <form id="computerRegistrationForm">
-            <div class="form-group">
-                <label>Computer Name:</label>
-                <input type="text" id="computerName" required>
+    <div class="login-container">
+        <h2>Lab Login</h2>
+        <form id="loginForm">
+            <input type="text" id="username" placeholder="Username" required>
+            <div class="password-container">
+                <input type="password" id="password" placeholder="Password" required>
+                <button type="button" id="togglePasswordLogin" class="toggle-password">👁️</button>
             </div>
-            
-            <div class="specs-display">
-                <h3>System Specifications</h3>
-                <div id="specsDetails">
-                    <p><strong>CPU:</strong> <span id="cpuInfo">Detecting...</span></p>
-                    <p><strong>RAM:</strong> <span id="ramInfo">Detecting...</span></p>
-                    <p><strong>OS:</strong> <span id="osInfo">Detecting...</span></p>
-                    <p><strong>Network:</strong> <span id="networkInfo">Detecting...</span></p>
-                    <p><strong>Storage:</strong> <span id="storageInfo">Detecting...</span></p>
-                </div>
-                <div id="storageList"></div>
-                <div id="devicesList"></div>
-            </div>
-            <button type="submit" id="submitButton">Submit Registration</button>
+            <button type="submit">Login</button>
         </form>
-        <div id="statusMessage" class="status-message" style="display: none;"></div>
-    </div>
 
-    <script src="js/computer-registration.js"></script>
+        <div class="registration-section">
+            <button id="registerComputerBtn">Register This Computer</button>
+        </div>
+    </div>
+    
     <script>
-        // Dark mode toggle functionality
+        // Add event listener for the "Register This Computer" button
+        document.getElementById('registerComputerBtn').addEventListener('click', () => {
+            window.location.href = '/register-computer.html';
+        });
+
+        // Toggle password visibility
+        document.getElementById('togglePasswordLogin').addEventListener('click', () => {
+            const passwordField = document.getElementById('password');
+            const type = passwordField.getAttribute('type') === 'password' ? 'password' : 'text';
+            passwordField.setAttribute('type', type);
+        });
+
+        // Dark mode toggle
         const darkModeToggle = document.getElementById('toggle');
         darkModeToggle.addEventListener('change', () => {
             document.body.dataset.theme = darkModeToggle.checked ? 'dark' : 'light';
         });
     </script>
+    <script src="js/login.js"></script>
 </body>
 </html>

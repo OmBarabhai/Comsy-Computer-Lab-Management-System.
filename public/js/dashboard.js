@@ -147,7 +147,6 @@ function logout() {
 }
 
 // Role-Based Content Loading
-// Update loadRoleSpecificContent
 function loadRoleSpecificContent(role) {
     // Hide all dashboards
     document.querySelectorAll('[id$="Dashboard"]').forEach(el => el.classList.add('hidden'));

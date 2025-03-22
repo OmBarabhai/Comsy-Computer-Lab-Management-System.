@@ -25,7 +25,7 @@ const __dirname = path.dirname(__filename);
 
 dotenv.config();
 const app = express();
-const port = process.env.PORT || 5050;
+const port = process.env.PORT || 5000;
 // Connect to MongoDB
 mongoose.connection.on('error', (err) => {
     console.error('MongoDB connection error:', err);

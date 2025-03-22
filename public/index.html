@@ -3,29 +3,409 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lab Login</title>
-    <link rel="stylesheet" href="css/style.css">
+    <title>Comsy Lab Management System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;300;400;500;600;700;800&family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        /* General Styles */
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #1a1a1a, #003366); /* Cosmic Space Gradient */
+            color: #ffffff;
+            height: 100%;
+            padding-bottom: 50px; /* Space for fixed footer */
+        }
+
+        header {
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            left: 0;
+            z-index: 10; /* Ensures header stays on top */
+            background: linear-gradient(135deg, #1a1a1a, #003366);
+            box-sizing: border-box;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .nav-links {
+            list-style: none;
+            display: flex;
+            margin: 0;
+            padding: 0;
+        }
+
+        .nav-links li {
+            margin-left: 20px;
+        }
+
+        .nav-links a {
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 16px;
+        }
+
+        .nav-links a:hover {
+            color: #00ffcc;
+        }
+
+        /* Floating Effect */
+        .hero {
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            animation: floatingEffect 10s infinite ease-in-out;
+            margin-top: 80px; /* Account for the fixed header */
+        }
+
+        @keyframes floatingEffect {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+            100% { transform: translateY(0); }
+        }
+
+        .hero-content h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            color: #ffffff;
+        }
+
+        .hero-content p {
+            font-size: 20px;
+            margin-bottom: 30px;
+            color: #ffffff;
+        }
+
+        .hero-content button {
+            padding: 10px 20px;
+            font-size: 18px;
+            color: #ffffff;
+            background: linear-gradient(135deg, #00ffcc, #009999);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .hero-content button:hover {
+            background: linear-gradient(135deg, #00ccaa, #007777);
+        }
+
+        /* Stacked Cards Feature Section */
+        .features {
+            padding: 0;
+            margin-top: 50px;
+        }
+
+        .features h2 {
+            font-size: 36px;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .stack-area {
+            width: 100%;
+            height: 300vh;
+            position: relative;
+            display: flex;
+        }
+
+        .left {
+            height: 100vh;
+            flex-basis: 50%;
+            position: sticky;
+            top: 0;
+            left: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
+            flex-direction: column;
+        }
+
+        .right {
+            height: 100vh;
+            flex-basis: 50%;
+            position: sticky;
+            top: 0;
+        }
+
+        .title {
+            width: 420px;
+            font-size: 84px;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 700;
+            line-height: 88px;
+        }
+
+        .sub-title {
+            width: 420px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 14px;
+            margin-top: 30px;
+        }
+
+        .sub-title button {
+            font-family: 'Poppins', sans-serif;
+            font-size: 14px;
+            padding: 15px 30px;
+            background: #00ffcc;
+            color: #1a1a1a;
+            border-radius: 8mm;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        .card {
+            width: 350px;
+            height: 350px;
+            border-radius: 25px;
+            margin-bottom: 10px;
+            position: absolute;
+            top: calc(50% - 175px);
+            left: calc(50% - 175px);
+            transition: 0.5s ease-in-out;
+            box-sizing: border-box;
+            padding: 35px;
+            display: flex;
+            justify-content: space-between;
+            flex-direction: column;
+        }
+
+        .card:nth-child(1) {
+            background: rgb(64, 122, 255);
+        }
+
+        .card:nth-child(2) {
+            background: rgb(221, 62, 88);
+        }
+
+        .card:nth-child(3) {
+            background: rgb(186, 113, 245);
+        }
+
+        .card:nth-child(4) {
+            background: rgb(247, 92, 208);
+        }
+
+        .sub {
+            font-family: 'Poppins', sans-serif;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .content {
+            font-family: 'Poppins', sans-serif;
+            font-size: 44px;
+            font-weight: 700;
+            line-height: 54px;
+        }
+
+        .away {
+            transform-origin: bottom left;
+        }
+
+        /* About and Contact Sections */
+        .about, .contact {
+            padding: 50px 20px;
+            text-align: center;
+        }
+
+        .about h2, .contact h2 {
+            font-size: 36px;
+            margin-bottom: 40px;
+        }
+
+        .about p {
+            font-size: 16px;
+            color: #cccccc;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .contact form {
+            max-width: 600px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .contact input, .contact textarea {
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #00ffcc;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+        }
+
+        .contact button {
+            padding: 10px 20px;
+            font-size: 18px;
+            color: #ffffff;
+            background: linear-gradient(135deg, #00ffcc, #009999);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .contact button:hover {
+            background: linear-gradient(135deg, #00ccaa, #007777);
+        }
+
+        footer {
+            text-align: center;
+            padding: 10px 0;
+            position: fixed; /* Make the footer fixed */
+            width: 100%;
+            bottom: 0; /* Always at the bottom of the viewport */
+            left: 0;
+            background: linear-gradient(135deg, #1a1a1a, #003366); /* Optional: same as header background */
+            color: white; /* Make sure text is visible */
+        }
+    </style>
 </head>
 <body>
-    <div class="login-container">
-        <h2>Lab Login</h2>
-        <form id="loginForm">
-            <input type="text" id="username" placeholder="Username" required>
-            <input type="password" id="password" placeholder="Password" required>
-            <button type="submit">Login</button>
-        </form>
+    <header>
+        <nav style="width: 100%; display: flex; justify-content: space-between; align-items: center;">
+            <div class="logo">Comsy</div>
+            <ul class="nav-links">
+                <li><a href="#home">Home</a></li>
+                <li><a href="login.html" id="loginBtn">Login</a></li>
+                <li><a href="#features">Features</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
 
-        <div class="registration-section">
-            <button id="registerComputerBtn">Register This Computer</button>
+    <section id="home" class="hero">
+        <div class="hero-content">
+            <h1>Welcome to Comsy Lab Management System</h1>
+            <p>Efficiently manage your laboratory operations with our advanced system.</p>
+            <button onclick="learnMore()">Learn More</button>
         </div>
-    </div>
+    </section>
+
+    <section id="features" class="features">
+        <h2>Features</h2>
+        <div class="stack-area">
+            <div class="left">
+                <div class="title">Our Features</div>
+                <div class="sub-title">
+                    Comsy Lab Management System offers a suite of powerful features designed to transform your laboratory operations. Discover how our system can elevate your lab's efficiency and performance.
+                    <br />
+                    <button onclick="showMoreFeatures()">See More Details</button>
+                </div>
+            </div>
+            <div class="right">
+                <div class="card">
+                    <div class="sub">Efficient Management</div>
+                    <div class="content">Streamline your lab operations</div>
+                </div>
+                <div class="card">
+                    <div class="sub">Real-Time Analytics</div>
+                    <div class="content">Gain insights into performance</div>
+                </div>
+                <div class="card">
+                    <div class="sub">Secure Data</div>
+                    <div class="content">Advanced encryption methods</div>
+                </div>
+                <div class="card">
+                    <div class="sub">Support</div>
+                    <div class="content">24/7 expert assistance</div>
+                </div>
+                
+            </div>
+        </div>
+    </section>
+
+    <section id="about" class="about">
+        <h2>About Comsy</h2>
+        <p>Comsy is a cutting-edge lab management system designed to simplify and optimize laboratory operations. Our mission is to provide innovative solutions that empower labs to achieve their goals efficiently and securely.</p>
+    </section>
+
+    <section id="contact" class="contact">
+        <h2>Contact Us</h2>
+        <form id="contactForm">
+            <input type="text" id="name" placeholder="Your Name" required>
+            <input type="email" id="email" placeholder="Your Email" required>
+            <textarea id="message" placeholder="Your Message" rows="5" required></textarea>
+            <button type="submit">Send Message</button>
+        </form>
+    </section>
+
+    <footer>
+        <p>&copy; 2023 Comsy. All rights reserved.</p>
+    </footer>
+
     <script>
-        // Add event listener for the "Register This Computer" button
-        document.getElementById('registerComputerBtn').addEventListener('click', () => {
-            window.location.href = '/register-computer.html';
+        // Feature cards stacking effect
+        let cards = document.querySelectorAll(".card");
+        let stackArea = document.querySelector(".stack-area");
+
+        function rotateCards() {
+            let angle = 0;
+            cards.forEach((card, index) => {
+                if (card.classList.contains("away")) {
+                    card.style.transform = `translateY(-120vh) rotate(-48deg)`;
+                } else {
+                    card.style.transform = `rotate(${angle}deg)`;
+                    angle = angle - 10;
+                    card.style.zIndex = cards.length - index;
+                }
+            });
+        }
+
+        rotateCards();
+
+        window.addEventListener("scroll", () => {
+            let distance = window.innerHeight * 0.5;
+            let topVal = stackArea.getBoundingClientRect().top;
+            let index = -1 * (topVal / distance + 1);
+            index = Math.floor(index);
+
+            for (let i = 0; i < cards.length; i++) {
+                if (i <= index) {
+                    cards[i].classList.add("away");
+                } else {
+                    cards[i].classList.remove("away");
+                }
+            }
+            rotateCards();
+        });
+
+        // Other functions
+        function learnMore() {
+            alert("Thank you for your interest in Comsy Lab Management System. More details coming soon!");
+        }
+
+        function showMoreFeatures() {
+            alert("More features information will be available soon. Stay tuned for updates!");
+        }
+
+        document.getElementById('contactForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+
+            alert(`Thank you, ${name}! Your message has been sent. We will get back to you at ${email}.`);
+            document.getElementById('contactForm').reset();
         });
     </script>
-
-    <script src="js/login.js"></script>
 </body>
 </html>

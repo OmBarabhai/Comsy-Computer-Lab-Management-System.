@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab Login</title>
+    <link rel="icon" type="image/jpg" href="images/logo.jpg">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --background: #EFE9E0;
+            --primary: #0F9E99;
+            --text: #262424;
+            --secondary-bg: #ffffff;
+            --border: #ddd;
+            --shadow: rgba(0, 0, 0, 0.1);
+            --hover: #0d8c87;
+            --danger: #e74c3c;
+            --success: #2ecc71;
+            --warning: #f39c12;
+            --sidebar-bg: #0F9E99;
+            --sidebar-text: white;
+        }
+
+        [data-theme="dark"] {
+            --background: #262424;
+            --primary: #eee5da;
+            --text: #EEE5DA;
+            --secondary-bg: #333;
+            --border: #444;
+            --shadow: rgba(0, 0, 0, 0.3);
+            --hover: #10b8b2;
+            --sidebar-bg: #1a1a1a;
+            --sidebar-text: #EEE5DA;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--background);
+            color: var(--text);
+            transition: all 0.3s ease;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .login-container {
+            background-color: var(--secondary-bg);
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 4px 12px var(--shadow);
+            width: 100%;
+            max-width: 400px;
+            transition: all 0.3s ease;
+        }
+
+        h2 {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: var(--primary);
+            text-align: center;
+        }
+
+        #loginForm {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        input[type="text"], 
+        input[type="password"] {
+            padding: 12px 15px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background-color: var(--secondary-bg);
+            color: var(--text);
+            width: 100%;
+            transition: all 0.3s;
+        }
+
+        input[type="text"]:focus, 
+        input[type="password"]:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px var(--primary);
+        }
+
+        .password-container {
+            position: relative;
+            width: 100%;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text);
+        }
+
+        button[type="submit"] {
+            padding: 12px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+            margin-top: 10px;
+        }
+
+        button[type="submit"]:hover {
+            background-color: var(--hover);
+        }
+
+        .registration-section {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        #registerComputerBtn {
+            padding: 10px 15px;
+            background-color: transparent;
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        #registerComputerBtn:hover {
+            background-color: var(--border);
+        }
+
+        /* Dark mode toggle */
+        .dark-mode-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        .dark-mode-toggle label {
+            display: block;
+            width: 50px;
+            height: 26px;
+            background: rgb(202, 202, 202);
+            border-radius: 30mm;
+            position: relative;
+            cursor: pointer;
+            overflow: hidden;
+            z-index: 1;
+            box-shadow: 0 0 10px 2px rgba(83, 180, 229, 0.5);
+            margin-left: 10px;
+        }
+
+        .dark-mode-toggle label .thumb {
+            position: absolute;
+            width: 22px;
+            height: 22px;
+            background: rgb(23, 24, 33);
+            top: 2px;
+            left: 2px;
+            border-radius: 50%;
+            box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.2),
+                1.5px 1.5px 0 rgba(100, 100, 100, 0.2);
+            overflow: hidden;
+            transition: 0.5s ease-in;
+        }
+
+        .dark-mode-toggle .rotator {
+            display: block;
+            width: 200%;
+            height: 100%;
+            position: relative;
+            display: flex;
+            align-items: center;
+            transition: 0.5s ease-in;
+        }
+
+        .dark-mode-toggle .side {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.5s ease-in;
+            color: white;
+            font-size: 12px;
+        }
+
+        #toggle:checked + label .thumb .rotator {
+            transform: translateX(-50%);
+            background: rgb(235, 123, 91);
+        }
+
+        #toggle:checked + label .thumb {
+            left: calc(100% - 24px);
+        }
+
+        #toggle:checked + label .thumb .rotator .side {
+            transform: rotate(180deg);
+        }
+
+        #toggle {
+            display: none;
+        }
+
+        #toggle:checked + label {
+            box-shadow: 0 0 10px 2px rgba(229, 83, 83, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div class="dark-mode-toggle">
+        <input type="checkbox" name="toggle" id="toggle" />
+        <label for="toggle">
+            <div class="thumb">
+                <div class="rotator">
+                    <div class="left side">
+                        <i class="fas fa-moon"></i>
+                    </div>
+                    <div class="right side">
+                        <i class="fas fa-sun"></i>
+                    </div>
+                </div>
+            </div>
+        </label>
+    </div>
+
+    <div class="login-container">
+        <h2>Lab Login</h2>
+        <form id="loginForm">
+            <input type="text" id="username" placeholder="Username" required>
+            <div class="password-container">
+                <input type="password" id="password" placeholder="Password" required>
+                <button type="button" id="togglePasswordLogin" class="toggle-password">👁️</button>
+            </div>
+            <button type="submit">Login</button>
+        </form>
+
+        <div class="registration-section">
+            <button id="registerComputerBtn">Register This Computer</button>
+        </div>
+    </div>
+    
+    <script>
+        // Add event listener for the "Register This Computer" button
+        document.getElementById('registerComputerBtn').addEventListener('click', () => {
+            window.location.href = '/register-computer.html';
+        });
+
+        // Toggle password visibility
+        document.getElementById('togglePasswordLogin').addEventListener('click', () => {
+            const passwordField = document.getElementById('password');
+            const type = passwordField.getAttribute('type') === 'password' ? 'password' : 'text';
+            passwordField.setAttribute('type', type);
+        });
+
+        // Dark mode toggle
+        const darkModeToggle = document.getElementById('toggle');
+        darkModeToggle.addEventListener('change', () => {
+            document.body.dataset.theme = darkModeToggle.checked ? 'dark' : 'light';
+        });
+    </script>
+    <script src="js/login.js"></script>
+</body>
+</html>

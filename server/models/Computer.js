@@ -1,18 +1,36 @@
 import mongoose from 'mongoose';
 
-const ComputerSchema = new mongoose.Schema({
-    name: String,
+const computerSchema = new mongoose.Schema({
+    name: { type: String, required: true },
+    ipAddress: { type: String, required: true },
     specs: {
-        cpu: String,
-        ram: String,
-        storage: String,
-        os: String,
-        network: String,
+        cpu: { type: String, required: true },
+        ram: { type: String, required: true },
+        storage: { type: String, required: true },
+        os: { type: String, required: true },
+        network: { type: String, required: true }
     },
-    ipAddress: String,
-    status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
-    lab: String,
+    status: { 
+        type: String, 
+        enum: ['pending', 'approved', 'rejected'], 
+        default: 'pending' 
+    },
+    operationalStatus: {
+        type: String,
+        enum: ['available', 'in-use', 'maintenance'],
+        default: 'available'
+    },
+    powerStatus: {
+        type: String,
+        enum: ['on', 'off'],
+        default: 'on'
+    },
+    networkSpeed: {
+        type: Number,
+        default: 0
+    },
+    registeredBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: false },
+    registeredAt: { type: Date, default: Date.now }
 });
 
-const Computer = mongoose.model('Computer', ComputerSchema);
-export default Computer;
+export default mongoose.model('Computer', computerSchema);

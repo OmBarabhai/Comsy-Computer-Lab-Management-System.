@@ -1,11 +1,22 @@
 import mongoose from 'mongoose';
 
 const issueSchema = new mongoose.Schema({
-  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  computer: { type: mongoose.Schema.Types.ObjectId, ref: 'Computer', required: true },
+  computer: { 
+      type: mongoose.Schema.Types.ObjectId, 
+      ref: 'Computer', 
+      required: true 
+  },
+  reportedBy: { 
+      type: mongoose.Schema.Types.ObjectId, 
+      ref: 'User', 
+      required: true 
+  },
   description: { type: String, required: true },
-  status: { type: String, default: 'reported' },
-  createdAt: { type: Date, default: Date.now }
-});
+  status: {
+      type: String,
+      enum: ['open', 'in-progress', 'resolved'],
+      default: 'open'
+  }
+}, { timestamps: true });
 
 export default mongoose.model('Issue', issueSchema);

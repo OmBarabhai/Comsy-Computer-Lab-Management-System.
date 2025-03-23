@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     await updateSpecs();
 
     // Poll every 5 seconds
-    setInterval(updateSpecs, 5050);
+    setInterval(updateSpecs, 5000);
 });
 
 // Handle form submission

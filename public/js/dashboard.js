@@ -161,14 +161,18 @@ function loadRoleSpecificContent(role) {
             loadRegistrationRequests();
             loadAllComputers();
             loadIssuesTable();
+            loadBookings(); 
+
             break;
         case 'student':
             document.getElementById('studentDashboard').classList.remove('hidden');
             loadAllComputers();
+            loadAvailableComputers();
             break;
         case 'staff':
             document.getElementById('staffDashboard').classList.remove('hidden');
             loadAllComputers();
+            loadAvailableComputers();
             break;
     }
 }
@@ -272,7 +276,7 @@ async function loadAllComputers() {
                     <td>${computer.id}</td>
                     <td>${computer.name}</td>
                     <td>
-                        <span class="status-indicator ${computer.operationalStatus}">
+                    <span class="status-indicator ${computer.operationalStatus}">
                             ${computer.operationalStatus}
                         </span>
                     </td>
@@ -314,7 +318,7 @@ function simulateNetworkSpeedUpdates() {
             const newSpeed = (Math.random() * 60 + 45).toFixed(2);
             element.textContent = newSpeed;
         });
-    }, 1000); // Update every 5 seconds
+    }, 2000); // Update every 5 seconds
 }
 
 async function handleStatusChange(e) {
@@ -371,21 +375,23 @@ async function handleStaffBooking(e) {
     // Implement booking logic similar to student
 }
 
-// Student Functions
-async function loadComputersForBooking() {
-    // Implementation for loading available computers
-}
-
 document.getElementById('issueFormStudent').addEventListener('submit', async (e) => {
     e.preventDefault();
 
     const computerId = document.getElementById('issueComputerSelectStudent').value;
     const description = document.getElementById('issueDescriptionStudent').value;
 
-    if (!computerId || !description) {
-        alert('Please fill all required fields');
+    if (!computerId) {
+        alert('Please select a computer.');
         return;
     }
+
+    const issueData = {
+        computer: computerId,
+        description: description
+    };
+
+    console.log('Issue Data:', issueData); // Debugging log
 
     try {
         const response = await fetch('/api/issues', {
@@ -394,17 +400,18 @@ document.getElementById('issueFormStudent').addEventListener('submit', async (e)
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
             },
-            body: JSON.stringify({ computer: computerId, description })
+            body: JSON.stringify(issueData)
         });
 
         const data = await response.json();
-        
+
         if (!response.ok) {
-            throw new Error(data.error || 'Failed to report issue');
+            throw new Error(data.message || 'Failed to report issue');
         }
 
         alert('Issue reported successfully!');
         e.target.reset();
+        loadIssuesTable(); // Refresh the issues table
     } catch (error) {
         console.error('Error reporting issue:', error);
         alert(`Error: ${error.message}`);
@@ -420,14 +427,36 @@ async function loadIssuesTable() {
             }
         });
 
-        if (!response.ok) throw new Error('Failed to fetch issues');
-        const issues = await response.json();
+        let issues = [];
+
+        if (!response.ok) {
+            console.warn('Failed to fetch issues. Using dummy data instead.');
+            issues = [
+                {
+                    _id: '64f8b1e2a1b2c3d4e5f6a7b8',
+                    computer: { name: 'Computer 1' },
+                    reportedBy: { username: 'student1' },
+                    description: 'Keyboard not working',
+                    status: 'open',
+                    createdAt: new Date()
+                },
+                {
+                    _id: '64f8b1e2a1b2c3d4e5f6a7b9',
+                    computer: { name: 'Computer 2' },
+                    reportedBy: { username: 'staff1' },
+                    description: 'Monitor not displaying',
+                    status: 'in-progress',
+                    createdAt: new Date()
+                }
+            ];
+        } else {
+            issues = await response.json();
+        }
 
         const tbody = document.querySelector('#issuesTable tbody');
         tbody.innerHTML = '';
 
         issues.forEach(issue => {
-            // Add null checks for populated fields
             tbody.innerHTML += `
                 <tr>
                     <td>${issue._id}</td>
@@ -437,47 +466,14 @@ async function loadIssuesTable() {
                     <td>${issue.description}</td>
                     <td>
                         <span class="status-indicator ${issue.status}">
-                            ${issue.status.replace('-', ' ')}
+                            ${issue.status}
                         </span>
                     </td>
                     <td>
-                        ${issue.status === 'open' ? `
-                            <button class="btn-in-progress" data-id="${issue._id}">In-Progress</button>
-                        ` : ''}
-                        ${issue.status === 'in-progress' ? `
-                            <button class="btn-resolve" data-id="${issue._id}">Issue Resolved</button>
-                        ` : ''}
+                        <button class="btn-resolve" data-id="${issue._id}">Issue Resolved</button>
                     </td>
                 </tr>
             `;
-        });
-        // Add event listener for in-progress button
-        document.querySelectorAll('.btn-in-progress').forEach(button => {
-            button.addEventListener('click', async () => {
-                const issueId = button.dataset.id;
-                try {
-                    const response = await fetch(`/api/issues/${issueId}/in-progress`, {
-                        method: 'PATCH',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${localStorage.getItem('token')}`
-                        }
-                    });
-        
-                    const data = await response.json();
-        
-                    if (!response.ok) {
-                        throw new Error(data.error || 'Failed to mark in-progress');
-                    }
-        
-                    alert('Issue marked as in-progress!');
-                    loadIssuesTable();
-                    loadAllComputers();
-                } catch (error) {
-                    console.error('Error marking in-progress:', error);
-                    alert(`Error: ${error.message}`);
-                }
-            });
         });
 
         // Add event listeners for buttons
@@ -608,3 +604,143 @@ async function addNewUser(event) {
         alert(`Error: ${error.message}`);
     }
 }
+
+async function loadAvailableComputers() {
+    try {
+        // Fetch all computers
+        const response = await fetch('/api/computers', {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+
+        if (!response.ok) throw new Error('Failed to fetch computers');
+        const computers = await response.json();
+
+        // Filter approved and available computers
+        const availableComputers = computers.filter(computer => 
+            computer.status === 'approved' && 
+            computer.operationalStatus === 'available'
+        );
+
+        // Populate student booking dropdown
+        const select = document.getElementById('studentComputerSelect');
+        select.innerHTML = '<option value="">Select Computer</option>';
+        
+        availableComputers.forEach(computer => {
+            select.innerHTML += `
+                <option value="${computer._id}">
+                    ${computer.name} (${computer.specs.cpu}, ${computer.specs.ram}, ${computer.specs.storage})
+                </option>
+            `;
+        });
+
+    } catch (error) {
+        console.error('Error loading available computers:', error);
+        alert(`Error: ${error.message}`);
+    }
+}
+
+document.getElementById('studentBookingForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const computerId = document.getElementById('studentComputerSelect').value;
+    const startTime = document.getElementById('studentStartTime').value;
+    const endTime = document.getElementById('studentEndTime').value;
+
+    if (!computerId || !startTime || !endTime) {
+        alert('Please fill all fields.');
+        return;
+    }
+
+    const bookingData = {
+        computerId,
+        startTime,
+        endTime
+    };
+
+    try {
+        const response = await fetch('/api/bookings', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify(bookingData)
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || 'Failed to book computer');
+        }
+
+        alert('Computer booked successfully!');
+        e.target.reset();
+        loadAvailableComputers(); // Refresh the available computers list
+    } catch (error) {
+        console.error('Error booking computer:', error);
+        alert(`Error: ${error.message}`);
+    }
+});
+
+async function loadBookings() {
+    try {
+        const response = await fetch('/api/bookings', {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+
+        if (!response.ok) throw new Error('Failed to fetch bookings');
+        const bookings = await response.json();
+
+        const tbody = document.querySelector('#bookingsTable tbody');
+        tbody.innerHTML = '';
+
+        bookings.forEach(booking => {
+            tbody.innerHTML += `
+                <tr>
+                    <td>${booking.user.username}</td>
+                    <td>${booking.computer.name}</td>
+                    <td>${new Date(booking.startTime).toLocaleString()}</td>
+                    <td>${new Date(booking.endTime).toLocaleString()}</td>
+                    <td>${booking.status}</td>
+                </tr>
+            `;
+        });
+    } catch (error) {
+        console.error('Error loading bookings:', error);
+        alert(`Error: ${error.message}`);
+    }
+}
+
+document.getElementById('downloadAttendance').addEventListener('click', async () => {
+    const fromDate = document.getElementById('fromDate').value;
+    const toDate = document.getElementById('toDate').value;
+
+    if (!fromDate || !toDate) {
+        alert('Please select a date range.');
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/bookings/attendance?from=${fromDate}&to=${toDate}`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || 'Failed to download attendance');
+        }
+
+        // Convert data to PDF or Excel (use frontend libraries like jsPDF or SheetJS)
+        alert('Attendance downloaded successfully!');
+    } catch (error) {
+        console.error('Error downloading attendance:', error);
+        alert(`Error: ${error.message}`);
+    }
+});

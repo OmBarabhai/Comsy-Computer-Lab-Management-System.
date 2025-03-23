@@ -7,42 +7,49 @@ import { authenticate, authorize } from '../middleware/authMiddleware.js';
 const router = express.Router();
 
 // Route to report a new issue
+// issueRoutes.js (POST route
 router.post('/', authenticate, async (req, res) => {
-    try {
-        const { computer, description } = req.body;
+  try {
+    const { computer, description } = req.body;
 
-        // Validate computer ID
-        if (!mongoose.Types.ObjectId.isValid(computer)) {
-            return res.status(400).json({ error: 'Invalid computer ID' });
-        }
-
-        const issue = new Issue({
-            computer,
-            description,
-            reportedBy: req.user.userId,
-            status: 'open' // Explicitly set status
-        });
-
-        await issue.save();
-        res.status(201).json(issue);
-    } catch (error) {
-        res.status(400).json({ error: error.message });
+    // Validate computer ID
+    if (!mongoose.Types.ObjectId.isValid(computer)) {
+      return res.status(400).json({ error: 'Invalid computer ID' });
     }
+
+    const issue = new Issue({
+      computer,
+      description,
+      reportedBy: req.user.userId
+    });
+
+    await issue.save();
+
+    // Update computer status
+    await Computer.findByIdAndUpdate(
+      computer,
+      { operationalStatus: 'maintenance' }
+    );
+
+    res.status(201).json(issue);
+  } catch (error) {
+    console.error('Error reporting issue:', error);
+    res.status(400).json({ error: error.message });
+  }
 });
 
 // Route to get all issues (Admin only)
 router.get('/', authenticate, authorize(['admin']), async (req, res) => {
     try {
         const issues = await Issue.find()
-            .populate('computer', 'name')
-            .populate('reportedBy', 'username') // Ensure this matches User schema
-            .sort({ createdAt: -1 });
-
+            .populate('computer', 'name') // Populate computer details
+            .populate('reportedBy', 'username'); // Populate user details with username
         res.json(issues);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
+
 // Route to update issue status (Admin only)
 router.patch('/:id/status', authenticate, authorize(['admin']), async (req, res) => {
     try {
@@ -63,39 +70,6 @@ router.patch('/:id/status', authenticate, authorize(['admin']), async (req, res)
         res.json(issue);
     } catch (error) {
         res.status(400).json({ error: error.message });
-    }
-});
-// Add new route for in-progress status
-router.patch('/:id/in-progress', authenticate, authorize(['admin']), async (req, res) => {
-    try {
-        const issueId = req.params.id;
-
-        // Validate issue ID
-        if (!mongoose.Types.ObjectId.isValid(issueId)) {
-            return res.status(400).json({ error: 'Invalid issue ID' });
-        }
-
-        // Find the issue
-        const issue = await Issue.findById(issueId);
-        if (!issue) {
-            return res.status(404).json({ error: 'Issue not found' });
-        }
-
-        // Update issue status
-        issue.status = 'in-progress';
-        await issue.save();
-
-        // Update computer status
-        await Computer.findByIdAndUpdate(
-            issue.computer,
-            { operationalStatus: 'maintenance' },
-            { new: true }
-        );
-
-        res.json(issue);
-    } catch (error) {
-        console.error('Error marking issue in-progress:', error);
-        res.status(500).json({ error: error.message });
     }
 });
 

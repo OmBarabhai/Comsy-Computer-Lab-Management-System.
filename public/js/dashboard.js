@@ -79,7 +79,7 @@ async function fetchAndSendSpeed(ws) {
     }
 
     // Fetch speed every 5 seconds
-    setTimeout(() => fetchAndSendSpeed(ws), 5050);
+    setTimeout(() => fetchAndSendSpeed(ws), 1000);
 }
 
 // Function to fetch internet speed
@@ -147,6 +147,7 @@ function logout() {
 }
 
 // Role-Based Content Loading
+// Update loadRoleSpecificContent
 function loadRoleSpecificContent(role) {
     // Hide all dashboards
     document.querySelectorAll('[id$="Dashboard"]').forEach(el => el.classList.add('hidden'));
@@ -261,7 +262,7 @@ async function loadAllComputers() {
                 // Add to dropdown if approved
                 if (computer.status === 'approved') {
                     issueComputerSelectStudent.innerHTML += `
-                        <option value="${computer._id}">${computer.name}</option>
+                        <option value="${computer.id}">${computer.name}</option>
                     `;
                 }
             });
@@ -272,10 +273,10 @@ async function loadAllComputers() {
             // Use real data for operational status, approval status, and network speed
             tbody.innerHTML += `
                 <tr>
-                    <td>${computer._id}</td>
+                    <td>${computer.id}</td>
                     <td>${computer.name}</td>
                     <td>
-                        <span class="status-indicator ${computer.operationalStatus}">
+                    <span class="status-indicator ${computer.operationalStatus}">
                             ${computer.operationalStatus}
                         </span>
                     </td>
@@ -417,6 +418,48 @@ document.getElementById('issueFormStudent').addEventListener('submit', async (e)
     }
 });
 
+document.getElementById('issueFormStaff').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const computerId = document.getElementById('issueComputerSelectStudent').value;
+    const description = document.getElementById('issueDescriptionStudent').value;
+
+    if (!computerId) {
+        alert('Please select a computer.');
+        return;
+    }
+
+    const issueData = {
+        computer: computerId,
+        description: description
+    };
+
+    console.log('Issue Data:', issueData); // Debugging log
+
+    try {
+        const response = await fetch('/api/issues', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify(issueData)
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || 'Failed to report issue');
+        }
+
+        alert('Issue reported successfully!');
+        e.target.reset();
+        loadIssuesTable(); // Refresh the issues table
+    } catch (error) {
+        console.error('Error reporting issue:', error);
+        alert(`Error: ${error.message}`);
+    }
+});
 
 async function loadIssuesTable() {
     try {
@@ -459,8 +502,8 @@ async function loadIssuesTable() {
             tbody.innerHTML += `
                 <tr>
                     <td>${issue._id}</td>
-                    <td>${issue.computer.name}</td>
-                    <td>${issue.reportedBy.username}</td>
+                    <td>${issue.computer?.name || 'N/A'}</td>
+                    <td>${issue.reportedBy?.username || 'Unknown'}</td>
                     <td>${new Date(issue.createdAt).toLocaleDateString()}</td>
                     <td>${issue.description}</td>
                     <td>
@@ -606,7 +649,6 @@ async function addNewUser(event) {
 
 async function loadAvailableComputers() {
     try {
-        // Fetch all computers
         const response = await fetch('/api/computers', {
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -646,16 +688,13 @@ document.getElementById('studentBookingForm').addEventListener('submit', async (
     const computerId = document.getElementById('studentComputerSelect').value;
     const startTime = document.getElementById('studentStartTime').value;
     const endTime = document.getElementById('studentEndTime').value;
-
-    if (!computerId || !startTime || !endTime) {
-        alert('Please fill all fields.');
-        return;
-    }
+    const purpose = document.getElementById('studentBookingPurpose').value;
 
     const bookingData = {
-        computerId,
+        computer: computerId,
         startTime,
-        endTime
+        endTime,
+        purpose
     };
 
     try {
@@ -676,7 +715,7 @@ document.getElementById('studentBookingForm').addEventListener('submit', async (
 
         alert('Computer booked successfully!');
         e.target.reset();
-        loadAvailableComputers(); // Refresh the available computers list
+        // Refresh the available computers list
     } catch (error) {
         console.error('Error booking computer:', error);
         alert(`Error: ${error.message}`);
@@ -686,60 +725,68 @@ document.getElementById('studentBookingForm').addEventListener('submit', async (
 async function loadBookings() {
     try {
         const response = await fetch('/api/bookings', {
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         });
 
         if (!response.ok) throw new Error('Failed to fetch bookings');
         const bookings = await response.json();
 
+        console.log('Fetched Bookings:', bookings); // Debugging log
+
         const tbody = document.querySelector('#bookingsTable tbody');
         tbody.innerHTML = '';
 
         bookings.forEach(booking => {
+            const startDate = new Date(booking.startTime);
+            const endDate = new Date(booking.endTime);
+
             tbody.innerHTML += `
                 <tr>
-                    <td>${booking.user.username}</td>
-                    <td>${booking.computer.name}</td>
-                    <td>${new Date(booking.startTime).toLocaleString()}</td>
-                    <td>${new Date(booking.endTime).toLocaleString()}</td>
-                    <td>${booking.status}</td>
+                    <td>${booking._id}</td>
+                    <td>${booking.computer?.name || 'N/A'}</td>
+                    <td>${booking.user?.username || 'Unknown'}</td>
+                    <td>${startDate.toLocaleDateString()}</td>
+                    <td>${startDate.toLocaleTimeString()}</td>
+                    <td>${endDate.toLocaleTimeString()}</td>
+                    <td>${booking.purpose}</td>
+                    <td>
+                        <span class="status-indicator ${booking.status}">
+                            ${booking.status}
+                        </span>
+                    </td>
+                    <td>
+                        ${booking.status === 'upcoming' ? `
+                            <button class="btn-cancel" data-id="${booking._id}">Cancel</button>
+                        ` : 'No actions'}
+                    </td>
                 </tr>
             `;
         });
+
+        // Add cancel event listeners
+        document.querySelectorAll('.btn-cancel').forEach(button => {
+            button.addEventListener('click', async () => {
+                if (confirm('Are you sure you want to cancel this booking?')) {
+                    try {
+                        const response = await fetch(`/api/bookings/${button.dataset.id}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'Authorization': `Bearer ${localStorage.getItem('token')}`
+                            }
+                        });
+
+                        if (!response.ok) throw new Error('Failed to cancel booking');
+                        alert('Booking cancelled successfully');
+                        loadBookings(); // Refresh the table
+                    } catch (error) {
+                        alert(`Error: ${error.message}`);
+                    }
+                }
+            });
+        });
+
     } catch (error) {
         console.error('Error loading bookings:', error);
         alert(`Error: ${error.message}`);
     }
 }
-
-document.getElementById('downloadAttendance').addEventListener('click', async () => {
-    const fromDate = document.getElementById('fromDate').value;
-    const toDate = document.getElementById('toDate').value;
-
-    if (!fromDate || !toDate) {
-        alert('Please select a date range.');
-        return;
-    }
-
-    try {
-        const response = await fetch(`/api/bookings/attendance?from=${fromDate}&to=${toDate}`, {
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            throw new Error(data.message || 'Failed to download attendance');
-        }
-
-        // Convert data to PDF or Excel (use frontend libraries like jsPDF or SheetJS)
-        alert('Attendance downloaded successfully!');
-    } catch (error) {
-        console.error('Error downloading attendance:', error);
-        alert(`Error: ${error.message}`);
-    }
-});

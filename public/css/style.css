@@ -42,18 +42,76 @@ body.dark {
     background: var(--card-bg);
     border-right: 1px solid var(--border-color);
     transition: var(--transition);
-    overflow: hidden;
+    overflow-y: auto;
     z-index: 1000;
     box-shadow: var(--shadow);
+    left: 0; /* Ensure the navigation starts from the left */
 }
 
-.navigation.active {
-    width: 70px;
+.navigation.collapsed {
+    width: 70px; /* Slimmer width when collapsed */
+}
+
+.navigation .nav-header {
+    padding: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.navigation .logo h2 {
+    font-size: 1.2rem;
+    color: var(--primary-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: var(--transition);
+}
+
+.navigation.collapsed .logo h2 {
+    display: none;
+}
+
+.navigation .toggle-btn {
+    cursor: pointer;
+    font-size: 1.5rem;
+    color: var(--primary-color);
+}
+
+.navigation .user-info {
+    padding: 1px;
+    text-align: center;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 15px;
+}
+
+.navigation .role-badge {
+    padding: 8px 15px;
+    background-color: var(--primary-color);
+    color: white;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    box-shadow: var(--shadow);
+    display: inline-block;
+    transition: var(--transition);
+}
+
+.navigation.collapsed .role-badge {
+    padding: 6px;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    font-size: 0.7rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .navigation ul {
     list-style: none;
-    padding: 20px 0;
+    padding: 10px 0;
     position: relative;
 }
 
@@ -68,13 +126,14 @@ body.dark {
     align-items: center;
     text-decoration: none;
     color: var(--text-color);
-    padding: 12px 15px;
+    padding: 1px 1px;
     border-radius: 8px;
     margin: 0 10px;
     transition: var(--transition);
 }
 
-.navigation ul li a:hover {
+.navigation ul li a:hover,
+.navigation ul li a.active {
     background-color: var(--primary-color);
     color: #ffffff;
 }
@@ -95,17 +154,28 @@ body.dark {
     font-size: 1rem;
     font-weight: 500;
     white-space: nowrap;
+    overflow: hidden;
     transition: var(--transition);
 }
 
-/* When navigation is active */
-.navigation.active ul li a {
-    padding: 12px;
+.navigation.collapsed ul li a .title {
+    display: none;
 }
 
-.navigation.active ul li a .title {
-    opacity: 0;
-    display: none;
+.navigation .nav-divider {
+    padding: 1px 1px;
+}
+
+.navigation .nav-divider hr {
+    border: none;
+    height: 1px;
+    background-color: var(--border-color);
+    margin: 5px 0;
+}
+
+.navigation.collapsed .nav-divider hr {
+    margin: 5px auto;
+    width: 30px;
 }
 
 /* =========== Main Content ============ */
@@ -116,9 +186,8 @@ body.dark {
     min-height: 100vh;
 }
 
-.main.active {
+.main.expanded {
     margin-left: 70px;
-    width: calc(100% - 70px);
 }
 
 .topbar {
@@ -132,7 +201,7 @@ body.dark {
     box-shadow: var(--shadow);
 }
 
-.toggle {
+.topbar .toggle-btn {
     font-size: 1.8rem;
     cursor: pointer;
     color: var(--primary-color);
@@ -141,20 +210,54 @@ body.dark {
     justify-content: center;
 }
 
-.user {
+/* Search Container */
+.search-container {
     display: flex;
     align-items: center;
-    gap: 15px;
+    flex: 1;
+    max-width: 500px;
+    margin: 0 auto;
+    position: relative;
 }
 
-.role-badge {
-    padding: 8px 15px;
-    background-color: var(--primary-color);
+.search-container input {
+    width: 100%;
+    padding: 12px 20px;
+    padding-right: 50px;
+    border: 1px solid var(--border-color);
+    border-radius: 30px;
+    font-size: 1rem;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    transition: var(--transition);
+}
+
+.search-container input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.2);
+}
+
+.search-container button {
+    position: absolute;
+    right: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--primary-color);
     color: white;
-    border-radius: 20px;
-    font-size: 0.9rem;
-    font-weight: 500;
-    box-shadow: var(--shadow);
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.search-container button:hover {
+    background-color: #0056b3;
 }
 
 /* =========== Cards ============ */
@@ -172,9 +275,8 @@ body.dark {
     border: 1px solid var(--border-color);
     transition: var(--transition);
     box-shadow: var(--shadow);
-    
-    justify-content: space-between;
-    align-items: center;
+    display: flex;
+    flex-direction: column;
 }
 
 .card:hover {
@@ -207,6 +309,27 @@ body.dark {
     align-items: center;
 }
 
+/* =========== Card Container ============ */
+.card-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+/* Adjusting card for tables */
+.card-container .card.full-width {
+    grid-column: 1 / -1; /* Make the card span all columns */
+}
+
+.card h3 {
+    margin-bottom: 1px;
+    color: var(--primary-color);
+    font-weight: 600;
+    border-bottom: 2px solid rgba(0, 123, 255, 0.1);
+    padding-bottom: 10px;
+}
+
 /* =========== Tables ============ */
 .table-container {
     overflow-x: auto;
@@ -222,8 +345,13 @@ table {
     box-shadow: var(--shadow);
 }
 
-th, td {
+th {
     padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+td {
+    padding: 10px;
     text-align: left;
     border-bottom: 1px solid var(--border-color);
 }
@@ -367,40 +495,6 @@ button:hover {
     border-left: 4px solid #dc3545;
 }
 
-/* =========== Card Container ============ */
-
-
-.card h3 {
-    margin-bottom: 20px;
-    color: var(--primary-color);
-    font-weight: 600;
-    border-bottom: 2px solid rgba(0, 123, 255, 0.1);
-    padding-bottom: 10px;
-}
-/* Adjust card size for reported issues table */
-.card-container .card {
-    min-width: 100%;
-    overflow-x: auto;
-}
-
-/* Adjust table width to fit content */
-#issuesTable {
-    width: auto;
-    min-width: 100%;
-}
-
-/* Ensure table columns don't overflow */
-#issuesTable th,
-#issuesTable td {
-    white-space: nowrap;
-    padding: 10px;
-}
-
-/* Adjust card container grid */
-.card-container {
-    grid-template-columns: repeat(auto-fit, minmax(600px, 1fr)); /* Adjust min-width as needed */
-}
-
 /* Status Indicators */
 .status-indicator {
     padding: 6px 12px;
@@ -423,6 +517,21 @@ button:hover {
 .status-indicator.maintenance {
     background: #f8d7da;
     color: #721c24;
+}
+
+.status-indicator.open {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.status-indicator.in-progress {
+    background: #cce5ff;
+    color: #004085;
+}
+
+.status-indicator.resolved {
+    background: #d4edda;
+    color: #155724;
 }
 
 /* Power Status Indicators */
@@ -524,6 +633,17 @@ button:hover {
     display: none !important;
 }
 
+/* Section links highlighting */
+.section-link.active {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.section-link.active .icon,
+.section-link.active .title {
+    color: white;
+}
+
 /* =========== Responsive Design ============ */
 @media (max-width: 1200px) {
     .card-container {
@@ -533,30 +653,21 @@ button:hover {
 
 @media (max-width: 991px) {
     .navigation {
-        width: 70px;
-    }
-    
-    .navigation ul li a .title {
-        display: none;
-    }
-    
-    .main {
-        margin-left: 70px;
-        width: calc(100% - 70px);
-    }
-    
-    .navigation.active {
         width: 250px;
     }
     
-    .navigation.active ul li a .title {
-        display: block;
-        opacity: 1;
+    .main {
+        margin-left: 0;
+        width: 100%;
     }
     
-    .main.active {
-        margin-left: 250px;
-        width: calc(100% - 250px);
+    .navigation.collapsed {
+        left: -250px;
+        width: 250px;
+    }
+    
+    .main.expanded {
+        margin-left: 0;
     }
 }
 
@@ -577,6 +688,10 @@ button:hover {
         flex-direction: column;
         gap: 0;
     }
+    
+    .search-container {
+        max-width: 100%;
+    }
 }
 
 @media (max-width: 480px) {
@@ -586,10 +701,15 @@ button:hover {
     
     .topbar {
         padding: 10px;
+        flex-direction: column;
+        gap: 10px;
     }
     
     .card .numbers {
         font-size: 1.8rem;
     }
-
+    
+    .search-container {
+        width: 100%;
+    }
 }

@@ -10,68 +10,160 @@
 <body>
     <!-- Navigation -->
     <div class="navigation">
-        <ul>
-            <li>
-                <a href="dashboard.html">
-                    <span class="icon">
-                        <ion-icon name="speedometer-outline"></ion-icon>
-                    </span>
-                    <span class="title">Dashboard</span>
-                </a>
-            </li>
-            <li>
-                <a href="#" id="profileBtn">
-                    <span class="icon">
-                        <ion-icon name="person-outline"></ion-icon>
-                    </span>
-                    <span class="title">Profile</span>
-                </a>
-            </li>
-            <li>
-                <a href="thispc.html" class="nav-link">
-                    <span class="icon">
-                        <ion-icon name="desktop-outline"></ion-icon>
-                    </span>
-                    <span class="title">This PC</span>
-                </a>
-            </li>
-            <li>
-                <a href="#" id="themeToggle">
-                    <span class="icon">
-                        <ion-icon name="contrast-outline"></ion-icon>
-                    </span>
-                    <span class="title">Toggle Theme</span>
-                </a>
-            </li>
-            <li>
-                <a href="#" id="logoutBtn">
-                    <span class="icon">
-                        <ion-icon name="log-out-outline"></ion-icon>
-                    </span>
-                    <span class="title">Logout</span>
-                </a>
-            </li>
-        </ul>
+        <div class="nav-header">
+            <div class="logo">
+                <h2>Lab Management</h2>
+            </div>
+            <div class="toggle-btn" id="sidebarToggle">
+                <ion-icon name="menu-outline"></ion-icon>
+            </div>
+        </div>
+        <div class="user-info">
+            <span id="userRoleBadge" class="role-badge"></span>
+        </div>
+            <ul>
+                <li>
+                    <a href="dashboard.html">
+                        <span class="icon">
+                            <ion-icon name="speedometer-outline"></ion-icon>
+                        </span>
+                        <span class="title">Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-divider admin-tabs"><hr></li>
+                <li class="admin-tabs">
+                    <a href="#" data-target="labComputers" class="section-link active">
+                        <span class="icon">
+                            <ion-icon name="desktop-outline"></ion-icon>
+                        </span>
+                        <span class="title">Computers</span>
+                    </a>
+                </li>
+                <li class="admin-tabs">
+                    <a href="#" data-target="registrationRequests" class="section-link">
+                        <span class="icon">
+                            <ion-icon name="clipboard-outline"></ion-icon>
+                        </span>
+                        <span class="title">Registration Requests</span>
+                    </a>
+                </li>
+                <li class="admin-tabs">
+                    <a href="#" data-target="reportedIssues" class="section-link">
+                        <span class="icon">
+                            <ion-icon name="warning-outline"></ion-icon>
+                        </span>
+                        <span class="title">Reported Issues</span>
+                    </a>
+                </li>
+                <li class="admin-tabs">
+                    <a href="#" data-target="bookings" class="section-link">
+                        <span class="icon">
+                            <ion-icon name="calendar-outline"></ion-icon>
+                        </span>
+                        <span class="title">Bookings</span>
+                    </a>
+                </li>
+                
+                <!-- Student section tabs -->
+                <li class="nav-divider student-tabs hidden"><hr></li>
+                <li class="student-tabs hidden">
+                    <a href="#" data-target="bookComputer" class="section-link active">
+                        <span class="icon">
+                            <ion-icon name="laptop-outline"></ion-icon>
+                        </span>
+                        <span class="title">Book Computer</span>
+                    </a>
+                </li>
+                <li class="student-tabs hidden">
+                    <a href="#" data-target="reportIssueStudent" class="section-link">
+                        <span class="icon">
+                            <ion-icon name="alert-circle-outline"></ion-icon>
+                        </span>
+                        <span class="title">Report Issue</span>
+                    </a>
+                </li>
+                
+                <!-- Staff section tabs -->
+                <li class="nav-divider staff-tabs hidden"><hr></li>
+                <li class="staff-tabs hidden">
+                    <a href="#" data-target="reportIssueStaff" class="section-link">
+                        <span class="icon">
+                            <ion-icon name="alert-circle-outline"></ion-icon>
+                        </span>
+                        <span class="title">Report Issue</span>
+                    </a>
+                </li>
+                <li class="staff-tabs hidden">
+                    <a href="#" data-target="staffComputerBooking" class="section-link">
+                        <span class="icon">
+                            <ion-icon name="laptop-outline"></ion-icon>
+                        </span>
+                        <span class="title">Book Computer</span>
+                    </a>
+                </li>
+                <li class="nav-divider admin-tabs"><hr></li>
+                <li>
+                    <a href="thispc.html" class="nav-link">
+                        <span class="icon">
+                            <ion-icon name="desktop-outline"></ion-icon>
+                        </span>
+                        <span class="title">This PC</span>
+                    </a>
+                </li>
+                <li class="admin-tabs">
+                    <a href="#" data-target="addUser" class="section-link">
+                        <span class="icon">
+                            <ion-icon name="person-add-outline"></ion-icon>
+                        </span>
+                        <span class="title">Add User</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" id="profileBtn">
+                        <span class="icon">
+                            <ion-icon name="person-outline"></ion-icon>
+                        </span>
+                        <span class="title">Profile</span>
+                    </a>
+                </li> 
+                <li>
+                    <a href="#" id="themeToggle">
+                        <span class="icon">
+                            <ion-icon name="contrast-outline"></ion-icon>
+                        </span>
+                        <span class="title">Toggle Theme</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" id="logoutBtn">
+                        <span class="icon">
+                            <ion-icon name="log-out-outline"></ion-icon>
+                        </span>
+                        <span class="title">Logout</span>
+                    </a>
+                </li>
+            </ul>
     </div>
 
     <!-- Main Content -->
     <div class="main">
         <div class="topbar">
-            <div class="toggle">
-                <ion-icon name="menu-outline"></ion-icon>
-            </div>
-            <div class="user">
-                <span id="userRoleBadge" class="role-badge"></span>
+            <div class="search-container">
+                <input type="text" id="searchInput" placeholder="Search in table...">
+                <button id="searchBtn">
+                    <ion-icon name="search-outline"></ion-icon>
+                </button>
             </div>
         </div>
         <!-- Role-Specific Content -->
         <div class="details">
             <!-- Admin Content -->
             <div id="adminDashboard" class="hidden">
-                <!-- Add New User Form -->
+                <!-- Admin Section Contents -->
                 
-                <div class="card-container">
-                    <div class="card" id="allComputers">
+                <!-- Lab Computers Section -->
+                <div id="labComputers" class="section-content">
+                    <div class="card">
                         <h3>Lab Computers</h3>
                         <div class="table-container">
                             <table id="computersTable">
@@ -91,7 +183,11 @@
                             </table>
                         </div>
                     </div>
-                    <div class="card" id="registrationRequests">
+                </div>
+                
+                <!-- Registration Requests Section -->
+                <div id="registrationRequests" class="section-content hidden">
+                    <div class="card">
                         <h3>Pending Registrations</h3>
                         <table id="pendingComputersTable">
                             <thead>
@@ -106,26 +202,30 @@
                         </table>
                     </div>
                 </div>
-                <div class="card-container">
-                    <div class="card-container">
-                        <div class="card">
-                            <h3>Reported Issues</h3>
-                            <table id="issuesTable">
-                                <thead>
-                                    <tr>
-                                        <th>Issue ID</th>  <!-- New column -->
-                                        <th>Computer</th>
-                                        <th>Reported By</th>
-                                        <th>Date Reported</th>  <!-- New column -->
-                                        <th>Description</th>
-                                        <th>Status</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody></tbody>
-                            </table>
-                        </div>
+                
+                <!-- Reported Issues Section -->
+                <div id="reportedIssues" class="section-content hidden">
+                    <div class="card">
+                        <h3>Reported Issues</h3>
+                        <table id="issuesTable">
+                            <thead>
+                                <tr>
+                                    <th>Issue ID</th>
+                                    <th>Computer</th>
+                                    <th>Reported By</th>
+                                    <th>Date Reported</th>
+                                    <th>Description</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
                     </div>
+                </div>
+                
+                <!-- Add User Section -->
+                <div id="addUser" class="section-content hidden">
                     <div class="card">
                         <h3>Add New User</h3>
                         <form id="addUserForm">
@@ -160,60 +260,61 @@
                         </form>
                     </div>
                 </div>
-                <div class="card">
-                    <h3>Bookings</h3>
-                    <div class="table-container">
-                        <table id="bookingsTable">
-                            <thead>
-                                <tr>
-                                    <th>User</th>
-                                    <th>Computer</th>
-                                    <th>Start Time</th>
-                                    <th>End Time</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>From:</label>
-                            <input type="datetime-local" id="fromDate">
+                
+                <!-- Bookings Section -->
+                <div id="bookings" class="section-content hidden">
+                    <div class="card">
+                        <h3>Bookings</h3>
+                        <div class="table-container">
+                            <table id="bookingsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Booking ID</th>
+                                        <th>Computer</th>
+                                        <th>User</th>
+                                        <th>Date</th>
+                                        <th>Start Time</th>
+                                        <th>End Time</th>
+                                        <th>Purpose</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
                         </div>
-                        <div class="form-group">
-                            <label>To:</label>
-                            <input type="datetime-local" id="toDate">
-                        </div>
-                        <button id="downloadAttendance">Download Attendance</button>
                     </div>
                 </div>
-                <div class="card">
-                    <h3>Lab Booking</h3>
-                    <form id="labBookingFormAdmin">
-                        <div class="form-group">
-                            <label>Lab Name:</label>
-                            <input type="text" id="labNameAdmin" required>
-                        </div>
-                        <div class="form-row">
+                
+                <!-- Lab Booking Section -->
+                <div id="labBooking" class="section-content hidden">
+                    <div class="card">
+                        <h3>Lab Booking</h3>
+                        <form id="labBookingFormAdmin">
                             <div class="form-group">
-                                <label>Start Time:</label>
-                                <input type="datetime-local" id="labStartTime" required>
+                                <label>Lab Name:</label>
+                                <input type="text" id="labNameAdmin" required>
                             </div>
-                            <div class="form-group">
-                                <label>End Time:</label>
-                                <input type="datetime-local" id="labEndTime" required>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Start Time:</label>
+                                    <input type="datetime-local" id="labStartTime" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>End Time:</label>
+                                    <input type="datetime-local" id="labEndTime" required>
+                                </div>
                             </div>
-                        </div>
-                        <button type="submit">Book Lab</button>
-                    </form>
+                            <button type="submit">Book Lab</button>
+                        </form>
+                    </div>
                 </div>
             </div>
 
-
             <!-- Student Content -->
             <div id="studentDashboard" class="hidden">
-                <div class="card-container">
+                <!-- Book Computer Section -->
+                <div id="bookComputer" class="section-content">
                     <div class="card">
                         <h3>Book a Computer</h3>
                         <form id="studentBookingForm">
@@ -231,9 +332,17 @@
                                     <input type="datetime-local" id="studentEndTime" required>
                                 </div>
                             </div>
+                            <div class="form-group">
+                                <label>Purpose:</label>
+                                <textarea id="studentBookingPurpose" required></textarea>
+                            </div>
                             <button type="submit">Book Now</button>
                         </form>
                     </div>
+                </div>
+                
+                <!-- Report Issue Section for Students -->
+                <div id="reportIssueStudent" class="section-content hidden">
                     <div class="card">
                         <h3>Report Issue</h3>
                         <form id="issueFormStudent">
@@ -253,7 +362,8 @@
 
             <!-- Staff Content -->
             <div id="staffDashboard" class="hidden">
-                <div class="card-container">
+                <!-- Staff Lab Booking Section -->
+                <div id="staffLabBooking" class="section-content">
                     <div class="card">
                         <h3>Lab Booking</h3>
                         <form id="labBookingForm">
@@ -274,6 +384,10 @@
                             <button type="submit">Book Lab</button>
                         </form>
                     </div>
+                </div>
+                
+                <!-- Report Issue Section for Staff -->
+                <div id="reportIssueStaff" class="section-content hidden">
                     <div class="card">
                         <h3>Report Issue</h3>
                         <form id="issueFormStaff">
@@ -289,29 +403,32 @@
                         </form>
                     </div>
                 </div>
-                <div class="card">
-                    <h3>Book a Computer</h3>
-                    <form id="staffBookingForm">
-                        <div class="form-group">
-                            <label>Select Computer:</label>
-                            <select id="staffComputerSelect"></select>
-                        </div>
-                        <div class="form-row">
+                
+                <!-- Staff Computer Booking Section -->
+                <div id="staffComputerBooking" class="section-content hidden">
+                    <div class="card">
+                        <h3>Book a Computer</h3>
+                        <form id="staffBookingForm">
                             <div class="form-group">
-                                <label>Start Time:</label>
-                                <input type="datetime-local" id="studentStartTime" required>
+                                <label>Select Computer:</label>
+                                <select id="staffComputerSelect"></select>
                             </div>
-                            <div class="form-group">
-                                <label>End Time:</label>
-                                <input type="datetime-local" id="studentEndTime" required>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Start Time:</label>
+                                    <input type="datetime-local" id="staffStartTime" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>End Time:</label>
+                                    <input type="datetime-local" id="staffEndTime" required>
+                                </div>
                             </div>
-                        </div>
-                        <button type="submit">Book Now</button>
-                    </form>
+                            <button type="submit">Book Now</button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
-        <!-- Cards -->
         <div class="cardBox">
             <!-- Real-Time Status Card -->
             <div class="card">
@@ -341,5 +458,98 @@
     <script src="js/dashboard.js"></script>
     <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+    
+    <script>
+        // Navigation toggle and section handling
+        document.addEventListener('DOMContentLoaded', function() {
+            const navigation = document.querySelector('.navigation');
+            const main = document.querySelector('.main');
+            const toggleBtn = document.querySelector('#sidebarToggle');
+            
+            // Toggle sidebar
+            toggleBtn.addEventListener('click', function() {
+                navigation.classList.toggle('collapsed');
+                main.classList.toggle('expanded');
+            });
+            
+            // Section links functionality (new navigation links)
+            const sectionLinks = document.querySelectorAll('.section-link');
+            
+            sectionLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Remove active class from all links
+                    sectionLinks.forEach(l => l.classList.remove('active'));
+                    
+                    // Add active class to clicked link
+                    this.classList.add('active');
+                    
+                    // Hide all section content
+                    const allSections = document.querySelectorAll('.section-content');
+                    allSections.forEach(section => section.classList.add('hidden'));
+                    
+                    // Show target section
+                    const targetId = this.getAttribute('data-target');
+                    document.getElementById(targetId).classList.remove('hidden');
+                });
+            });
+            
+            // Table search functionality
+            const searchInput = document.getElementById('searchInput');
+            const searchBtn = document.getElementById('searchBtn');
+            
+            function performSearch() {
+                const searchTerm = searchInput.value.toLowerCase();
+                const visibleSection = document.querySelector('.section-content:not(.hidden)');
+                
+                // If there's a visible section with a table
+                if (visibleSection) {
+                    const table = visibleSection.querySelector('table');
+                    if (table) {
+                        const rows = table.querySelectorAll('tbody tr');
+                        
+                        rows.forEach(row => {
+                            const text = row.textContent.toLowerCase();
+                            if (searchTerm === '' || text.includes(searchTerm)) {
+                                row.style.display = '';
+                            } else {
+                                row.style.display = 'none';
+                            }
+                        });
+                    }
+                }
+            }
+            
+            searchBtn.addEventListener('click', performSearch);
+            searchInput.addEventListener('keyup', function(e) {
+                if (e.key === 'Enter') {
+                    performSearch();
+                }
+            });
+            
+            // Show appropriate section tabs based on user role
+            const userRole = localStorage.getItem('role');
+            if (userRole) {
+                document.querySelectorAll('.admin-tabs, .student-tabs, .staff-tabs').forEach(element => {
+                    element.classList.add('hidden');
+                });
+                
+                if (userRole === 'admin') {
+                    document.querySelectorAll('.admin-tabs').forEach(element => {
+                        element.classList.remove('hidden');
+                    });
+                } else if (userRole === 'student') {
+                    document.querySelectorAll('.student-tabs').forEach(element => {
+                        element.classList.remove('hidden');
+                    });
+                } else if (userRole === 'staff') {
+                    document.querySelectorAll('.staff-tabs').forEach(element => {
+                        element.classList.remove('hidden');
+                    });
+                }
+            }
+        });
+    </script>
 </body>
 </html>

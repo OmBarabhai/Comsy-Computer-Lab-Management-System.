@@ -670,7 +670,7 @@ async function loadAvailableComputers() {
         
         availableComputers.forEach(computer => {
             select.innerHTML += `
-                <option value="${computer._id}">
+                <option value="${computer.id}">
                     ${computer.name} (${computer.specs.cpu}, ${computer.specs.ram}, ${computer.specs.storage})
                 </option>
             `;
@@ -690,10 +690,15 @@ document.getElementById('studentBookingForm').addEventListener('submit', async (
     const endTime = document.getElementById('studentEndTime').value;
     const purpose = document.getElementById('studentBookingPurpose').value;
 
+    if (!computerId || !startTime || !endTime || !purpose) {
+        alert('Please fill all fields.');
+        return;
+    }
+
     const bookingData = {
         computer: computerId,
-        startTime,
-        endTime,
+        startTime: startTime, // Plain date string
+        endTime: endTime, // Plain date string
         purpose
     };
 
@@ -715,7 +720,7 @@ document.getElementById('studentBookingForm').addEventListener('submit', async (
 
         alert('Computer booked successfully!');
         e.target.reset();
-        // Refresh the available computers list
+        loadAvailableComputers(); // Refresh the available computers list
     } catch (error) {
         console.error('Error booking computer:', error);
         alert(`Error: ${error.message}`);

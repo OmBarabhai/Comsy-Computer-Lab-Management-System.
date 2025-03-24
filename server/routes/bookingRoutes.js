@@ -1,3 +1,4 @@
+import mongoose from 'mongoose'; // Add this line
 import express from 'express';
 import Booking from '../models/Booking.js';
 import Computer from '../models/Computer.js'; // Import Computer model
@@ -9,6 +10,9 @@ const router = express.Router();
 router.post('/', authenticate, async (req, res) => {
     try {
         const { computer, startTime, endTime, purpose } = req.body;
+
+        // Debugging: Log incoming data
+        console.log('Request Body:', req.body);
 
         // Validate required fields
         if (!computer || !startTime || !endTime || !purpose) {
@@ -24,7 +28,7 @@ router.post('/', authenticate, async (req, res) => {
         const computerDetails = await Computer.findById(computer);
         console.log('Computer Details:', computerDetails); // Debugging log
 
-        if (!computerDetails || computerDetails.status !== 'approved' || computerDetails.operationalStatus !== 'available') {
+        if (!computerDetails || computerDetails.status !== 'approved') {
             return res.status(400).json({ message: 'Computer is not available for booking.' });
         }
 
@@ -53,8 +57,8 @@ router.post('/', authenticate, async (req, res) => {
         const booking = new Booking({
             user: req.user.userId,
             computer: computer,
-            startTime: startTime, // Use plain date string
-            endTime: endTime, // Use plain date string
+            startTime: start,
+            endTime: end,
             purpose,
             status: 'upcoming'
         });
@@ -67,7 +71,6 @@ router.post('/', authenticate, async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 });
-
 // Add middleware to update booking statuses
 router.use(async (req, res, next) => {
     try {

@@ -19,6 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeTheme();
     setupEventListeners();
     loadRoleSpecificContent(role);
+    checkComputerRegistration();
 
     async function verifyToken(token) {
         try {
@@ -33,6 +34,93 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 });
+
+async function checkComputerRegistration() {
+    const registerBtn = document.getElementById('registerComputerBtn');
+    const ipDisplay = document.getElementById('detectedIp');
+    
+    try {
+        // Get client IP
+        const clientIp = await getClientIp();
+        ipDisplay.textContent = `Checking: ${clientIp}`;
+        
+        // Fetch all computers
+        const response = await fetch('/api/computers', {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+
+        if (!response.ok) throw new Error('Failed to fetch computers');
+        
+        const computers = await response.json();
+        
+        // Find computer with matching IP
+        const matchingComputer = computers.find(computer => computer.ipAddress === clientIp);
+        
+        if (matchingComputer) {
+            if (matchingComputer.status === 'approved') {
+                // Computer is registered and approved
+                registerBtn.textContent = matchingComputer.name;
+                registerBtn.disabled = true;
+                registerBtn.style.cursor = 'default';
+                registerBtn.style.opacity = '0.7';
+                ipDisplay.textContent = `Status: Approved (${clientIp})`;
+                ipDisplay.style.color = 'var(--success)';
+            } else {
+                // Computer is registered but pending approval
+                registerBtn.textContent = 'Registration Pending';
+                registerBtn.disabled = true;
+                registerBtn.style.cursor = 'not-allowed';
+                ipDisplay.textContent = `Status: Pending Approval (${clientIp})`;
+                ipDisplay.style.color = 'var(--warning)';
+            }
+        } else {
+            // Computer not registered
+            registerBtn.textContent = 'Register This PC';
+            registerBtn.disabled = false;
+            registerBtn.style.cursor = 'pointer';
+            registerBtn.style.opacity = '1';
+            ipDisplay.textContent = `This PC (${clientIp}) is not registered`;
+            ipDisplay.style.color = 'var(--text)';
+            
+            // Add click handler if not already added
+            registerBtn.onclick = () => {
+                window.location.href = '/register-computer.html';
+            };
+        }
+    } catch (error) {
+        console.error('Registration check error:', error);
+        ipDisplay.textContent = 'Error checking registration status';
+        ipDisplay.style.color = 'var(--danger)';
+        
+        // Fallback - enable registration button
+        registerBtn.textContent = 'Register This PC';
+        registerBtn.disabled = false;
+        registerBtn.onclick = () => {
+            window.location.href = '/register-computer.html';
+        };
+    }
+}
+
+async function getClientIp() {
+    try {
+        // Try public IP first
+        const response = await fetch('https://api.ipify.org?format=json');
+        const data = await response.json();
+        return data.ip;
+    } catch (error) {
+        console.log('Could not get public IP:', error);
+        
+        // Fallback for local development
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            return '127.0.0.1';
+        }
+        
+        // Final fallback
+        return 'unknown-ip';
+    }
+}
 document.getElementById('togglePasswordAddUser').addEventListener('click', function () {
     const passwordInput = document.getElementById('userPassword');
     const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
@@ -79,7 +167,7 @@ async function fetchAndSendSpeed(ws) {
     }
 
     // Fetch speed every 5 seconds
-    setTimeout(() => fetchAndSendSpeed(ws), 1000);
+    setTimeout(() => fetchAndSendSpeed(ws), 5000);
 }
 
 // Function to fetch internet speed

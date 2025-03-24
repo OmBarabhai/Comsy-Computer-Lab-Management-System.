@@ -14,7 +14,9 @@
             <div class="logo">
                 <h1>Comsy</h1>
             </div>
-            
+            <div class="toggle-btn" id="sidebarToggle">
+                <ion-icon name="menu-outline"></ion-icon>
+            </div>
         </div>
         <div class="user-info">
             <span id="userRoleBadge" class="role-badge"></span>
@@ -154,13 +156,19 @@
     <!-- Main Content -->
     <div class="main">
         <div class="topbar">
-            <div class="toggle-btn" id="sidebarToggle">
-                <ion-icon name="menu-outline"></ion-icon>
-            </div>
             <div class="search-container">
                 <input type="text" id="searchInput" placeholder="Search in table...">
                 <button id="searchBtn">
                     <ion-icon name="search-outline"></ion-icon>
+                </button>
+            </div>            
+            <!-- In the topbar div, modify the registration-section -->
+            <div class="registration-section">
+                <button id="registerComputerBtn" class="register-btn">
+                    Register This PC
+                    <div id="detectedIp" style="display: inline-block; margin-right: 10px; font-size: 0.4rem;">
+                        Loading computer status...
+                    </div>
                 </button>
             </div>
         </div>
@@ -503,6 +511,7 @@
 
     <!-- Scripts -->
     <script src="js/dashboard.js"></script>
+    <script src="js/computer-registration.js"></script>
     <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
     
@@ -531,7 +540,11 @@
                 });
             });
         
-            
+            // Toggle sidebar
+            toggleBtn.addEventListener('click', function() {
+                navigation.classList.toggle('collapsed');
+                main.classList.toggle('expanded');
+            });    
             // Table search functionality
             const searchInput = document.getElementById('searchInput');
             const searchBtn = document.getElementById('searchBtn');

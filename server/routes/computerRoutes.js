@@ -88,7 +88,6 @@ router.get('/available', authenticate, async (req, res) => {
     }
 });
 
-// Approve computer (updated)
 // Approval endpoint
 router.patch('/:id/approve', authenticate, authorize(['admin']), async (req, res) => {
     try {

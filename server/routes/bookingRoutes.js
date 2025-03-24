@@ -3,6 +3,7 @@ import express from 'express';
 import Booking from '../models/Booking.js';
 import Computer from '../models/Computer.js'; // Import Computer model
 import { authenticate } from '../middleware/authMiddleware.js';
+import { generateExcel, generatePDF } from '../utils/exportUtils.js'; 
 
 const router = express.Router();
 
@@ -152,13 +153,81 @@ router.get('/attendance', authenticate, async (req, res) => {
     try {
         const { from, to } = req.query;
 
+        // Validate date range
+        if (!from || !to) {
+            return res.status(400).json({ message: 'Please provide a valid date range.' });
+        }
+
+        // Fetch bookings within the date range
         const bookings = await Booking.find({
             startTime: { $gte: new Date(from) },
             endTime: { $lte: new Date(to) }
-        }).populate('user', 'username').populate('computer', 'name');
+        })
+            .populate('user', 'username') // Populate user details
+            .populate('computer', 'name'); // Populate computer details
 
-        res.json(bookings); // For now, return JSON
+        // Return JSON data for frontend display
+        res.json(bookings);
     } catch (error) {
+        console.error('Error fetching attendance:', error);
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// Download attendance as Excel
+router.get('/attendance/excel', authenticate, async (req, res) => {
+    try {
+        const { from, to } = req.query;
+
+        // Validate date range
+        if (!from || !to) {
+            return res.status(400).json({ message: 'Please provide a valid date range.' });
+        }
+
+        // Fetch bookings within the date range
+        const bookings = await Booking.find({
+            startTime: { $gte: new Date(from) },
+            endTime: { $lte: new Date(to) }
+        })
+            .populate('user', 'username') // Populate user details
+            .populate('computer', 'name'); // Populate computer details
+
+        // Generate Excel file
+        const filePath = await generateExcel(bookings);
+
+        // Send the file as a download
+        res.download(filePath);
+    } catch (error) {
+        console.error('Error generating Excel:', error);
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// Download attendance as PDF
+router.get('/attendance/pdf', authenticate, async (req, res) => {
+    try {
+        const { from, to } = req.query;
+
+        // Validate date range
+        if (!from || !to) {
+            return res.status(400).json({ message: 'Please provide a valid date range.' });
+        }
+
+        // Fetch bookings within the date range
+        const bookings = await Booking.find({
+            startTime: { $gte: new Date(from) },
+            endTime: { $lte: new Date(to) }
+        })
+            .populate('user', 'username') // Populate user details
+            .populate('computer', 'name'); // Populate computer details
+
+        // Generate PDF file
+        const filePath = await generatePDF(bookings);
+
+        // Send the file as a download
+        res.download(filePath);
+    } catch (error) {
+        console.error('Error generating PDF:', error);
         res.status(500).json({ message: error.message });
     }
 });

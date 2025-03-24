@@ -295,7 +295,7 @@ async function loadAllComputers() {
                     </td>
                     <td>${computer.ipAddress}</td>
                     <td>
-                        <button class="btn-edit">Edit</button>
+                        <button class="btn-edit">See Details</button>
                         <button class="btn-delete">Delete</button>
                     </td>
                 </tr>
@@ -795,3 +795,80 @@ async function loadBookings() {
         alert(`Error: ${error.message}`);
     }
 }
+
+// View Attendance
+document.getElementById('attendanceForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const fromDate = document.getElementById('fromDate').value;
+    const toDate = document.getElementById('toDate').value;
+
+    if (!fromDate || !toDate) {
+        alert('Please select a date range.');
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/bookings/attendance?from=${fromDate}&to=${toDate}`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || 'Failed to fetch attendance');
+        }
+
+        // Populate the table
+        const tbody = document.querySelector('#attendanceTable tbody');
+        tbody.innerHTML = '';
+
+        data.forEach(booking => {
+            const startDate = new Date(booking.startTime);
+            const endDate = new Date(booking.endTime);
+
+            tbody.innerHTML += `
+                <tr>
+                    <td>${booking._id}</td>
+                    <td>${booking.computer?.name || 'N/A'}</td>
+                    <td>${booking.user?.username || 'Unknown'}</td>
+                    <td>${startDate.toLocaleString()}</td>
+                    <td>${endDate.toLocaleString()}</td>
+                    <td>${booking.purpose}</td>
+                    <td>${booking.status}</td>
+                </tr>
+            `;
+        });
+    } catch (error) {
+        console.error('Error fetching attendance:', error);
+        alert(`Error: ${error.message}`);
+    }
+});
+
+// Download Excel
+document.getElementById('downloadExcel').addEventListener('click', async () => {
+    const fromDate = document.getElementById('fromDate').value;
+    const toDate = document.getElementById('toDate').value;
+
+    if (!fromDate || !toDate) {
+        alert('Please select a date range.');
+        return;
+    }
+
+    window.open(`/api/bookings/attendance/excel?from=${fromDate}&to=${toDate}`, '_blank');
+});
+
+// Download PDF
+document.getElementById('downloadPDF').addEventListener('click', async () => {
+    const fromDate = document.getElementById('fromDate').value;
+    const toDate = document.getElementById('toDate').value;
+
+    if (!fromDate || !toDate) {
+        alert('Please select a date range.');
+        return;
+    }
+
+    window.open(`/api/bookings/attendance/pdf?from=${fromDate}&to=${toDate}`, '_blank');
+});

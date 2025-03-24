@@ -72,6 +72,14 @@
                         <span class="title">Book Computer</span>
                     </a>
                 </li>
+                <li class="admin-tabs">
+                    <a href="#" data-target="attendance" class="section-link">
+                        <span class="icon">
+                            <ion-icon name="document-text-outline"></ion-icon>
+                        </span>
+                        <span class="title">Attendance</span>
+                    </a>
+                </li>
                 <li class="student-tabs hidden">
                     <a href="#" data-target="reportIssueStudent" class="section-link">
                         <span class="icon">
@@ -286,6 +294,44 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Attendance Section -->
+                <div id="attendance" class="section-content hidden">
+                    <div class="card">
+                        <h3>Attendance</h3>
+                        <form id="attendanceForm">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>From:</label>
+                                    <input type="datetime-local" id="fromDate" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>To:</label>
+                                    <input type="datetime-local" id="toDate" required>
+                                </div>
+                            </div>
+                            <button type="submit">View Attendance</button>
+                            <button type="button" id="downloadExcel">Download Excel</button>
+                            <button type="button" id="downloadPDF">Download PDF</button>
+                        </form>
+                        <div class="table-container">
+                            <table id="attendanceTable">
+                                <thead>
+                                    <tr>
+                                        <th>Booking ID</th>
+                                        <th>Computer</th>
+                                        <th>User</th>
+                                        <th>Start Time</th>
+                                        <th>End Time</th>
+                                        <th>Purpose</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
                 
                 <!-- Lab Booking Section -->
                 <div id="labBooking" class="section-content hidden">
@@ -463,38 +509,28 @@
     <script>
         // Navigation toggle and section handling
         document.addEventListener('DOMContentLoaded', function() {
-            const navigation = document.querySelector('.navigation');
-            const main = document.querySelector('.main');
-            const toggleBtn = document.querySelector('#sidebarToggle');
-            
-            // Toggle sidebar
-            toggleBtn.addEventListener('click', function() {
-                navigation.classList.toggle('collapsed');
-                main.classList.toggle('expanded');
-            });
-            
-            // Section links functionality (new navigation links)
             const sectionLinks = document.querySelectorAll('.section-link');
-            
+
             sectionLinks.forEach(link => {
                 link.addEventListener('click', function(e) {
                     e.preventDefault();
-                    
+
                     // Remove active class from all links
                     sectionLinks.forEach(l => l.classList.remove('active'));
-                    
+
                     // Add active class to clicked link
                     this.classList.add('active');
-                    
+
                     // Hide all section content
                     const allSections = document.querySelectorAll('.section-content');
                     allSections.forEach(section => section.classList.add('hidden'));
-                    
+
                     // Show target section
                     const targetId = this.getAttribute('data-target');
                     document.getElementById(targetId).classList.remove('hidden');
                 });
             });
+        
             
             // Table search functionality
             const searchInput = document.getElementById('searchInput');

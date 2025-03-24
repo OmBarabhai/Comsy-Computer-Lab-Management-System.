@@ -19,6 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeTheme();
     setupEventListeners();
     loadRoleSpecificContent(role);
+    checkComputerRegistration();
 
     async function verifyToken(token) {
         try {
@@ -33,6 +34,93 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 });
+
+async function checkComputerRegistration() {
+    const registerBtn = document.getElementById('registerComputerBtn');
+    const ipDisplay = document.getElementById('detectedIp');
+    
+    try {
+        // Get client IP
+        const clientIp = await getClientIp();
+        ipDisplay.textContent = `Checking: ${clientIp}`;
+        
+        // Fetch all computers
+        const response = await fetch('/api/computers', {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+
+        if (!response.ok) throw new Error('Failed to fetch computers');
+        
+        const computers = await response.json();
+        
+        // Find computer with matching IP
+        const matchingComputer = computers.find(computer => computer.ipAddress === clientIp);
+        
+        if (matchingComputer) {
+            if (matchingComputer.status === 'approved') {
+                // Computer is registered and approved
+                registerBtn.textContent = matchingComputer.name;
+                registerBtn.disabled = true;
+                registerBtn.style.cursor = 'default';
+                registerBtn.style.opacity = '0.7';
+                ipDisplay.textContent = `Status: Approved (${clientIp})`;
+                ipDisplay.style.color = 'var(--success)';
+            } else {
+                // Computer is registered but pending approval
+                registerBtn.textContent = 'Registration Pending';
+                registerBtn.disabled = true;
+                registerBtn.style.cursor = 'not-allowed';
+                ipDisplay.textContent = `Status: Pending Approval (${clientIp})`;
+                ipDisplay.style.color = 'var(--warning)';
+            }
+        } else {
+            // Computer not registered
+            registerBtn.textContent = 'Register This PC';
+            registerBtn.disabled = false;
+            registerBtn.style.cursor = 'pointer';
+            registerBtn.style.opacity = '1';
+            ipDisplay.textContent = `This PC (${clientIp}) is not registered`;
+            ipDisplay.style.color = 'var(--text)';
+            
+            // Add click handler if not already added
+            registerBtn.onclick = () => {
+                window.location.href = '/register-computer.html';
+            };
+        }
+    } catch (error) {
+        console.error('Registration check error:', error);
+        ipDisplay.textContent = 'Error checking registration status';
+        ipDisplay.style.color = 'var(--danger)';
+        
+        // Fallback - enable registration button
+        registerBtn.textContent = 'Register This PC';
+        registerBtn.disabled = false;
+        registerBtn.onclick = () => {
+            window.location.href = '/register-computer.html';
+        };
+    }
+}
+
+async function getClientIp() {
+    try {
+        // Try public IP first
+        const response = await fetch('https://api.ipify.org?format=json');
+        const data = await response.json();
+        return data.ip;
+    } catch (error) {
+        console.log('Could not get public IP:', error);
+        
+        // Fallback for local development
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            return '127.0.0.1';
+        }
+        
+        // Final fallback
+        return 'unknown-ip';
+    }
+}
 document.getElementById('togglePasswordAddUser').addEventListener('click', function () {
     const passwordInput = document.getElementById('userPassword');
     const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
@@ -79,7 +167,7 @@ async function fetchAndSendSpeed(ws) {
     }
 
     // Fetch speed every 5 seconds
-    setTimeout(() => fetchAndSendSpeed(ws), 1000);
+    setTimeout(() => fetchAndSendSpeed(ws), 5000);
 }
 
 // Function to fetch internet speed
@@ -295,7 +383,7 @@ async function loadAllComputers() {
                     </td>
                     <td>${computer.ipAddress}</td>
                     <td>
-                        <button class="btn-edit">Edit</button>
+                        <button class="btn-edit">See Details</button>
                         <button class="btn-delete">Delete</button>
                     </td>
                 </tr>
@@ -670,7 +758,7 @@ async function loadAvailableComputers() {
         
         availableComputers.forEach(computer => {
             select.innerHTML += `
-                <option value="${computer._id}">
+                <option value="${computer.id}">
                     ${computer.name} (${computer.specs.cpu}, ${computer.specs.ram}, ${computer.specs.storage})
                 </option>
             `;
@@ -690,10 +778,15 @@ document.getElementById('studentBookingForm').addEventListener('submit', async (
     const endTime = document.getElementById('studentEndTime').value;
     const purpose = document.getElementById('studentBookingPurpose').value;
 
+    if (!computerId || !startTime || !endTime || !purpose) {
+        alert('Please fill all fields.');
+        return;
+    }
+
     const bookingData = {
         computer: computerId,
-        startTime,
-        endTime,
+        startTime: startTime, // Plain date string
+        endTime: endTime, // Plain date string
         purpose
     };
 
@@ -715,7 +808,7 @@ document.getElementById('studentBookingForm').addEventListener('submit', async (
 
         alert('Computer booked successfully!');
         e.target.reset();
-        // Refresh the available computers list
+        loadAvailableComputers(); // Refresh the available computers list
     } catch (error) {
         console.error('Error booking computer:', error);
         alert(`Error: ${error.message}`);
@@ -790,3 +883,80 @@ async function loadBookings() {
         alert(`Error: ${error.message}`);
     }
 }
+
+// View Attendance
+document.getElementById('attendanceForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const fromDate = document.getElementById('fromDate').value;
+    const toDate = document.getElementById('toDate').value;
+
+    if (!fromDate || !toDate) {
+        alert('Please select a date range.');
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/bookings/attendance?from=${fromDate}&to=${toDate}`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || 'Failed to fetch attendance');
+        }
+
+        // Populate the table
+        const tbody = document.querySelector('#attendanceTable tbody');
+        tbody.innerHTML = '';
+
+        data.forEach(booking => {
+            const startDate = new Date(booking.startTime);
+            const endDate = new Date(booking.endTime);
+
+            tbody.innerHTML += `
+                <tr>
+                    <td>${booking._id}</td>
+                    <td>${booking.computer?.name || 'N/A'}</td>
+                    <td>${booking.user?.username || 'Unknown'}</td>
+                    <td>${startDate.toLocaleString()}</td>
+                    <td>${endDate.toLocaleString()}</td>
+                    <td>${booking.purpose}</td>
+                    <td>${booking.status}</td>
+                </tr>
+            `;
+        });
+    } catch (error) {
+        console.error('Error fetching attendance:', error);
+        alert(`Error: ${error.message}`);
+    }
+});
+
+// Download Excel
+document.getElementById('downloadExcel').addEventListener('click', async () => {
+    const fromDate = document.getElementById('fromDate').value;
+    const toDate = document.getElementById('toDate').value;
+
+    if (!fromDate || !toDate) {
+        alert('Please select a date range.');
+        return;
+    }
+
+    window.open(`/api/bookings/attendance/excel?from=${fromDate}&to=${toDate}`, '_blank');
+});
+
+// Download PDF
+document.getElementById('downloadPDF').addEventListener('click', async () => {
+    const fromDate = document.getElementById('fromDate').value;
+    const toDate = document.getElementById('toDate').value;
+
+    if (!fromDate || !toDate) {
+        alert('Please select a date range.');
+        return;
+    }
+
+    window.open(`/api/bookings/attendance/pdf?from=${fromDate}&to=${toDate}`, '_blank');
+});

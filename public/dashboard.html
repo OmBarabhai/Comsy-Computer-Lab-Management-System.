@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lab Management Dashboard</title>
+    <title>Dashboard Comsy</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="icon" type="image/png" href="images/logo1.png">
 </head>
@@ -12,7 +12,7 @@
     <div class="navigation">
         <div class="nav-header">
             <div class="logo">
-                <h2>Lab Management</h2>
+                <h1>Comsy</h1>
             </div>
             <div class="toggle-btn" id="sidebarToggle">
                 <ion-icon name="menu-outline"></ion-icon>
@@ -72,6 +72,14 @@
                             <ion-icon name="laptop-outline"></ion-icon>
                         </span>
                         <span class="title">Book Computer</span>
+                    </a>
+                </li>
+                <li class="admin-tabs">
+                    <a href="#" data-target="attendance" class="section-link">
+                        <span class="icon">
+                            <ion-icon name="document-text-outline"></ion-icon>
+                        </span>
+                        <span class="title">Attendance</span>
                     </a>
                 </li>
                 <li class="student-tabs hidden">
@@ -152,6 +160,15 @@
                 <input type="text" id="searchInput" placeholder="Search in table...">
                 <button id="searchBtn">
                     <ion-icon name="search-outline"></ion-icon>
+                </button>
+            </div>            
+            <!-- In the topbar div, modify the registration-section -->
+            <div class="registration-section">
+                <button id="registerComputerBtn" class="register-btn">
+                    Register This PC
+                    <div id="detectedIp" style="display: inline-block; margin-right: 10px; font-size: 0.4rem;">
+                        Loading computer status...
+                    </div>
                 </button>
             </div>
         </div>
@@ -278,6 +295,44 @@
                                         <th>Purpose</th>
                                         <th>Status</th>
                                         <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Attendance Section -->
+                <div id="attendance" class="section-content hidden">
+                    <div class="card">
+                        <h3>Attendance</h3>
+                        <form id="attendanceForm">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>From:</label>
+                                    <input type="datetime-local" id="fromDate" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>To:</label>
+                                    <input type="datetime-local" id="toDate" required>
+                                </div>
+                            </div>
+                            <button type="submit">View Attendance</button>
+                            <button type="button" id="downloadExcel">Download Excel</button>
+                            <button type="button" id="downloadPDF">Download PDF</button>
+                        </form>
+                        <div class="table-container">
+                            <table id="attendanceTable">
+                                <thead>
+                                    <tr>
+                                        <th>Booking ID</th>
+                                        <th>Computer</th>
+                                        <th>User</th>
+                                        <th>Start Time</th>
+                                        <th>End Time</th>
+                                        <th>Purpose</th>
+                                        <th>Status</th>
                                     </tr>
                                 </thead>
                                 <tbody></tbody>
@@ -456,45 +511,40 @@
 
     <!-- Scripts -->
     <script src="js/dashboard.js"></script>
+    <script src="js/computer-registration.js"></script>
     <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
     
     <script>
         // Navigation toggle and section handling
         document.addEventListener('DOMContentLoaded', function() {
-            const navigation = document.querySelector('.navigation');
-            const main = document.querySelector('.main');
-            const toggleBtn = document.querySelector('#sidebarToggle');
-            
-            // Toggle sidebar
-            toggleBtn.addEventListener('click', function() {
-                navigation.classList.toggle('collapsed');
-                main.classList.toggle('expanded');
-            });
-            
-            // Section links functionality (new navigation links)
             const sectionLinks = document.querySelectorAll('.section-link');
-            
+
             sectionLinks.forEach(link => {
                 link.addEventListener('click', function(e) {
                     e.preventDefault();
-                    
+
                     // Remove active class from all links
                     sectionLinks.forEach(l => l.classList.remove('active'));
-                    
+
                     // Add active class to clicked link
                     this.classList.add('active');
-                    
+
                     // Hide all section content
                     const allSections = document.querySelectorAll('.section-content');
                     allSections.forEach(section => section.classList.add('hidden'));
-                    
+
                     // Show target section
                     const targetId = this.getAttribute('data-target');
                     document.getElementById(targetId).classList.remove('hidden');
                 });
             });
-            
+        
+            // Toggle sidebar
+            toggleBtn.addEventListener('click', function() {
+                navigation.classList.toggle('collapsed');
+                main.classList.toggle('expanded');
+            });    
             // Table search functionality
             const searchInput = document.getElementById('searchInput');
             const searchBtn = document.getElementById('searchBtn');

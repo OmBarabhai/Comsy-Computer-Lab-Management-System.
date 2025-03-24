@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 const computerSchema = new mongoose.Schema({
     name: { type: String, required: true },
-    ipAddress: { type: String, required: true },
+    ipAddress: { type: String, required: true, unique: true, index: true },
     specs: {
         cpu: { type: String, required: true },
         ram: { type: String, required: true },

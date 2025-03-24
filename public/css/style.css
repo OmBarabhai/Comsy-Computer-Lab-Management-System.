@@ -56,12 +56,11 @@ body.dark {
     padding: 15px;
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: space-evenly;
     border-bottom: 1px solid var(--border-color);
 }
 
-.navigation .logo h2 {
-    font-size: 1.2rem;
+.navigation .logo h1 {
     color: var(--primary-color);
     white-space: nowrap;
     overflow: hidden;
@@ -69,7 +68,7 @@ body.dark {
     transition: var(--transition);
 }
 
-.navigation.collapsed .logo h2 {
+.navigation.collapsed .logo h1 {
     display: none;
 }
 
@@ -80,10 +79,10 @@ body.dark {
 }
 
 .navigation .user-info {
-    padding: 1px;
+    padding: 5px;
     text-align: center;
     border-bottom: 1px solid var(--border-color);
-    margin-bottom: 15px;
+    margin-bottom: 1px;
 }
 
 .navigation .role-badge {
@@ -111,14 +110,13 @@ body.dark {
 
 .navigation ul {
     list-style: none;
-    padding: 10px 0;
+    padding: 1px 0;
     position: relative;
 }
 
 .navigation ul li {
     position: relative;
     width: 100%;
-    margin-bottom: 5px;
 }
 
 .navigation ul li a {
@@ -196,7 +194,7 @@ body.dark {
     align-items: center;
     margin-bottom: 30px;
     background-color: var(--card-bg);
-    padding: 15px;
+    padding: 2px;
     border-radius: 10px;
     box-shadow: var(--shadow);
 }
@@ -564,6 +562,44 @@ button:hover {
     border: 1px solid var(--border-color);
     background-color: var(--bg-color);
     color: var(--text-color);
+}
+
+/*Register computer */
+.register-computer-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px 12px;
+}
+
+.ip-display {
+    font-size: 0.8em;
+    margin-top: 4px;
+    color: #666;
+}
+
+.register-computer-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+#registerComputerBtn {
+    padding: 8px 16px;
+    background-color: var(--primary);
+    color: var(--text-color);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+#registerComputerBtn:disabled {
+    background-color: var(--border);
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+#registerComputerBtn:hover:not(:disabled) {
+    background-color: var(--hover);
 }
 
 /* Password Toggle Button */

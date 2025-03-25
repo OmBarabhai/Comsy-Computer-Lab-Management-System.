@@ -45,9 +45,13 @@ body.dark {
     overflow-y: auto;
     z-index: 1000;
     box-shadow: var(--shadow);
-    left: 0; /* Ensure the navigation starts from the left */
+    left: 0;
+    scrollbar-width: none;
+    -ms-overflow-style: none; 
 }
-
+.navigation::-webkit-scrollbar {
+    display: none; 
+}
 .navigation.collapsed {
     width: 70px; /* Slimmer width when collapsed */
 }
@@ -87,15 +91,19 @@ body.dark {
 
 .navigation .role-badge {
     padding: 8px 15px;
-    background-color: var(--primary-color);
-    color: white;
+    
+    color: var(--text-color);
     border-radius: 20px;
     font-size: 0.9rem;
     font-weight: 500;
     box-shadow: var(--shadow);
     display: inline-block;
     transition: var(--transition);
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
+
+
 
 .navigation.collapsed .role-badge {
     padding: 6px;
@@ -106,6 +114,14 @@ body.dark {
     display: flex;
     align-items: center;
     justify-content: center;
+    text-indent: -9999px; /* Hide text when collapsed */
+    overflow: hidden;
+}
+
+.navigation.collapsed .role-badge::after {
+    content: attr(data-initial);
+    text-indent: 0;
+    position: absolute;
 }
 
 .navigation ul {

@@ -518,33 +518,86 @@
     <script>
         // Navigation toggle and section handling
         document.addEventListener('DOMContentLoaded', function() {
+            // Get elements properly
+            const toggleBtn = document.getElementById('sidebarToggle');
+            const navigation = document.querySelector('.navigation');
+            const main = document.querySelector('.main');
             const sectionLinks = document.querySelectorAll('.section-link');
-
-            sectionLinks.forEach(link => {
-                link.addEventListener('click', function(e) {
-                    e.preventDefault();
-
-                    // Remove active class from all links
-                    sectionLinks.forEach(l => l.classList.remove('active'));
-
-                    // Add active class to clicked link
-                    this.classList.add('active');
-
-                    // Hide all section content
-                    const allSections = document.querySelectorAll('.section-content');
-                    allSections.forEach(section => section.classList.add('hidden'));
-
-                    // Show target section
-                    const targetId = this.getAttribute('data-target');
-                    document.getElementById(targetId).classList.remove('hidden');
-                });
-            });
-        
+            const userRoleBadge = document.getElementById('userRoleBadge');
+    
+            // Set user role badge with "Panel" text
+            const userRole = localStorage.getItem('role');
+            if (userRole) {
+                const roleText = userRole.charAt(0).toUpperCase() + userRole.slice(1) + ' Panel';
+                userRoleBadge.textContent = roleText;
+                
+                // Apply different styles based on role
+                userRoleBadge.className = 'role-badge ' + userRole;
+                
+                // Show appropriate dashboard
+                document.getElementById('adminDashboard').classList.add('hidden');
+                document.getElementById('studentDashboard').classList.add('hidden');
+                document.getElementById('staffDashboard').classList.add('hidden');
+                
+                if (userRole === 'admin') {
+                    document.getElementById('adminDashboard').classList.remove('hidden');
+                } else if (userRole === 'student') {
+                    document.getElementById('studentDashboard').classList.remove('hidden');
+                } else if (userRole === 'staff') {
+                    document.getElementById('staffDashboard').classList.remove('hidden');
+                }
+            }
+    
             // Toggle sidebar
             toggleBtn.addEventListener('click', function() {
                 navigation.classList.toggle('collapsed');
                 main.classList.toggle('expanded');
-            });    
+            });
+    
+            // Section link handling
+            sectionLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+    
+                    // Remove active class from all links
+                    sectionLinks.forEach(l => l.classList.remove('active'));
+    
+                    // Add active class to clicked link
+                    this.classList.add('active');
+    
+                    // Hide all section content
+                    const allSections = document.querySelectorAll('.section-content');
+                    allSections.forEach(section => section.classList.add('hidden'));
+    
+                    // Show target section
+                    const targetId = this.getAttribute('data-target');
+                    if (targetId) {
+                        document.getElementById(targetId)?.classList.remove('hidden');
+                    }
+                });
+            });
+    
+            // Show appropriate section tabs based on user role
+            if (userRole) {
+                document.querySelectorAll('.admin-tabs, .student-tabs, .staff-tabs').forEach(element => {
+                    element.classList.add('hidden');
+                });
+                
+                if (userRole === 'admin') {
+                    document.querySelectorAll('.admin-tabs').forEach(element => {
+                        element.classList.remove('hidden');
+                    });
+                } else if (userRole === 'student') {
+                    document.querySelectorAll('.student-tabs').forEach(element => {
+                        element.classList.remove('hidden');
+                    });
+                } else if (userRole === 'staff') {
+                    document.querySelectorAll('.staff-tabs').forEach(element => {
+                        element.classList.remove('hidden');
+                    });
+                }
+            }
+    
             // Table search functionality
             const searchInput = document.getElementById('searchInput');
             const searchBtn = document.getElementById('searchBtn');
@@ -553,7 +606,6 @@
                 const searchTerm = searchInput.value.toLowerCase();
                 const visibleSection = document.querySelector('.section-content:not(.hidden)');
                 
-                // If there's a visible section with a table
                 if (visibleSection) {
                     const table = visibleSection.querySelector('table');
                     if (table) {
@@ -577,28 +629,6 @@
                     performSearch();
                 }
             });
-            
-            // Show appropriate section tabs based on user role
-            const userRole = localStorage.getItem('role');
-            if (userRole) {
-                document.querySelectorAll('.admin-tabs, .student-tabs, .staff-tabs').forEach(element => {
-                    element.classList.add('hidden');
-                });
-                
-                if (userRole === 'admin') {
-                    document.querySelectorAll('.admin-tabs').forEach(element => {
-                        element.classList.remove('hidden');
-                    });
-                } else if (userRole === 'student') {
-                    document.querySelectorAll('.student-tabs').forEach(element => {
-                        element.classList.remove('hidden');
-                    });
-                } else if (userRole === 'staff') {
-                    document.querySelectorAll('.staff-tabs').forEach(element => {
-                        element.classList.remove('hidden');
-                    });
-                }
-            }
         });
     </script>
 </body>

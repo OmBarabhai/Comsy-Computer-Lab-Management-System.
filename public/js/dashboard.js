@@ -116,7 +116,7 @@ async function getClientIp() {
         if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
             return '127.0.0.1';
         }
-        
+
         // Final fallback
         return 'unknown-ip';
     }

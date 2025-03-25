@@ -183,7 +183,83 @@
             <!-- Admin Content -->
             <div id="adminDashboard" class="hidden">
                 <!-- Admin Section Contents -->
-                
+                <!-- Add this inside the adminDashboard div, at the top of the section-content divs -->
+                <!-- Replace the existing dashboardOverview section with this -->
+                <div id="dashboardOverview" class="section-content">
+                    <div class="dashboard-grid">
+                        <!-- Card 1: All Computers (span 2 columns and 2 rows) -->
+                        <div class="dashboard-card card1">
+                            <div class="card-content">
+                                <div class="numbers" id="totalComputers">0</div>
+                                <div class="cardName">All Computers</div>
+                                <div class="status-details">
+                                    <div><span class="status-indicator available"></span> <span id="availableComputers">0</span> Available</div>
+                                    <div><span class="status-indicator in-use"></span> <span id="inUseComputers">0</span> In Use</div>
+                                    <div><span class="status-indicator maintenance"></span> <span id="maintenanceComputers">0</span> Maintenance</div>
+                                </div>
+                            </div>
+                            <div class="iconBx">
+                                <ion-icon name="desktop-outline"></ion-icon>
+                            </div>
+                        </div>
+
+                        <!-- Card 2: Pending Computers (span 2 rows) -->
+                        <div class="dashboard-card card2">
+                            <div class="card-content">
+                                <div class="numbers" id="pendingComputers">0</div>
+                                <div class="cardName">Pending Approval</div>
+                                <div class="status-details">
+                                    <div><span class="approval-status pending"></span> Waiting for review</div>
+                                </div>
+                            </div>
+                            <div class="iconBx">
+                                <ion-icon name="time-outline"></ion-icon>
+                            </div>
+                        </div>
+
+                        <!-- Card 3: Reported Issues -->
+                        <div class="dashboard-card card3">
+                            <div class="card-content">
+                                <div class="numbers" id="totalIssues">0</div>
+                                <div class="cardName">Reported Issues</div>
+                                <div class="status-details">
+                                    <div><span class="status-indicator open"></span> <span id="openIssues">0</span> Open</div>
+                                    <div><span class="status-indicator resolved"></span> <span id="resolvedIssues">0</span> Resolved</div>
+                                </div>
+                            </div>
+                            <div class="iconBx">
+                                <ion-icon name="warning-outline"></ion-icon>
+                            </div>
+                        </div>
+
+                        <!-- Card 4: Bookings -->
+                        <div class="dashboard-card card4">
+                            <div class="card-content">
+                                <div class="numbers" id="totalBookings">0</div>
+                                <div class="cardName">Computer Bookings</div>
+                                <div class="status-details">
+                                    <div><span class="status-indicator upcoming"></span> <span id="upcomingBookings">0</span> Upcoming</div>
+                                    <div><span class="status-indicator ongoing"></span> <span id="ongoingBookings">0</span> Ongoing</div>
+                                    <div><span class="status-indicator completed"></span> <span id="completedBookings">0</span> Completed</div>
+                                </div>
+                            </div>
+                            <div class="iconBx">
+                                <ion-icon name="calendar-outline"></ion-icon>
+                            </div>
+                        </div>
+
+                        <!-- Card 5: Current Speed (moved from cardBox) -->
+                        <div class="dashboard-card card5">
+                            <div class="card-content">
+                                <div class="numbers"><span id="currentSpeed">0</span> Mbps</div>
+                                <div class="cardName">Network Speed</div>
+                            </div>
+                            <div class="iconBx">
+                                <ion-icon name="speedometer-outline"></ion-icon>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <!-- Lab Computers Section -->
                 <div id="labComputers" class="section-content">
                     <div class="card">

@@ -227,6 +227,12 @@ function setupEventListeners() {
     document.getElementById('labBookingFormAdmin').addEventListener('submit', bookLab);
     document.getElementById('staffBookingForm').addEventListener('submit', handleStaffBooking);
     document.getElementById('profileBtn').addEventListener('click', () => {window.location.href = '/profile.html';});
+    document.querySelector('[href="dashboard.html"]').addEventListener('click', (e) => {
+        e.preventDefault();
+        document.querySelectorAll('.section-content').forEach(el => el.classList.add('hidden'));
+        document.getElementById('dashboardOverview').classList.remove('hidden');
+        loadDashboardData();
+    });
 }
 
 function logout() {
@@ -240,31 +246,95 @@ function loadRoleSpecificContent(role) {
     // Hide all dashboards
     document.querySelectorAll('[id$="Dashboard"]').forEach(el => el.classList.add('hidden'));
     document.getElementById('adminView').classList.add('hidden');
-// Load necessary data
+    
+    // Load necessary data
     switch(role) {
         case 'admin':
             document.getElementById('adminView').classList.remove('hidden');
             document.getElementById('adminDashboard').classList.remove('hidden');
             
+            // Load dashboard overview by default
+            document.getElementById('dashboardOverview').classList.remove('hidden');
+            
+            // Load all data
+            loadDashboardData();
             loadRegistrationRequests();
             loadAllComputers();
             loadIssuesTable();
-            loadBookings(); 
-
+            loadBookings();
             break;
         case 'student':
             document.getElementById('studentDashboard').classList.remove('hidden');
-            loadAllComputers();
             loadAvailableComputers();
             break;
         case 'staff':
             document.getElementById('staffDashboard').classList.remove('hidden');
-            loadAllComputers();
             loadAvailableComputers();
             break;
     }
 }
 
+// Add this new function to fetch and update dashboard data
+async function loadDashboardData() {
+    try {
+        // Fetch computers data
+        const computersResponse = await fetch('/api/computers', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        const computers = await computersResponse.ok ? await computersResponse.json() : [];
+        
+        // Count computer statuses
+        const totalComputers = computers.length;
+        const availableComputers = computers.filter(c => c.operationalStatus === 'available').length;
+        const inUseComputers = computers.filter(c => c.operationalStatus === 'in-use').length;
+        const maintenanceComputers = computers.filter(c => c.operationalStatus === 'maintenance').length;
+        const pendingComputers = computers.filter(c => c.status === 'pending').length;
+        
+        // Update computer cards
+        document.getElementById('totalComputers').textContent = totalComputers;
+        document.getElementById('availableComputers').textContent = availableComputers;
+        document.getElementById('inUseComputers').textContent = inUseComputers;
+        document.getElementById('maintenanceComputers').textContent = maintenanceComputers;
+        document.getElementById('pendingComputers').textContent = pendingComputers;
+        
+        // Fetch issues data
+        const issuesResponse = await fetch('/api/issues', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        const issues = issuesResponse.ok ? await issuesResponse.json() : [];
+        
+        // Count issue statuses
+        const totalIssues = issues.length;
+        const openIssues = issues.filter(i => i.status === 'open').length;
+        const resolvedIssues = issues.filter(i => i.status === 'resolved').length;
+        
+        // Update issues card
+        document.getElementById('totalIssues').textContent = totalIssues;
+        document.getElementById('openIssues').textContent = openIssues;
+        document.getElementById('resolvedIssues').textContent = resolvedIssues;
+        
+        // Fetch bookings data
+        const bookingsResponse = await fetch('/api/bookings', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        const bookings = bookingsResponse.ok ? await bookingsResponse.json() : [];
+        
+        // Count booking statuses
+        const totalBookings = bookings.length;
+        const upcomingBookings = bookings.filter(b => b.status === 'upcoming').length;
+        const ongoingBookings = bookings.filter(b => b.status === 'ongoing').length;
+        const completedBookings = bookings.filter(b => b.status === 'completed').length;
+        
+        // Update bookings card
+        document.getElementById('totalBookings').textContent = totalBookings;
+        document.getElementById('upcomingBookings').textContent = upcomingBookings;
+        document.getElementById('ongoingBookings').textContent = ongoingBookings;
+        document.getElementById('completedBookings').textContent = completedBookings;
+        
+    } catch (error) {
+        console.error('Error loading dashboard data:', error);
+    }
+}
 // Admin Functions
 async function loadRegistrationRequests() {
     try {

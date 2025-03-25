@@ -814,6 +814,50 @@ document.getElementById('studentBookingForm').addEventListener('submit', async (
         alert(`Error: ${error.message}`);
     }
 });
+document.getElementById('staffBookingForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const computerId = document.getElementById('studentComputerSelect').value;
+    const startTime = document.getElementById('studentStartTime').value;
+    const endTime = document.getElementById('studentEndTime').value;
+    const purpose = document.getElementById('studentBookingPurpose').value;
+
+    if (!computerId || !startTime || !endTime || !purpose) {
+        alert('Please fill all fields.');
+        return;
+    }
+
+    const bookingData = {
+        computer: computerId,
+        startTime: startTime, // Plain date string
+        endTime: endTime, // Plain date string
+        purpose
+    };
+
+    try {
+        const response = await fetch('/api/bookings', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify(bookingData)
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || 'Failed to book computer');
+        }
+
+        alert('Computer booked successfully!');
+        e.target.reset();
+        loadAvailableComputers(); // Refresh the available computers list
+    } catch (error) {
+        console.error('Error booking computer:', error);
+        alert(`Error: ${error.message}`);
+    }
+});
 
 async function loadBookings() {
     try {
@@ -959,4 +1003,246 @@ document.getElementById('downloadPDF').addEventListener('click', async () => {
     }
 
     window.open(`/api/bookings/attendance/pdf?from=${fromDate}&to=${toDate}`, '_blank');
+});
+
+// Add these functions to your dashboard.js or in a script tag
+async function fetchIPAddress() {
+    try {
+        const response = await fetch('https://api.ipify.org?format=json');
+        const data = await response.json();
+        return data.ip;
+    } catch (error) {
+        console.error('Error fetching IP address:', error);
+        return null;
+    }
+}
+
+async function fetchComputerDetails(ip) {
+    try {
+        const response = await fetch(`/api/computers?ip=${ip}`);
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Error fetching computer details:', error);
+        return null;
+    }
+}
+
+async function fetchRealTimeSpecs() {
+    try {
+        const response = await fetch('http://localhost:3000/api/specs');
+        if (!response.ok) throw new Error('Failed to fetch specs');
+        const specs = await response.json();
+        return specs;
+    } catch (error) {
+        console.error('Error fetching real-time specs:', error);
+        return null;
+    }
+}
+
+async function updateSystemSpecs() {
+    const ip = await fetchIPAddress();
+    if (ip) {
+        document.getElementById('computer-name').textContent = ip;
+        const computerDetails = await fetchComputerDetails(ip);
+        const realTimeSpecs = await fetchRealTimeSpecs();
+
+        const specsToUpdate = {
+            'os': realTimeSpecs?.os || computerDetails?.os,
+            'processor': realTimeSpecs?.cpu || computerDetails?.processor,
+            'memory': realTimeSpecs?.ram || computerDetails?.memory,
+            'storage': realTimeSpecs?.storage?.map(disk => disk.size).join(', ') || computerDetails?.storage,
+            'graphics': computerDetails?.graphics,
+            'resolution': computerDetails?.resolution
+        };
+
+        Object.entries(specsToUpdate).forEach(([key, value]) => {
+            const element = document.getElementById(`${key}-value`);
+            const input = document.getElementById(`${key}-input`);
+            
+            if (value) {
+                element.textContent = value;
+                input.value = value;
+            } else {
+                element.textContent = '--';
+                addEditButton(key);
+            }
+        });
+    }
+}
+
+function addEditButton(specId) {
+    const specItem = document.getElementById(`${specId}-value`).closest('.spec-item');
+    const editHtml = `
+        <i class="fas fa-pencil-alt edit-icon" data-spec="${specId}"></i>
+        <i class="fas fa-save edit-icon" data-spec="${specId}" style="display: none"></i>
+    `;
+    specItem.insertAdjacentHTML('beforeend', editHtml);
+    
+    specItem.querySelector('.fa-pencil-alt').addEventListener('click', startEditing);
+    specItem.querySelector('.fa-save').addEventListener('click', saveEditing);
+}
+
+function startEditing(e) {
+    const specItem = e.target.closest('.spec-item');
+    const specId = e.target.dataset.spec;
+    
+    specItem.classList.add('editing');
+    e.target.style.display = 'none';
+    specItem.querySelector('.fa-save').style.display = 'block';
+}
+
+function saveEditing(e) {
+    const specItem = e.target.closest('.spec-item');
+    const specId = e.target.dataset.spec;
+    const input = document.getElementById(`${specId}-input`);
+    const valueElement = document.getElementById(`${specId}-value`);
+    
+    valueElement.textContent = input.value || '--';
+    specItem.classList.remove('editing');
+    e.target.style.display = 'none';
+    specItem.querySelector('.fa-pencil-alt').style.display = 'block';
+}
+
+function simulateSpeedTest() {
+    const testSpeedBtn = document.getElementById("test-speed-btn");
+    testSpeedBtn.disabled = true;
+    testSpeedBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Testing...';
+
+    document.getElementById("download-speed").textContent = "0.00";
+    document.getElementById("upload-speed").textContent = "0.00";
+    document.getElementById("ping-value").textContent = "0";
+    document.getElementById("download-progress").style.width = "0%";
+    document.getElementById("upload-progress").style.width = "0%";
+    document.getElementById("ping-progress").style.width = "0%";
+
+    setTimeout(() => {
+        const downloadSpeed = (Math.random() * 100 + 50).toFixed(2);
+        document.getElementById("download-speed").textContent = downloadSpeed;
+        document.getElementById("download-progress").style.width = `${Math.min((downloadSpeed / 200) * 100, 100)}%`;
+
+        setTimeout(() => {
+            const uploadSpeed = (Math.random() * 30 + 10).toFixed(2);
+            document.getElementById("upload-speed").textContent = uploadSpeed;
+            document.getElementById("upload-progress").style.width = `${Math.min((uploadSpeed / 50) * 100, 100)}%`;
+
+            setTimeout(() => {
+                const ping = Math.floor(Math.random() * 30 + 5);
+                document.getElementById("ping-value").textContent = ping;
+                document.getElementById("ping-progress").style.width = `${Math.min(100 - (ping / 100) * 100, 100)}%`;
+
+                testSpeedBtn.disabled = false;
+                testSpeedBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Test Speed';
+            }, 500);
+        }, 1000);
+    }, 1500);
+}
+
+// Initialize when This PC section is shown
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('test-speed-btn')?.addEventListener('click', simulateSpeedTest);
+    
+    // Update specs when This PC section is shown
+    document.querySelector('[data-target="thisPC"]')?.addEventListener('click', updateSystemSpecs);
+});
+
+// Profile Functions
+async function loadProfileData() {
+    try {
+        const response = await fetch('/api/users/profile', {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+
+        if (!response.ok) throw new Error('Failed to load profile');
+        
+        const userData = await response.json();
+        document.getElementById('profileName').value = userData.name;
+        document.getElementById('profileEmail').value = userData.email;
+    } catch (error) {
+        showProfileMessage(`Error: ${error.message}`, 'error');
+    }
+}
+
+async function updateProfile(e) {
+    e.preventDefault();
+    const updateBtn = document.getElementById('updateProfileBtn');
+    const messageEl = document.getElementById('profileMessage');
+    
+    try {
+        updateBtn.disabled = true;
+        updateBtn.textContent = 'Updating...';
+
+        const updateData = {
+            name: document.getElementById('profileName').value,
+            email: document.getElementById('profileEmail').value,
+            currentPassword: document.getElementById('currentPassword').value,
+            newPassword: document.getElementById('newPassword').value
+        };
+
+        const response = await fetch('/api/users/profile', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify(updateData)
+        });
+
+        const data = await response.json();
+        
+        if (!response.ok) throw new Error(data.message || 'Update failed');
+        
+        showProfileMessage('Profile updated successfully!', 'success');
+        if (updateData.newPassword) {
+            // If password changed, log out
+            setTimeout(() => {
+                localStorage.clear();
+                window.location.href = '/login.html';
+            }, 1500);
+        }
+    } catch (error) {
+        showProfileMessage(`Error: ${error.message}`, 'error');
+    } finally {
+        updateBtn.disabled = false;
+        updateBtn.textContent = 'Update Profile';
+    }
+}
+
+function showProfileMessage(message, type) {
+    const messageEl = document.getElementById('profileMessage');
+    messageEl.textContent = message;
+    messageEl.className = `status-message ${type}`;
+    messageEl.style.display = 'block';
+    setTimeout(() => messageEl.style.display = 'none', 3000);
+}
+
+// Initialize profile section
+function initProfileSection() {
+    // Password toggle functionality
+    document.getElementById('toggleCurrentPassword')?.addEventListener('click', function() {
+        const passwordField = document.getElementById('currentPassword');
+        const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
+        passwordField.setAttribute('type', type);
+        this.textContent = type === 'password' ? '👁️' : '🙈';
+    });
+
+    document.getElementById('toggleNewPassword')?.addEventListener('click', function() {
+        const passwordField = document.getElementById('newPassword');
+        const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
+        passwordField.setAttribute('type', type);
+        this.textContent = type === 'password' ? '👁️' : '🙈';
+    });
+
+    // Form submission
+    document.getElementById('profileForm')?.addEventListener('submit', updateProfile);
+
+    // Load profile data when section is shown
+    document.querySelector('[data-target="profileSection"]')?.addEventListener('click', loadProfileData);
+}
+
+// Call this in your DOMContentLoaded event
+document.addEventListener('DOMContentLoaded', function() {
+    initProfileSection();
 });

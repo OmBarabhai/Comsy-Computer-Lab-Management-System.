@@ -6,6 +6,7 @@
     <title>Dashboard Comsy</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="icon" type="image/png" href="images/logo1.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <!-- Navigation -->
@@ -63,6 +64,14 @@
                         <span class="title">Bookings</span>
                     </a>
                 </li>
+                <li class="admin-tabs">
+                    <a href="#" data-target="attendance" class="section-link">
+                        <span class="icon">
+                            <ion-icon name="document-text-outline"></ion-icon>
+                        </span>
+                        <span class="title">Attendance</span>
+                    </a>
+                </li>
                 
                 <!-- Student section tabs -->
                 <li class="nav-divider student-tabs hidden"><hr></li>
@@ -74,14 +83,7 @@
                         <span class="title">Book Computer</span>
                     </a>
                 </li>
-                <li class="admin-tabs">
-                    <a href="#" data-target="attendance" class="section-link">
-                        <span class="icon">
-                            <ion-icon name="document-text-outline"></ion-icon>
-                        </span>
-                        <span class="title">Attendance</span>
-                    </a>
-                </li>
+                
                 <li class="student-tabs hidden">
                     <a href="#" data-target="reportIssueStudent" class="section-link">
                         <span class="icon">
@@ -94,7 +96,7 @@
                 <!-- Staff section tabs -->
                 <li class="nav-divider staff-tabs hidden"><hr></li>
                 <li class="staff-tabs hidden">
-                    <a href="#" data-target="reportIssueStaff" class="section-link">
+                    <a href="#" data-target="reportIssueStudent" class="section-link">
                         <span class="icon">
                             <ion-icon name="alert-circle-outline"></ion-icon>
                         </span>
@@ -102,7 +104,7 @@
                     </a>
                 </li>
                 <li class="staff-tabs hidden">
-                    <a href="#" data-target="staffComputerBooking" class="section-link">
+                    <a href="#" data-target="bookComputer" class="section-link active">
                         <span class="icon">
                             <ion-icon name="laptop-outline"></ion-icon>
                         </span>
@@ -110,8 +112,12 @@
                     </a>
                 </li>
                 <li class="nav-divider admin-tabs"><hr></li>
+                <li class="nav-divider student-tabs hidden"><hr></li>
+                <li class="nav-divider staff-tabs hidden"><hr></li>
+
+
                 <li>
-                    <a href="thispc.html" class="nav-link">
+                    <a href="#" data-target="thisPC" class="section-link">
                         <span class="icon">
                             <ion-icon name="desktop-outline"></ion-icon>
                         </span>
@@ -440,46 +446,183 @@
                         </form>
                     </div>
                 </div>
+
+                <div id="reportIssueStudent" class="section-content hidden">
+                    <div class="card">
+                        <h3>Report Issue</h3>
+                        <form id="issueFormStudent">
+                            <div class="form-group">
+                                <label>Computer:</label>
+                                <select id="issueComputerSelectStudent" required></select>
+                            </div>
+                            <div class="form-group">
+                                <label>Description:</label>
+                                <textarea id="issueDescriptionStudent" required></textarea>
+                            </div>
+                            <button type="submit">Report Issue</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div id="bookComputer" class="section-content">
+                    <div class="card">
+                        <h3>Book a Computer</h3>
+                        <form id="studentBookingForm">
+                            <div class="form-group">
+                                <label>Select Computer:</label>
+                                <select id="studentComputerSelect"></select>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Start Time:</label>
+                                    <input type="datetime-local" id="studentStartTime" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>End Time:</label>
+                                    <input type="datetime-local" id="studentEndTime" required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Purpose:</label>
+                                <textarea id="studentBookingPurpose" required></textarea>
+                            </div>
+                            <button type="submit">Book Now</button>
+                        </form>
+                    </div>
+                </div>
+                 <!-- Report Issue Section for Staff -->
+                <div id="staffBookComputer" class="section-content">
+                    <div class="card">
+                        <h3>Book a Computer</h3>
+                        <form id="staffBookingForm">
+                            <div class="form-group">
+                                <label>Select Computer:</label>
+                                <select id="studentComputerSelect"></select>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Start Time:</label>
+                                    <input type="datetime-local" id="studentStartTime" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>End Time:</label>
+                                    <input type="datetime-local" id="studentEndTime" required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Purpose:</label>
+                                <textarea id="studentBookingPurpose" required></textarea>
+                            </div>
+                            <button type="submit">Book Now</button>
+                        </form>
+                    </div>
+                </div>
                 
-                <!-- Report Issue Section for Staff -->
+                <!-- Report Issue Section for Students -->
                 <div id="reportIssueStaff" class="section-content hidden">
                     <div class="card">
                         <h3>Report Issue</h3>
                         <form id="issueFormStaff">
                             <div class="form-group">
                                 <label>Computer:</label>
-                                <select id="issueComputerSelectStaff" required></select>
+                                <select id="issueComputerSelectStudent" required></select>
                             </div>
                             <div class="form-group">
                                 <label>Description:</label>
-                                <textarea id="issueDescriptionStaff" required></textarea>
+                                <textarea id="issueDescriptionStudent" required></textarea>
                             </div>
                             <button type="submit">Report Issue</button>
                         </form>
                     </div>
                 </div>
-                
-                <!-- Staff Computer Booking Section -->
-                <div id="staffComputerBooking" class="section-content hidden">
+            </div>
+            <!-- Add this inside the <div class="details"> section, after the other section-content divs -->
+            <div id="thisPC" class="section-content hidden">
+                <div class="card">
+                    <h3><i class="fas fa-desktop"></i> This PC - <span id="computer-name">Loading...</span></h3>
+                    
+                    <!-- System Specifications Card -->
                     <div class="card">
-                        <h3>Book a Computer</h3>
-                        <form id="staffBookingForm">
-                            <div class="form-group">
-                                <label>Select Computer:</label>
-                                <select id="staffComputerSelect"></select>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label>Start Time:</label>
-                                    <input type="datetime-local" id="staffStartTime" required>
-                                </div>
-                                <div class="form-group">
-                                    <label>End Time:</label>
-                                    <input type="datetime-local" id="staffEndTime" required>
+                        <h3><i class="fas fa-microchip"></i> System Specifications</h3>
+                        <div class="specs-grid">
+                            <!-- Detected Specs -->
+                            <div class="spec-item">
+                                <div class="spec-name">Operating System</div>
+                                <div class="spec-value">
+                                    <span class="spec-text" id="os-value">--</span>
+                                    <input type="text" class="spec-input" id="os-input">
                                 </div>
                             </div>
-                            <button type="submit">Book Now</button>
-                        </form>
+                            <div class="spec-item">
+                                <div class="spec-name">Processor</div>
+                                <div class="spec-value">
+                                    <span class="spec-text" id="processor-value">--</span>
+                                    <input type="text" class="spec-input" id="processor-input">
+                                </div>
+                            </div>
+                            <div class="spec-item">
+                                <div class="spec-name">Memory</div>
+                                <div class="spec-value">
+                                    <span class="spec-text" id="memory-value">--</span>
+                                    <input type="text" class="spec-input" id="memory-input">
+                                </div>
+                            </div>
+                            <div class="spec-item">
+                                <div class="spec-name">Total Storage</div>
+                                <div class="spec-value">
+                                    <span class="spec-text" id="storage-value">--</span>
+                                    <input type="text" class="spec-input" id="storage-input">
+                                </div>
+                            </div>
+                            <div class="spec-item">
+                                <div class="spec-name">Graphics</div>
+                                <div class="spec-value">
+                                    <span class="spec-text" id="graphics-value">--</span>
+                                    <input type="text" class="spec-input" id="graphics-input">
+                                </div>
+                            </div>
+                            <div class="spec-item">
+                                <div class="spec-name">Screen Resolution</div>
+                                <div class="spec-value">
+                                    <span class="spec-text" id="resolution-value">--</span>
+                                    <input type="text" class="spec-input" id="resolution-input">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Network Speed Card -->
+                    <div class="card">
+                        <h3><i class="fas fa-wifi"></i> Network Speed</h3>
+                        <div class="speed-meters">
+                            <div class="speed-meter">
+                                <h4>Download Speed</h4>
+                                <div class="speed-value" id="download-speed">0.00</div>
+                                <div class="speed-unit">Mbps</div>
+                                <div class="progress-container">
+                                    <div class="progress-bar" id="download-progress" style="width: 0%;"></div>
+                                </div>
+                            </div>
+                            <div class="speed-meter">
+                                <h4>Upload Speed</h4>
+                                <div class="speed-value" id="upload-speed">0.00</div>
+                                <div class="speed-unit">Mbps</div>
+                                <div class="progress-container">
+                                    <div class="progress-bar" id="upload-progress" style="width: 0%;"></div>
+                                </div>
+                            </div>
+                            <div class="speed-meter">
+                                <h4>Ping</h4>
+                                <div class="speed-value" id="ping-value">0</div>
+                                <div class="speed-unit">ms</div>
+                                <div class="progress-container">
+                                    <div class="progress-bar" id="ping-progress" style="width: 0%;"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <button id="test-speed-btn" class="refresh-btn">
+                            <i class="fas fa-sync-alt"></i> Test Speed
+                        </button>
                     </div>
                 </div>
             </div>

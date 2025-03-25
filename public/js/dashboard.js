@@ -990,7 +990,7 @@ async function loadBookings() {
                     <td>
                         ${booking.status === 'upcoming' ? `
                             <button class="btn-cancel" data-id="${booking._id}">Cancel</button>
-                        ` : 'No actions'}
+                        ` : '--'}
                     </td>
                 </tr>
             `;

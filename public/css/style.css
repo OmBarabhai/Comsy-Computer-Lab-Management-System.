@@ -283,53 +283,6 @@ body.dark {
 }
 
 /* =========== Cards ============ */
-.cardBox {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 20px;
-    margin-bottom: 30px;
-}
-
-.card {
-    background: var(--card-bg);
-    padding: 25px;
-    border-radius: 15px;
-    border: 1px solid var(--border-color);
-    transition: var(--transition);
-    box-shadow: var(--shadow);
-    display: flex;
-    flex-direction: column;
-}
-
-.card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-}
-
-.card .numbers {
-    font-size: 0.1rem;
-    font-weight: bold;
-    color: var(--primary-color);
-    margin-bottom: 5px;
-}
-
-.card .cardName {
-    font-size: 0.1rem;
-    color: var(--secondary-color);
-    font-weight: 500;
-}
-
-.card .iconBx {
-    font-size: 0.1rem;
-    color: var(--primary-color);
-    background-color: rgba(0, 123, 255, 0.1);
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
 
 /* =========== Card Container ============ */
 .card-container {
@@ -467,7 +420,7 @@ body.dark {
 /* Card 4: Span 2 columns and 3 rows, positioned at column 4, row 1 */
 .card4 {
     grid-column: 4 / span 2;
-    grid-row: 1 / span 3;
+    grid-row: 1 / span 2;
     display: flex;
     flex-direction: row;
 }
@@ -511,13 +464,13 @@ body.dark {
     }
     
     .card4 {
-        grid-column: 2 / span 2;
+        grid-column: 2;
         grid-row: 3 / span 2;
     }
     
     .card5 {
-        grid-column: 1 / span 3;
-        grid-row: 5 / span 2;
+        grid-column: 3;
+        grid-row: 3 / span 2;
     }
 }
 

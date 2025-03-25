@@ -451,10 +451,13 @@ async function loadAllComputers() {
                 </td>
                 <td>${computer.ipAddress}</td>
                 <td>
-                    <button class="btn-see-details">See Details</button>
+                    <button class="btn-details">Details</button>
                     <button class="btn-delete" data-ip="${computer.ipAddress}">Delete</button>
                 </td>
             `;
+            row.querySelector('.btn-details').addEventListener('click', () => {
+                showDetailsPopup(computer);
+            });    
             tbody.appendChild(row);
         });
 
@@ -494,6 +497,98 @@ async function loadAllComputers() {
         alert(`Error: ${error.message}`);
     }
 }
+function showDetailsPopup(computer) {
+    const popup = document.createElement('div');
+    popup.className = 'popup';
+
+    const popupContent = document.createElement('div');
+    popupContent.className = 'popup-content';
+
+    const closeButton = document.createElement('button');
+    closeButton.className = 'close-button';
+    closeButton.textContent = '×';
+    closeButton.addEventListener('click', () => {
+        document.body.removeChild(popup);
+        document.getElementById('main-content').classList.remove('blur'); // Remove blur from main content
+    });
+
+    const details = `
+        <h2>${computer.name}</h2>
+        <p><strong>Quick Status:</strong></p>
+        <ul>
+            <li>Internet Connection: ${computer.quickStatus?.internetConnection || 'N/A'}</li>
+            <li>Speed: ${computer.quickStatus?.speed || '0 '} Mbps</li>
+            <li>Maintenance Required: ${computer.quickStatus?.maintenanceRequired ? 'Yes' : 'No'}</li>
+            <li>IP Address: ${computer.quickStatus?.ipAddress || 'N/A'}</li>
+        </ul>
+        <p><strong>Current User:</strong></p>
+        <ul>
+            <li>Name: ${computer.currentUser?.name || 'N/A'}</li>
+            <li>Branch: ${computer.currentUser?.branch || 'N/A'}</li>
+            <li>Role: ${computer.currentUser?.role || 'N/A'}</li>
+        </ul>
+        <p><strong>System Specifications:</strong></p>
+        <ul>
+            <li>RAM: ${computer.systemSpecs?.ram || 'N/A'}</li>
+            <li>Storage: ${computer.systemSpecs?.storage || 'N/A'}</li>
+            <li>OS: ${computer.systemSpecs?.os || 'N/A'}</li>
+            <li>Processor: ${computer.systemSpecs?.processor || 'N/A'}</li>
+        </ul>
+        <p><strong>Hardware Connected:</strong></p>
+        <ul>
+            <li>Mouse: ${computer.hardwareConnected?.mouse ? 'Yes' : 'No'}</li>
+            <li>Keyboard: ${computer.hardwareConnected?.keyboard ? 'Yes' : 'No'}</li>
+            <li>Monitor: ${computer.hardwareConnected?.monitor ? 'Yes' : 'No'}</li>
+            <li>External Drive: ${computer.hardwareConnected?.externalDrive ? 'Yes' : 'No'}</li>
+        </ul>
+    `;
+
+    popupContent.innerHTML = details;
+    popupContent.appendChild(closeButton);
+    popup.appendChild(popupContent);
+    document.body.appendChild(popup);
+
+    // Apply blur to the main content
+    document.getElementById('main-content').classList.add('blur');
+}
+const style = document.createElement('style');
+style.textContent = `
+    .popup {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+    .popup-content {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        max-width: 500px;
+        width: 100%;
+        position: relative;
+    }
+    .close-button {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: none;
+        border: none;
+        font-size: 20px;
+        cursor: pointer;
+        color: #000;
+    }
+    .blur {
+        filter: blur(5px);
+        pointer-events: none; /* Prevent interaction with blurred content */
+    }
+`;
+document.head.appendChild(style);
 
 function simulateNetworkSpeedUpdates() {
     setInterval(() => {

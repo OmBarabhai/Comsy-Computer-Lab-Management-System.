@@ -470,7 +470,7 @@ button:hover {
     transform: translateY(-2px);
 }
 /* Minimize button sizes */
-.btn-edit,
+.btn-see-details,
 .btn-delete,
 .btn-approve,
 .btn-reject,
@@ -482,7 +482,7 @@ button:hover {
 }
 
 /* Hover effects for buttons */
-.btn-edit:hover,
+.btn-see-details:hover,
 .btn-delete:hover,
 .btn-approve:hover,
 .btn-reject:hover,

@@ -147,4 +147,40 @@ router.delete('/:id/reject', authenticate, authorize(['admin']), async (req, res
     }
 });
 
+router.delete('/ip/:ipAddress', authenticate, authorize(['admin']), async (req, res) => {
+    try {
+        const ipAddress = req.params.ipAddress;
+        
+        // Validate IP address format
+        if (!/^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/.test(ipAddress)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid IP address format'
+            });
+        }
+
+        const deletedComputer = await Computer.findOneAndDelete({ ipAddress });
+
+        if (!deletedComputer) {
+            return res.status(404).json({
+                success: false,
+                message: 'Computer with this IP address not found'
+            });
+        }
+
+        res.json({
+            success: true,
+            message: 'Computer deleted successfully'
+        });
+
+    } catch (error) {
+        console.error('Delete by IP error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to delete computer',
+            error: error.message
+        });
+    }
+});
+
 export default router;

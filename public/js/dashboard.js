@@ -343,11 +343,10 @@ async function loadAllComputers() {
 
         // Populate dropdown for all roles
         const issueComputerSelectStudent = document.getElementById('issueComputerSelectStudent');
-        if (issueComputerSelectStudent) { // Ensure the dropdown exists
+        if (issueComputerSelectStudent) {
             issueComputerSelectStudent.innerHTML = '<option value="">Select Computer</option>';
 
             computers.forEach(computer => {
-                // Add to dropdown if approved
                 if (computer.status === 'approved') {
                     issueComputerSelectStudent.innerHTML += `
                         <option value="${computer.id}">${computer.name}</option>
@@ -358,44 +357,71 @@ async function loadAllComputers() {
 
         // Populate table with real data
         computers.forEach(computer => {
-            // Use real data for operational status, approval status, and network speed
-            tbody.innerHTML += `
-                <tr>
-                    <td>${computer.id}</td>
-                    <td>${computer.name}</td>
-                    <td>
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${computer.id}</td>
+                <td>${computer.name}</td>
+                <td>
                     <span class="status-indicator ${computer.operationalStatus}">
-                            ${computer.operationalStatus}
-                        </span>
-                    </td>
-                    <td>
-                        <span class="approval-status ${computer.status}">
-                            ${computer.status}
-                        </span>
-                    </td>
-                    <td>
-                        <span class="power-status ${computer.powerStatus}">
-                            ${computer.powerStatus.toUpperCase()}
-                        </span>
-                    </td>
-                    <td>
-                        <span class="network-speed">${computer.networkSpeed}</span> Mbps
-                    </td>
-                    <td>${computer.ipAddress}</td>
-                    <td>
-                        <button class="btn-edit">See Details</button>
-                        <button class="btn-delete">Delete</button>
-                    </td>
-                </tr>
+                        ${computer.operationalStatus}
+                    </span>
+                </td>
+                <td>
+                    <span class="approval-status ${computer.status}">
+                        ${computer.status}
+                    </span>
+                </td>
+                <td>
+                    <span class="power-status ${computer.powerStatus}">
+                        ${computer.powerStatus.toUpperCase()}
+                    </span>
+                </td>
+                <td>
+                    <span class="network-speed">${computer.networkSpeed}</span> Mbps
+                </td>
+                <td>${computer.ipAddress}</td>
+                <td>
+                    <button class="btn-see-details">See Details</button>
+                    <button class="btn-delete" data-ip="${computer.ipAddress}">Delete</button>
+                </td>
             `;
+            tbody.appendChild(row);
         });
 
-        // Simulate network speed updates (if needed)
+        // Add delete button event listeners
+        document.querySelectorAll('.btn-delete').forEach(button => {
+            button.addEventListener('click', async () => {
+                const ipAddress = button.dataset.ip;
+                if (confirm(`Are you sure you want to delete computer with IP ${ipAddress}?`)) {
+                    try {
+                        const response = await fetch(`/api/computers/ip/${ipAddress}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'Authorization': `Bearer ${localStorage.getItem('token')}`
+                            }
+                        });
+
+                        if (!response.ok) {
+                            const errorData = await response.json();
+                            throw new Error(errorData.message || 'Failed to delete computer');
+                        }
+
+                        alert('Computer deleted successfully!');
+                        loadAllComputers(); // Refresh the table
+                    } catch (error) {
+                        console.error('Delete error:', error);
+                        alert(`Error: ${error.message}`);
+                    }
+                }
+            });
+        });
+
+        // Simulate network speed updates
         simulateNetworkSpeedUpdates();
 
     } catch (error) {
-        console.error('Error:', error);
-        alert(`Error loading computers: ${error.message}`);
+        console.error('Error loading computers:', error);
+        alert(`Error: ${error.message}`);
     }
 }
 
@@ -1146,103 +1172,3 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelector('[data-target="thisPC"]')?.addEventListener('click', updateSystemSpecs);
 });
 
-// Profile Functions
-async function loadProfileData() {
-    try {
-        const response = await fetch('/api/users/profile', {
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
-        });
-
-        if (!response.ok) throw new Error('Failed to load profile');
-        
-        const userData = await response.json();
-        document.getElementById('profileName').value = userData.name;
-        document.getElementById('profileEmail').value = userData.email;
-    } catch (error) {
-        showProfileMessage(`Error: ${error.message}`, 'error');
-    }
-}
-
-async function updateProfile(e) {
-    e.preventDefault();
-    const updateBtn = document.getElementById('updateProfileBtn');
-    const messageEl = document.getElementById('profileMessage');
-    
-    try {
-        updateBtn.disabled = true;
-        updateBtn.textContent = 'Updating...';
-
-        const updateData = {
-            name: document.getElementById('profileName').value,
-            email: document.getElementById('profileEmail').value,
-            currentPassword: document.getElementById('currentPassword').value,
-            newPassword: document.getElementById('newPassword').value
-        };
-
-        const response = await fetch('/api/users/profile', {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            },
-            body: JSON.stringify(updateData)
-        });
-
-        const data = await response.json();
-        
-        if (!response.ok) throw new Error(data.message || 'Update failed');
-        
-        showProfileMessage('Profile updated successfully!', 'success');
-        if (updateData.newPassword) {
-            // If password changed, log out
-            setTimeout(() => {
-                localStorage.clear();
-                window.location.href = '/login.html';
-            }, 1500);
-        }
-    } catch (error) {
-        showProfileMessage(`Error: ${error.message}`, 'error');
-    } finally {
-        updateBtn.disabled = false;
-        updateBtn.textContent = 'Update Profile';
-    }
-}
-
-function showProfileMessage(message, type) {
-    const messageEl = document.getElementById('profileMessage');
-    messageEl.textContent = message;
-    messageEl.className = `status-message ${type}`;
-    messageEl.style.display = 'block';
-    setTimeout(() => messageEl.style.display = 'none', 3000);
-}
-
-// Initialize profile section
-function initProfileSection() {
-    // Password toggle functionality
-    document.getElementById('toggleCurrentPassword')?.addEventListener('click', function() {
-        const passwordField = document.getElementById('currentPassword');
-        const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
-        passwordField.setAttribute('type', type);
-        this.textContent = type === 'password' ? '👁️' : '🙈';
-    });
-
-    document.getElementById('toggleNewPassword')?.addEventListener('click', function() {
-        const passwordField = document.getElementById('newPassword');
-        const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
-        passwordField.setAttribute('type', type);
-        this.textContent = type === 'password' ? '👁️' : '🙈';
-    });
-
-    // Form submission
-    document.getElementById('profileForm')?.addEventListener('submit', updateProfile);
-
-    // Load profile data when section is shown
-    document.querySelector('[data-target="profileSection"]')?.addEventListener('click', loadProfileData);
-}
-
-// Call this in your DOMContentLoaded event
-document.addEventListener('DOMContentLoaded', function() {
-    initProfileSection();
-});

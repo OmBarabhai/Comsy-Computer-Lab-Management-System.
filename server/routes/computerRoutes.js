@@ -37,7 +37,6 @@ router.post('/register', async (req, res) => { // Removed 'authenticate' middlew
 });
 
 
-// Get pending computers (Admin only)
 // Add this route
 router.get('/', authenticate, async (req, res) => {
     try {

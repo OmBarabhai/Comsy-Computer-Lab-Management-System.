@@ -262,6 +262,7 @@ function loadRoleSpecificContent(role) {
             loadAllComputers();
             loadIssuesTable();
             loadBookings();
+            
             break;
         case 'student':
             document.getElementById('studentDashboard').classList.remove('hidden');
@@ -456,7 +457,7 @@ async function loadAllComputers() {
                 </td>
             `;
             row.querySelector('.btn-details').addEventListener('click', () => {
-                showDetailsPopup(computer);
+                showDetailsPopup(computer); // Pass the complete computer object
             });    
             tbody.appendChild(row);
         });
@@ -497,59 +498,136 @@ async function loadAllComputers() {
         alert(`Error: ${error.message}`);
     }
 }
-function showDetailsPopup(computer) {
-    const popup = document.createElement('div');
-    popup.className = 'popup';
+async function showDetailsPopup(computer) {
+    try {
+        // Use the computer object passed from the clicked row
+        // No need to fetch IP separately since we have the complete computer object
+        const popup = document.getElementById('computerDetailsPopup');
+        popup.classList.remove('hidden');
 
-    const popupContent = document.createElement('div');
-    popupContent.className = 'popup-content';
+        const popupContent = document.getElementById('popupDetails');
+        popupContent.innerHTML = `
+            <div class="detail-section">
+                <h4>Basic Information</h4>
+                <div class="detail-item">
+                    <span class="detail-label">Computer Name:</span>
+                    <span>${computer.name || 'N/A'}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">IP Address:</span>
+                    <span>${computer.ipAddress || 'N/A'}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Status:</span>
+                    <span class="status-indicator ${computer.operationalStatus || 'unknown'}">
+                        ${computer.operationalStatus || 'N/A'}
+                    </span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Approval Status:</span>
+                    <span class="approval-status ${computer.status || 'unknown'}">
+                        ${computer.status || 'N/A'}
+                    </span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Power Status:</span>
+                    <span class="power-status ${computer.powerStatus || 'unknown'}">
+                        ${computer.powerStatus ? computer.powerStatus.toUpperCase() : 'N/A'}
+                    </span>
+                </div>
+            </div>
 
-    const closeButton = document.createElement('button');
-    closeButton.className = 'close-button';
-    closeButton.textContent = '×';
-    closeButton.addEventListener('click', () => {
-        document.body.removeChild(popup);
-        document.getElementById('main-content').classList.remove('blur'); // Remove blur from main content
-    });
+            <div class="detail-section">
+                <h4>System Specifications</h4>
+                <div class="detail-item">
+                    <span class="detail-label">Processor:</span>
+                    <span>${computer.specs?.cpu || 'N/A'}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Memory (RAM):</span>
+                    <span>${computer.specs?.ram || 'N/A'}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Storage:</span>
+                    <span>${computer.specs?.storage || 'N/A'}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Operating System:</span>
+                    <span>${computer.specs?.os || 'N/A'}</span>
+                </div>
+            </div>
 
-    const details = `
-        <h2>${computer.name}</h2>
-        <p><strong>Quick Status:</strong></p>
-        <ul>
-            <li>Internet Connection: ${computer.quickStatus?.internetConnection || 'N/A'}</li>
-            <li>Speed: ${computer.quickStatus?.speed || '0 '} Mbps</li>
-            <li>Maintenance Required: ${computer.quickStatus?.maintenanceRequired ? 'Yes' : 'No'}</li>
-            <li>IP Address: ${computer.quickStatus?.ipAddress || 'N/A'}</li>
-        </ul>
-        <p><strong>Current User:</strong></p>
-        <ul>
-            <li>Name: ${computer.currentUser?.name || 'N/A'}</li>
-            <li>Branch: ${computer.currentUser?.branch || 'N/A'}</li>
-            <li>Role: ${computer.currentUser?.role || 'N/A'}</li>
-        </ul>
-        <p><strong>System Specifications:</strong></p>
-        <ul>
-            <li>RAM: ${computer.systemSpecs?.ram || 'N/A'}</li>
-            <li>Storage: ${computer.systemSpecs?.storage || 'N/A'}</li>
-            <li>OS: ${computer.systemSpecs?.os || 'N/A'}</li>
-            <li>Processor: ${computer.systemSpecs?.processor || 'N/A'}</li>
-        </ul>
-        <p><strong>Hardware Connected:</strong></p>
-        <ul>
-            <li>Mouse: ${computer.hardwareConnected?.mouse ? 'Yes' : 'No'}</li>
-            <li>Keyboard: ${computer.hardwareConnected?.keyboard ? 'Yes' : 'No'}</li>
-            <li>Monitor: ${computer.hardwareConnected?.monitor ? 'Yes' : 'No'}</li>
-            <li>External Drive: ${computer.hardwareConnected?.externalDrive ? 'Yes' : 'No'}</li>
-        </ul>
-    `;
+            <div class="detail-section">
+                <h4>Quick Status</h4>
+                <div class="detail-item">
+                    <span class="detail-label">Network Adapter:</span>
+                    <span>${computer.specs?.network || 'N/A'}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Network Speed:</span>
+                    <span class="network-speed">${computer.networkSpeed}</span> Mbps
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Maintenance Required:</span>
+                    <span>${computer.operationalStatus === 'maintenance' ? 'Yes' : 'No'}</span>
+                </div>
+            </div>
 
-    popupContent.innerHTML = details;
-    popupContent.appendChild(closeButton);
-    popup.appendChild(popupContent);
-    document.body.appendChild(popup);
+            <div class="detail-section">
+                <h4>Hardware Connected</h4>
+                <div class="detail-item">
+                    <span class="detail-label">Mouse:</span>
+                    <span>N/A</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Keyboard:</span>
+                    <span>N/A</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Monitor:</span>
+                    <span>N/A</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">External Drive:</span>
+                    <span>N/A</span>
+                </div>
+            </div>
+            
+            <div class="detail-section">
+                <h4>Current User</h4>
+                <div class="detail-item">
+                    <span class="detail-label">Name:</span>
+                    <span>N/A</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Role:</span>
+                    <span>N/A</span>
+                </div>
+            </div>
 
-    // Apply blur to the main content
-    document.getElementById('main-content').classList.add('blur');
+            <div class="detail-section">
+                <h4>Registration Details</h4>
+                <div class="detail-item">
+                    <span class="detail-label">Registered By:</span>
+                    <span>${computer.registeredBy?.name || 'N/A'}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Registration Date:</span>
+                    <span>${computer.registeredAt ? 
+                        new Date(computer.registeredAt).toLocaleString() : 'N/A'}</span>
+                </div>
+            </div>
+        `;
+
+        // Add close button functionality
+        document.querySelector('.popup-close').addEventListener('click', () => {
+            popup.classList.add('hidden');
+        });
+
+    } catch (error) {
+        console.error('Error showing computer details:', error);
+        alert('Failed to load computer details');
+    }
 }
 const style = document.createElement('style');
 style.textContent = `

@@ -3,8 +3,7 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const atlasUri = 'mongodb+srv://techspace:9011232879@cluster0.31ygm.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
-
+const atlasUri = process.env.atlasUri;
 const connectDB = async () => {
   try {
       await mongoose.connect(atlasUri, {

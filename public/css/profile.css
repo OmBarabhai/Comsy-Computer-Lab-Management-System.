@@ -245,3 +245,106 @@ button[type="submit"]:hover {
 #toggle:checked + label {
     box-shadow: 0 0 10px 2px rgba(229, 83, 83, 0.5);
 }
+
+/* Profile Section Styles */
+#profileSection .card {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 30px;
+}
+
+#profileSection h2 {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 25px;
+    color: var(--primary-color);
+    text-align: center;
+    border-bottom: none;
+}
+
+#profileForm {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+#profileSection .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+#profileSection .form-group label {
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+#profileSection input[type="text"],
+#profileSection input[type="email"],
+#profileSection input[type="password"] {
+    padding: 12px 15px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    width: 100%;
+    transition: all 0.3s;
+}
+
+#profileSection input[type="text"]:focus,
+#profileSection input[type="email"]:focus,
+#profileSection input[type="password"]:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--primary-color);
+}
+
+#profileSection .password-container {
+    position: relative;
+    width: 100%;
+}
+
+#profileSection .toggle-password {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-color);
+}
+
+#profileSection button[type="submit"] {
+    padding: 12px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s;
+    margin-top: 10px;
+}
+
+#profileSection button[type="submit"]:hover {
+    background-color: var(--hover);
+}
+
+#profileSection .status-message {
+    margin-top: 15px;
+    padding: 10px;
+    border-radius: 6px;
+    text-align: center;
+}
+
+#profileSection .status-message.success {
+    background-color: rgba(46, 204, 113, 0.1);
+    color: var(--success-color);
+    border: 1px solid var(--success-color);
+}
+
+#profileSection .status-message.error {
+    background-color: rgba(231, 76, 60, 0.1);
+    color: var(--danger-color);
+    border: 1px solid var(--danger-color);
+}

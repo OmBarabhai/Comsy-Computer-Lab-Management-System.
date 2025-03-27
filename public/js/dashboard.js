@@ -116,7 +116,7 @@ async function getClientIp() {
         if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
             return '127.0.0.1';
         }
-        
+
         // Final fallback
         return 'unknown-ip';
     }
@@ -227,6 +227,12 @@ function setupEventListeners() {
     document.getElementById('labBookingFormAdmin').addEventListener('submit', bookLab);
     document.getElementById('staffBookingForm').addEventListener('submit', handleStaffBooking);
     document.getElementById('profileBtn').addEventListener('click', () => {window.location.href = '/profile.html';});
+    document.querySelector('[href="dashboard.html"]').addEventListener('click', (e) => {
+        e.preventDefault();
+        document.querySelectorAll('.section-content').forEach(el => el.classList.add('hidden'));
+        document.getElementById('dashboardOverview').classList.remove('hidden');
+        loadDashboardData();
+    });
 }
 
 function logout() {
@@ -240,31 +246,96 @@ function loadRoleSpecificContent(role) {
     // Hide all dashboards
     document.querySelectorAll('[id$="Dashboard"]').forEach(el => el.classList.add('hidden'));
     document.getElementById('adminView').classList.add('hidden');
-// Load necessary data
+    
+    // Load necessary data
     switch(role) {
         case 'admin':
             document.getElementById('adminView').classList.remove('hidden');
             document.getElementById('adminDashboard').classList.remove('hidden');
             
+            // Load dashboard overview by default
+            document.getElementById('dashboardOverview').classList.remove('hidden');
+            
+            // Load all data
+            loadDashboardData();
             loadRegistrationRequests();
             loadAllComputers();
             loadIssuesTable();
-            loadBookings(); 
-
+            loadBookings();
+            
             break;
         case 'student':
             document.getElementById('studentDashboard').classList.remove('hidden');
-            loadAllComputers();
             loadAvailableComputers();
             break;
         case 'staff':
             document.getElementById('staffDashboard').classList.remove('hidden');
-            loadAllComputers();
             loadAvailableComputers();
             break;
     }
 }
 
+// Add this new function to fetch and update dashboard data
+async function loadDashboardData() {
+    try {
+        // Fetch computers data
+        const computersResponse = await fetch('/api/computers', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        const computers = await computersResponse.ok ? await computersResponse.json() : [];
+        
+        // Count computer statuses
+        const totalComputers = computers.length;
+        const availableComputers = computers.filter(c => c.operationalStatus === 'available').length;
+        const inUseComputers = computers.filter(c => c.operationalStatus === 'in-use').length;
+        const maintenanceComputers = computers.filter(c => c.operationalStatus === 'maintenance').length;
+        const pendingComputers = computers.filter(c => c.status === 'pending').length;
+        
+        // Update computer cards
+        document.getElementById('totalComputers').textContent = totalComputers;
+        document.getElementById('availableComputers').textContent = availableComputers;
+        document.getElementById('inUseComputers').textContent = inUseComputers;
+        document.getElementById('maintenanceComputers').textContent = maintenanceComputers;
+        document.getElementById('pendingComputers').textContent = pendingComputers;
+        
+        // Fetch issues data
+        const issuesResponse = await fetch('/api/issues', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        const issues = issuesResponse.ok ? await issuesResponse.json() : [];
+        
+        // Count issue statuses
+        const totalIssues = issues.length;
+        const openIssues = issues.filter(i => i.status === 'open').length;
+        const resolvedIssues = issues.filter(i => i.status === 'resolved').length;
+        
+        // Update issues card
+        document.getElementById('totalIssues').textContent = totalIssues;
+        document.getElementById('openIssues').textContent = openIssues;
+        document.getElementById('resolvedIssues').textContent = resolvedIssues;
+        
+        // Fetch bookings data
+        const bookingsResponse = await fetch('/api/bookings', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        const bookings = bookingsResponse.ok ? await bookingsResponse.json() : [];
+        
+        // Count booking statuses
+        const totalBookings = bookings.length;
+        const upcomingBookings = bookings.filter(b => b.status === 'upcoming').length;
+        const ongoingBookings = bookings.filter(b => b.status === 'ongoing').length;
+        const completedBookings = bookings.filter(b => b.status === 'completed').length;
+        
+        // Update bookings card
+        document.getElementById('totalBookings').textContent = totalBookings;
+        document.getElementById('upcomingBookings').textContent = upcomingBookings;
+        document.getElementById('ongoingBookings').textContent = ongoingBookings;
+        document.getElementById('completedBookings').textContent = completedBookings;
+        
+    } catch (error) {
+        console.error('Error loading dashboard data:', error);
+    }
+}
 // Admin Functions
 async function loadRegistrationRequests() {
     try {
@@ -343,11 +414,10 @@ async function loadAllComputers() {
 
         // Populate dropdown for all roles
         const issueComputerSelectStudent = document.getElementById('issueComputerSelectStudent');
-        if (issueComputerSelectStudent) { // Ensure the dropdown exists
+        if (issueComputerSelectStudent) {
             issueComputerSelectStudent.innerHTML = '<option value="">Select Computer</option>';
 
             computers.forEach(computer => {
-                // Add to dropdown if approved
                 if (computer.status === 'approved') {
                     issueComputerSelectStudent.innerHTML += `
                         <option value="${computer.id}">${computer.name}</option>
@@ -358,46 +428,245 @@ async function loadAllComputers() {
 
         // Populate table with real data
         computers.forEach(computer => {
-            // Use real data for operational status, approval status, and network speed
-            tbody.innerHTML += `
-                <tr>
-                    <td>${computer.id}</td>
-                    <td>${computer.name}</td>
-                    <td>
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${computer.id}</td>
+                <td>${computer.name}</td>
+                <td>
                     <span class="status-indicator ${computer.operationalStatus}">
-                            ${computer.operationalStatus}
-                        </span>
-                    </td>
-                    <td>
-                        <span class="approval-status ${computer.status}">
-                            ${computer.status}
-                        </span>
-                    </td>
-                    <td>
-                        <span class="power-status ${computer.powerStatus}">
-                            ${computer.powerStatus.toUpperCase()}
-                        </span>
-                    </td>
-                    <td>
-                        <span class="network-speed">${computer.networkSpeed}</span> Mbps
-                    </td>
-                    <td>${computer.ipAddress}</td>
-                    <td>
-                        <button class="btn-edit">See Details</button>
-                        <button class="btn-delete">Delete</button>
-                    </td>
-                </tr>
+                        ${computer.operationalStatus}
+                    </span>
+                </td>
+                <td>
+                    <span class="approval-status ${computer.status}">
+                        ${computer.status}
+                    </span>
+                </td>
+                <td>
+                    <span class="power-status ${computer.powerStatus}">
+                        ${computer.powerStatus.toUpperCase()}
+                    </span>
+                </td>
+                <td>
+                    <span class="network-speed">${computer.networkSpeed}</span> Mbps
+                </td>
+                <td>${computer.ipAddress}</td>
+                <td>
+                    <button class="btn-details">Details</button>
+                    <button class="btn-delete" data-ip="${computer.ipAddress}">Delete</button>
+                </td>
             `;
+            row.querySelector('.btn-details').addEventListener('click', () => {
+                showDetailsPopup(computer); // Pass the complete computer object
+            });    
+            tbody.appendChild(row);
         });
 
-        // Simulate network speed updates (if needed)
+        // Add delete button event listeners
+        document.querySelectorAll('.btn-delete').forEach(button => {
+            button.addEventListener('click', async () => {
+                const ipAddress = button.dataset.ip;
+                if (confirm(`Are you sure you want to delete computer with IP ${ipAddress}?`)) {
+                    try {
+                        const response = await fetch(`/api/computers/ip/${ipAddress}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'Authorization': `Bearer ${localStorage.getItem('token')}`
+                            }
+                        });
+
+                        if (!response.ok) {
+                            const errorData = await response.json();
+                            throw new Error(errorData.message || 'Failed to delete computer');
+                        }
+
+                        alert('Computer deleted successfully!');
+                        loadAllComputers(); // Refresh the table
+                    } catch (error) {
+                        console.error('Delete error:', error);
+                        alert(`Error: ${error.message}`);
+                    }
+                }
+            });
+        });
+
+        // Simulate network speed updates
         simulateNetworkSpeedUpdates();
 
     } catch (error) {
-        console.error('Error:', error);
-        alert(`Error loading computers: ${error.message}`);
+        console.error('Error loading computers:', error);
+        alert(`Error: ${error.message}`);
     }
 }
+async function showDetailsPopup(computer) {
+    try {
+        // Use the computer object passed from the clicked row
+        // No need to fetch IP separately since we have the complete computer object
+        const popup = document.getElementById('computerDetailsPopup');
+        popup.classList.remove('hidden');
+
+        const popupContent = document.getElementById('popupDetails');
+        popupContent.innerHTML = `
+            <div class="detail-section">
+                <h4>Basic Information</h4>
+                <div class="detail-item">
+                    <span class="detail-label">Computer Name:</span>
+                    <span>${computer.name || 'N/A'}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">IP Address:</span>
+                    <span>${computer.ipAddress || 'N/A'}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Status:</span>
+                    <span class="status-indicator ${computer.operationalStatus || 'unknown'}">
+                        ${computer.operationalStatus || 'N/A'}
+                    </span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Approval Status:</span>
+                    <span class="approval-status ${computer.status || 'unknown'}">
+                        ${computer.status || 'N/A'}
+                    </span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Power Status:</span>
+                    <span class="power-status ${computer.powerStatus || 'unknown'}">
+                        ${computer.powerStatus ? computer.powerStatus.toUpperCase() : 'N/A'}
+                    </span>
+                </div>
+            </div>
+
+            <div class="detail-section">
+                <h4>System Specifications</h4>
+                <div class="detail-item">
+                    <span class="detail-label">Processor:</span>
+                    <span>${computer.specs?.cpu || 'N/A'}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Memory (RAM):</span>
+                    <span>${computer.specs?.ram || 'N/A'}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Storage:</span>
+                    <span>${computer.specs?.storage || 'N/A'}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Operating System:</span>
+                    <span>${computer.specs?.os || 'N/A'}</span>
+                </div>
+            </div>
+
+            <div class="detail-section">
+                <h4>Quick Status</h4>
+                <div class="detail-item">
+                    <span class="detail-label">Network Adapter:</span>
+                    <span>${computer.specs?.network || 'N/A'}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Network Speed:</span>
+                    <span class="network-speed">${computer.networkSpeed}</span> Mbps
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Maintenance Required:</span>
+                    <span>${computer.operationalStatus === 'maintenance' ? 'Yes' : 'No'}</span>
+                </div>
+            </div>
+
+            <div class="detail-section">
+                <h4>Hardware Connected</h4>
+                <div class="detail-item">
+                    <span class="detail-label">Mouse:</span>
+                    <span>N/A</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Keyboard:</span>
+                    <span>N/A</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Monitor:</span>
+                    <span>N/A</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">External Drive:</span>
+                    <span>N/A</span>
+                </div>
+            </div>
+            
+            <div class="detail-section">
+                <h4>Current User</h4>
+                <div class="detail-item">
+                    <span class="detail-label">Name:</span>
+                    <span>N/A</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Role:</span>
+                    <span>N/A</span>
+                </div>
+            </div>
+
+            <div class="detail-section">
+                <h4>Registration Details</h4>
+                <div class="detail-item">
+                    <span class="detail-label">Registered By:</span>
+                    <span>${computer.registeredBy?.name || 'N/A'}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Registration Date:</span>
+                    <span>${computer.registeredAt ? 
+                        new Date(computer.registeredAt).toLocaleString() : 'N/A'}</span>
+                </div>
+            </div>
+        `;
+
+        // Add close button functionality
+        document.querySelector('.popup-close').addEventListener('click', () => {
+            popup.classList.add('hidden');
+        });
+
+    } catch (error) {
+        console.error('Error showing computer details:', error);
+        alert('Failed to load computer details');
+    }
+}
+const style = document.createElement('style');
+style.textContent = `
+    .popup {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+    .popup-content {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        max-width: 500px;
+        width: 100%;
+        position: relative;
+    }
+    .close-button {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: none;
+        border: none;
+        font-size: 20px;
+        cursor: pointer;
+        color: #000;
+    }
+    .blur {
+        filter: blur(5px);
+        pointer-events: none; /* Prevent interaction with blurred content */
+    }
+`;
+document.head.appendChild(style);
 
 function simulateNetworkSpeedUpdates() {
     setInterval(() => {
@@ -814,6 +1083,50 @@ document.getElementById('studentBookingForm').addEventListener('submit', async (
         alert(`Error: ${error.message}`);
     }
 });
+document.getElementById('staffBookingForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const computerId = document.getElementById('studentComputerSelect').value;
+    const startTime = document.getElementById('studentStartTime').value;
+    const endTime = document.getElementById('studentEndTime').value;
+    const purpose = document.getElementById('studentBookingPurpose').value;
+
+    if (!computerId || !startTime || !endTime || !purpose) {
+        alert('Please fill all fields.');
+        return;
+    }
+
+    const bookingData = {
+        computer: computerId,
+        startTime: startTime, // Plain date string
+        endTime: endTime, // Plain date string
+        purpose
+    };
+
+    try {
+        const response = await fetch('/api/bookings', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify(bookingData)
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || 'Failed to book computer');
+        }
+
+        alert('Computer booked successfully!');
+        e.target.reset();
+        loadAvailableComputers(); // Refresh the available computers list
+    } catch (error) {
+        console.error('Error booking computer:', error);
+        alert(`Error: ${error.message}`);
+    }
+});
 
 async function loadBookings() {
     try {
@@ -850,7 +1163,7 @@ async function loadBookings() {
                     <td>
                         ${booking.status === 'upcoming' ? `
                             <button class="btn-cancel" data-id="${booking._id}">Cancel</button>
-                        ` : 'No actions'}
+                        ` : '--'}
                     </td>
                 </tr>
             `;
@@ -960,3 +1273,145 @@ document.getElementById('downloadPDF').addEventListener('click', async () => {
 
     window.open(`/api/bookings/attendance/pdf?from=${fromDate}&to=${toDate}`, '_blank');
 });
+
+// Add these functions to your dashboard.js or in a script tag
+async function fetchIPAddress() {
+    try {
+        const response = await fetch('https://api.ipify.org?format=json');
+        const data = await response.json();
+        return data.ip;
+    } catch (error) {
+        console.error('Error fetching IP address:', error);
+        return null;
+    }
+}
+
+async function fetchComputerDetails(ip) {
+    try {
+        const response = await fetch(`/api/computers?ip=${ip}`);
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Error fetching computer details:', error);
+        return null;
+    }
+}
+
+async function fetchRealTimeSpecs() {
+    try {
+        const response = await fetch('http://localhost:3000/api/specs');
+        if (!response.ok) throw new Error('Failed to fetch specs');
+        const specs = await response.json();
+        return specs;
+    } catch (error) {
+        console.error('Error fetching real-time specs:', error);
+        return null;
+    }
+}
+
+async function updateSystemSpecs() {
+    const ip = await fetchIPAddress();
+    if (ip) {
+        document.getElementById('computer-name').textContent = ip;
+        const computerDetails = await fetchComputerDetails(ip);
+        const realTimeSpecs = await fetchRealTimeSpecs();
+
+        const specsToUpdate = {
+            'os': realTimeSpecs?.os || computerDetails?.os,
+            'processor': realTimeSpecs?.cpu || computerDetails?.processor,
+            'memory': realTimeSpecs?.ram || computerDetails?.memory,
+            'storage': realTimeSpecs?.storage?.map(disk => disk.size).join(', ') || computerDetails?.storage,
+            'graphics': computerDetails?.graphics,
+            'resolution': computerDetails?.resolution
+        };
+
+        Object.entries(specsToUpdate).forEach(([key, value]) => {
+            const element = document.getElementById(`${key}-value`);
+            const input = document.getElementById(`${key}-input`);
+            
+            if (value) {
+                element.textContent = value;
+                input.value = value;
+            } else {
+                element.textContent = '--';
+                addEditButton(key);
+            }
+        });
+    }
+}
+
+function addEditButton(specId) {
+    const specItem = document.getElementById(`${specId}-value`).closest('.spec-item');
+    const editHtml = `
+        <i class="fas fa-pencil-alt edit-icon" data-spec="${specId}"></i>
+        <i class="fas fa-save edit-icon" data-spec="${specId}" style="display: none"></i>
+    `;
+    specItem.insertAdjacentHTML('beforeend', editHtml);
+    
+    specItem.querySelector('.fa-pencil-alt').addEventListener('click', startEditing);
+    specItem.querySelector('.fa-save').addEventListener('click', saveEditing);
+}
+
+function startEditing(e) {
+    const specItem = e.target.closest('.spec-item');
+    const specId = e.target.dataset.spec;
+    
+    specItem.classList.add('editing');
+    e.target.style.display = 'none';
+    specItem.querySelector('.fa-save').style.display = 'block';
+}
+
+function saveEditing(e) {
+    const specItem = e.target.closest('.spec-item');
+    const specId = e.target.dataset.spec;
+    const input = document.getElementById(`${specId}-input`);
+    const valueElement = document.getElementById(`${specId}-value`);
+    
+    valueElement.textContent = input.value || '--';
+    specItem.classList.remove('editing');
+    e.target.style.display = 'none';
+    specItem.querySelector('.fa-pencil-alt').style.display = 'block';
+}
+
+function simulateSpeedTest() {
+    const testSpeedBtn = document.getElementById("test-speed-btn");
+    testSpeedBtn.disabled = true;
+    testSpeedBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Testing...';
+
+    document.getElementById("download-speed").textContent = "0.00";
+    document.getElementById("upload-speed").textContent = "0.00";
+    document.getElementById("ping-value").textContent = "0";
+    document.getElementById("download-progress").style.width = "0%";
+    document.getElementById("upload-progress").style.width = "0%";
+    document.getElementById("ping-progress").style.width = "0%";
+
+    setTimeout(() => {
+        const downloadSpeed = (Math.random() * 100 + 50).toFixed(2);
+        document.getElementById("download-speed").textContent = downloadSpeed;
+        document.getElementById("download-progress").style.width = `${Math.min((downloadSpeed / 200) * 100, 100)}%`;
+
+        setTimeout(() => {
+            const uploadSpeed = (Math.random() * 30 + 10).toFixed(2);
+            document.getElementById("upload-speed").textContent = uploadSpeed;
+            document.getElementById("upload-progress").style.width = `${Math.min((uploadSpeed / 50) * 100, 100)}%`;
+
+            setTimeout(() => {
+                const ping = Math.floor(Math.random() * 30 + 5);
+                document.getElementById("ping-value").textContent = ping;
+                document.getElementById("ping-progress").style.width = `${Math.min(100 - (ping / 100) * 100, 100)}%`;
+
+                testSpeedBtn.disabled = false;
+                testSpeedBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Test Speed';
+            }, 500);
+        }, 1000);
+    }, 1500);
+}
+
+// Initialize when This PC section is shown
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('test-speed-btn')?.addEventListener('click', simulateSpeedTest);
+    
+    // Update specs when This PC section is shown
+    document.querySelector('[data-target="thisPC"]')?.addEventListener('click', updateSystemSpecs);
+});
+

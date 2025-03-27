@@ -45,9 +45,13 @@ body.dark {
     overflow-y: auto;
     z-index: 1000;
     box-shadow: var(--shadow);
-    left: 0; /* Ensure the navigation starts from the left */
+    left: 0;
+    scrollbar-width: none;
+    -ms-overflow-style: none; 
 }
-
+.navigation::-webkit-scrollbar {
+    display: none; 
+}
 .navigation.collapsed {
     width: 70px; /* Slimmer width when collapsed */
 }
@@ -87,15 +91,19 @@ body.dark {
 
 .navigation .role-badge {
     padding: 8px 15px;
-    background-color: var(--primary-color);
-    color: white;
+    
+    color: var(--text-color);
     border-radius: 20px;
     font-size: 0.9rem;
     font-weight: 500;
     box-shadow: var(--shadow);
     display: inline-block;
     transition: var(--transition);
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
+
+
 
 .navigation.collapsed .role-badge {
     padding: 6px;
@@ -106,6 +114,14 @@ body.dark {
     display: flex;
     align-items: center;
     justify-content: center;
+    text-indent: -9999px; /* Hide text when collapsed */
+    overflow: hidden;
+}
+
+.navigation.collapsed .role-badge::after {
+    content: attr(data-initial);
+    text-indent: 0;
+    position: absolute;
 }
 
 .navigation ul {
@@ -179,7 +195,7 @@ body.dark {
 /* =========== Main Content ============ */
 .main {
     margin-left: 250px;
-    padding: 20px;
+    padding: 0 20px 20px 20px; /* Top padding removed since topbar is sticky */
     transition: var(--transition);
     min-height: 100vh;
 }
@@ -188,15 +204,23 @@ body.dark {
     margin-left: 70px;
 }
 
+.details {
+    padding-top: 20px; /* Adds spacing between topbar and content */
+}
+
 .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 30px;
+    padding: 15px 20px;
+    margin-bottom: 20px;
     background-color: var(--card-bg);
-    padding: 2px;
-    border-radius: 10px;
+    border-bottom: 1px solid var(--border-color);
     box-shadow: var(--shadow);
+    border-radius: 0;
 }
 
 .topbar .toggle-btn {
@@ -259,53 +283,6 @@ body.dark {
 }
 
 /* =========== Cards ============ */
-.cardBox {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 20px;
-    margin-bottom: 30px;
-}
-
-.card {
-    background: var(--card-bg);
-    padding: 25px;
-    border-radius: 15px;
-    border: 1px solid var(--border-color);
-    transition: var(--transition);
-    box-shadow: var(--shadow);
-    display: flex;
-    flex-direction: column;
-}
-
-.card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-}
-
-.card .numbers {
-    font-size: 2.2rem;
-    font-weight: bold;
-    color: var(--primary-color);
-    margin-bottom: 5px;
-}
-
-.card .cardName {
-    font-size: 1.1rem;
-    color: var(--secondary-color);
-    font-weight: 500;
-}
-
-.card .iconBx {
-    font-size: 2.5rem;
-    color: var(--primary-color);
-    background-color: rgba(0, 123, 255, 0.1);
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
 
 /* =========== Card Container ============ */
 .card-container {
@@ -328,6 +305,197 @@ body.dark {
     padding-bottom: 10px;
 }
 
+/* Dashboard Overview Cards */
+.card-content {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+}
+
+.card-content .numbers {
+    font-size: 2.2rem;
+    font-weight: bold;
+    color: var(--primary-color);
+    margin-bottom: 5px;
+}
+
+.card-content .cardName {
+    font-size: 1.1rem;
+    color: var(--secondary-color);
+    font-weight: 500;
+}
+
+.dashboard-grid .iconBx {
+    font-size: 2.5rem;
+    color: var(--primary-color);
+    background-color: rgba(0, 123, 255, 0.1);
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.card-content .status-details {
+    margin-top: 10px;
+    font-size: 1.2rem;
+    color: var(--secondary-color);
+}
+
+.status-details div {
+    margin: 5px 0;
+    display: flex;
+    align-items: center;
+}
+.status-details{
+    display:flex
+}
+
+.status-details .status-indicator,
+.status-details .approval-status {
+    margin-right: 8px;
+    width: 12px;
+    height: 12px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Make the dashboard overview the default view */
+#dashboardOverview:not(.hidden) ~ .section-content {
+    display: none;
+}
+
+/* =========== Dashboard Grid Layout ============ */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    grid-template-rows: repeat(5, 1fr);
+    gap: 15px;
+    height: calc(100vh - 120px); /* Adjust based on your header height */
+    min-height: 600px; /* Set a minimum height */
+}
+
+.dashboard-card {
+    background: var(--card-bg);
+    padding: 25px;
+    border-radius: 15px;
+    border: 1px solid var(--border-color);
+    transition: var(--transition);
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* Prevent content from overflowing */
+}
+
+/* Card 1: Span 3 columns and 3 rows */
+.card1 {
+    grid-column: span 3;
+    grid-row: span 3;
+    display: flex;
+    flex-direction: row;
+    
+}
+
+/* Card 2: Span 2 columns and 2 rows, positioned at column 1, row 4 */
+.card2 {
+    grid-column: 1 / span 2;
+    grid-row: 4 / span 2;
+    display: flex;
+    flex-direction: row;
+}
+
+/* Card 3: Span 2 columns and 2 rows, positioned at column 3, row 4 */
+.card3 {
+    grid-column: 3 / span 2;
+    grid-row: 4 / span 2;
+    display: flex;
+    flex-direction: row;
+}
+
+/* Card 4: Span 2 columns and 3 rows, positioned at column 4, row 1 */
+.card4 {
+    grid-column: 4 / span 2;
+    grid-row: 1 / span 2;
+    display: flex;
+    flex-direction: row;
+}
+
+/* Card 5: Span 1 column and 2 rows, positioned at column 5, row 4 */
+.card5 {
+    grid-column: 5;
+    grid-row: 4 / span 2;
+    display: flex;
+    flex-direction: row;
+}
+
+/* Make sure content fills the cards */
+.card-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1400px) {
+    .dashboard-grid {
+        grid-template-columns: repeat(3, 1fr);
+        grid-template-rows: repeat(6, 1fr);
+        height: auto;
+    }
+    
+    .card1 {
+        grid-column: 1 / span 2;
+        grid-row: 1 / span 2;
+    }
+    
+    .card2 {
+        grid-column: 3;
+        grid-row: 1 / span 2;
+    }
+    
+    .card3 {
+        grid-column: 1;
+        grid-row: 3 / span 2;
+    }
+    
+    .card4 {
+        grid-column: 2;
+        grid-row: 3 / span 2;
+    }
+    
+    .card5 {
+        grid-column: 3;
+        grid-row: 3 / span 2;
+    }
+}
+
+@media (max-width: 992px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: auto;
+    }
+    
+    .card1, .card2, .card3, .card4, .card5 {
+        grid-column: auto;
+        grid-row: auto;
+        min-height: 250px;
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .dashboard-card {
+        min-height: 200px;
+    }
+}
 /* =========== Tables ============ */
 .table-container {
     overflow-x: auto;
@@ -446,7 +614,7 @@ button:hover {
     transform: translateY(-2px);
 }
 /* Minimize button sizes */
-.btn-edit,
+.btn-details,
 .btn-delete,
 .btn-approve,
 .btn-reject,
@@ -458,7 +626,7 @@ button:hover {
 }
 
 /* Hover effects for buttons */
-.btn-edit:hover,
+.btn-see-details:hover,
 .btn-delete:hover,
 .btn-approve:hover,
 .btn-reject:hover,
@@ -695,6 +863,18 @@ button:hover {
     .main {
         margin-left: 0;
         width: 100%;
+        padding-top: 0; /* Remove top padding on mobile */
+    }
+    
+    .topbar {
+        position: static; /* Makes topbar scroll normally on mobile */
+        border-radius: 10px;
+        margin: 15px;
+        width: calc(100% - 30px);
+    }
+    
+    .details {
+        padding-top: 0;
     }
     
     .navigation.collapsed {
@@ -749,3 +929,233 @@ button:hover {
         width: 100%;
     }
 }
+/* This PC Section Styles */
+.specs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.spec-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background-color: var(--bg-color);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.spec-name {
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+.spec-value {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.spec-text {
+    margin-right: 10px;
+}
+
+.spec-input {
+    position: absolute;
+    right: 0;
+    width: 200px;
+    padding: 5px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    display: none;
+}
+
+.spec-item.editing .spec-text {
+    display: none;
+}
+
+.spec-item.editing .spec-input {
+    display: block;
+}
+
+.edit-icon {
+    margin-left: 10px;
+    cursor: pointer;
+    color: var(--primary-color);
+    font-size: 0.9rem;
+}
+
+/* Speed Meter Styles */
+.speed-meters {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-top: 15px;
+}
+
+.speed-meter {
+    text-align: center;
+    padding: 15px;
+    background-color: var(--bg-color);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.speed-value {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: var(--primary-color);
+    margin: 5px 0;
+}
+
+.speed-unit {
+    color: var(--secondary-color);
+    margin-bottom: 10px;
+}
+
+.progress-container {
+    width: 100%;
+    height: 8px;
+    background-color: var(--border-color);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    background-color: var(--primary-color);
+    transition: width 0.5s ease;
+}
+
+.refresh-btn {
+    margin-top: 15px;
+    padding: 8px 15px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.refresh-btn:hover {
+    background-color: #0056b3;
+}
+
+.refresh-btn i {
+    margin-right: 5px;
+}
+/* Add these styles to your CSS file */
+#popupContainer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.popup-content {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    max-width: 500px;
+    width: 90%;
+    position: relative;
+}
+
+.close-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #333;
+}
+
+.blur {
+    filter: blur(5px);
+    pointer-events: none;
+}
+
+  
+  .popup-title {
+    margin: 0;
+    font-size: 18px;
+  }
+  
+  
+  .popup-content {
+    padding: 20px;
+  }
+  
+  
+  .detail-section {
+    margin-bottom: 20px;
+  }
+  
+  .detail-section h4 {
+    margin: 0 0 10px 0;
+    color: #444;
+  }
+  
+  .detail-item {
+    display: flex;
+    margin-bottom: 8px;
+  }
+  
+  .detail-label {
+    font-weight: 500;
+    color: #666;
+    min-width: 150px;
+  }
+
+
+  .popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+  
+  .popup-container {
+    background: white;
+    border-radius: 8px;
+    width: 80%;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+  
+  .popup-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .popup-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+  }
+  
+  .hidden {
+    display: none !important;
+  }

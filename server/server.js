@@ -32,7 +32,14 @@ mongoose.connection.on('error', (err) => {
 });
 
 // Middleware
-app.use(cors({ origin: 'https://bytelab-demo.vercel.app' }));
+app.use(cors({
+  origin: [
+    'https://comsy-sigma.vercel.app',
+    'http://localhost:5000' // For local testing
+  ],
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true
+}));
 app.use(express.json());
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*'); // Allow requests from any origin (update to your specific origin in production)

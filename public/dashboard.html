@@ -268,13 +268,12 @@
                             <table id="computersTable">
                                 <thead>
                                     <tr>
-                                        <th>Computer ID</th>
                                         <th>Name</th>
                                         <th>Operational Status</th>
                                         <th>Approval Status</th>
                                         <th>Power Status</th>
-                                        <th>Network Speed</th>
-                                        <th>IP Address</th>
+                                        <th>Download Speed</th>
+                                        <th>Upload Speed</th>                                        <th>IP Address</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
@@ -612,93 +611,23 @@
                     </div>
                 </div>
             </div>
-            <!-- Add this inside the <div class="details"> section, after the other section-content divs -->
+            
             <div id="thisPC" class="section-content hidden">
                 <div class="card">
-                    <h3><i class="fas fa-desktop"></i> This PC - <span id="computer-name">Loading...</span></h3>
-                    
-                    <!-- System Specifications Card -->
-                    <div class="card">
-                        <h3><i class="fas fa-microchip"></i> System Specifications</h3>
-                        <div class="specs-grid">
-                            <!-- Detected Specs -->
-                            <div class="spec-item">
-                                <div class="spec-name">Operating System</div>
-                                <div class="spec-value">
-                                    <span class="spec-text" id="os-value">--</span>
-                                    <input type="text" class="spec-input" id="os-input">
-                                </div>
-                            </div>
-                            <div class="spec-item">
-                                <div class="spec-name">Processor</div>
-                                <div class="spec-value">
-                                    <span class="spec-text" id="processor-value">--</span>
-                                    <input type="text" class="spec-input" id="processor-input">
-                                </div>
-                            </div>
-                            <div class="spec-item">
-                                <div class="spec-name">Memory</div>
-                                <div class="spec-value">
-                                    <span class="spec-text" id="memory-value">--</span>
-                                    <input type="text" class="spec-input" id="memory-input">
-                                </div>
-                            </div>
-                            <div class="spec-item">
-                                <div class="spec-name">Total Storage</div>
-                                <div class="spec-value">
-                                    <span class="spec-text" id="storage-value">--</span>
-                                    <input type="text" class="spec-input" id="storage-input">
-                                </div>
-                            </div>
-                            <div class="spec-item">
-                                <div class="spec-name">Graphics</div>
-                                <div class="spec-value">
-                                    <span class="spec-text" id="graphics-value">--</span>
-                                    <input type="text" class="spec-input" id="graphics-input">
-                                </div>
-                            </div>
-                            <div class="spec-item">
-                                <div class="spec-name">Screen Resolution</div>
-                                <div class="spec-value">
-                                    <span class="spec-text" id="resolution-value">--</span>
-                                    <input type="text" class="spec-input" id="resolution-input">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Network Speed Card -->
-                    <div class="card">
-                        <h3><i class="fas fa-wifi"></i> Network Speed</h3>
-                        <div class="speed-meters">
-                            <div class="speed-meter">
-                                <h4>Download Speed</h4>
-                                <div class="speed-value" id="download-speed">0.00</div>
-                                <div class="speed-unit">Mbps</div>
-                                <div class="progress-container">
-                                    <div class="progress-bar" id="download-progress" style="width: 0%;"></div>
-                                </div>
-                            </div>
-                            <div class="speed-meter">
-                                <h4>Upload Speed</h4>
-                                <div class="speed-value" id="upload-speed">0.00</div>
-                                <div class="speed-unit">Mbps</div>
-                                <div class="progress-container">
-                                    <div class="progress-bar" id="upload-progress" style="width: 0%;"></div>
-                                </div>
-                            </div>
-                            <div class="speed-meter">
-                                <h4>Ping</h4>
-                                <div class="speed-value" id="ping-value">0</div>
-                                <div class="speed-unit">ms</div>
-                                <div class="progress-container">
-                                    <div class="progress-bar" id="ping-progress" style="width: 0%;"></div>
-                                </div>
-                            </div>
-                        </div>
-                        <button id="test-speed-btn" class="refresh-btn">
-                            <i class="fas fa-sync-alt"></i> Test Speed
+                    <div class="pc-header">
+                        <h3><i class="fas fa-desktop"></i> This PC</h3>
+                        <button id="refreshSpecsBtn" class="refresh-btn">
+                            <i class="fas fa-sync-alt"></i> Refresh
                         </button>
+                    </div>
+                    
+                    <!-- System Specifications Container -->
+                    <div id="systemSpecsContainer" class="specs-container">
+                        <!-- Content will be dynamically populated by JavaScript -->
+                        <div class="loading-specs">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <p>Loading system specifications...</p>
+                        </div>
                     </div>
                 </div>
             </div>

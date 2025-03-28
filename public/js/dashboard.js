@@ -40,8 +40,14 @@ async function checkComputerRegistration() {
     const ipDisplay = document.getElementById('detectedIp');
     
     try {
-        // Get client IP
-        const clientIp = await getClientIp();
+        // Get system specs which includes IP address from localhost:4000
+        const specs = await fetchSystemSpecs();
+        const clientIp = specs.ipAddress;
+        
+        if (!clientIp) {
+            throw new Error('Could not detect IP address');
+        }
+        
         ipDisplay.textContent = `Checking: ${clientIp}`;
         
         // Fetch all computers
@@ -103,24 +109,18 @@ async function checkComputerRegistration() {
     }
 }
 
-async function getClientIp() {
+// Add this helper function to fetch system specs (similar to computer-registration.js)
+async function fetchSystemSpecs() {
     try {
-        // Try public IP first
-        const response = await fetch('https://api.ipify.org?format=json');
-        const data = await response.json();
-        return data.ip;
+        const response = await fetch('http://localhost:4000/api/specs');
+        if (!response.ok) throw new Error('Failed to fetch specs');
+        return await response.json();
     } catch (error) {
-        console.log('Could not get public IP:', error);
-        
-        // Fallback for local development
-        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-            return '127.0.0.1';
-        }
-
-        // Final fallback
-        return 'unknown-ip';
+        console.error('Error fetching specs:', error);
+        return { ipAddress: null, networkSpeed: { download: 0, upload: 0, ping: 0 } };
     }
 }
+
 document.getElementById('togglePasswordAddUser').addEventListener('click', function () {
     const passwordInput = document.getElementById('userPassword');
     const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
@@ -152,36 +152,6 @@ ws.onclose = () => {
 ws.onerror = (error) => {
     console.error('WebSocket error:', error);
 };
-
-// Function to fetch and send internet speed
-async function fetchAndSendSpeed(ws) {
-    try {
-        const speed = await fetchInternetSpeed();
-        if (ws.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify({ type: 'speed', speed }));
-        }
-        document.getElementById('currentSpeed').textContent = speed;
-    } catch (error) {
-        console.error('Error fetching speed:', error);
-        document.getElementById('currentSpeed').textContent = '0';
-    }
-
-    // Fetch speed every 5 seconds
-    setTimeout(() => fetchAndSendSpeed(ws), 5000);
-}
-
-// Function to fetch internet speed
-async function fetchInternetSpeed() {
-    try {
-        // Simulate a random speed for testing
-        const speed = (Math.random() * 100).toFixed(2); // Random speed between 0 and 100 Mbps
-        console.log('Simulated speed:', speed);
-        return speed;
-    } catch (error) {
-        console.error('Error fetching internet speed:', error);
-        return 0; // Return 0 in case of error
-    }
-}
 
 // Update computer status
 document.querySelectorAll('.status-select').forEach(select => {
@@ -240,7 +210,6 @@ function logout() {
     window.location.href = '/login.html';
 }
 
-// Role-Based Content Loading
 // Update loadRoleSpecificContent
 function loadRoleSpecificContent(role) {
     // Hide all dashboards
@@ -430,7 +399,6 @@ async function loadAllComputers() {
         computers.forEach(computer => {
             const row = document.createElement('tr');
             row.innerHTML = `
-                <td>${computer.id}</td>
                 <td>${computer.name}</td>
                 <td>
                     <span class="status-indicator ${computer.operationalStatus}">
@@ -448,7 +416,10 @@ async function loadAllComputers() {
                     </span>
                 </td>
                 <td>
-                    <span class="network-speed">${computer.networkSpeed}</span> Mbps
+                    <span class="network-speed">${computer.networkSpeed?.download?.toFixed(2) || '0.00'}</span> Mbps
+                </td>
+                <td>
+                    <span class="network-speed">${computer.networkSpeed?.upload?.toFixed(2) || '0.00'}</span> Mbps
                 </td>
                 <td>${computer.ipAddress}</td>
                 <td>
@@ -490,18 +461,15 @@ async function loadAllComputers() {
             });
         });
 
-        // Simulate network speed updates
-        simulateNetworkSpeedUpdates();
-
+        // Remove the simulateNetworkSpeedUpdates call since we're using real data now
     } catch (error) {
         console.error('Error loading computers:', error);
         alert(`Error: ${error.message}`);
     }
 }
+
 async function showDetailsPopup(computer) {
     try {
-        // Use the computer object passed from the clicked row
-        // No need to fetch IP separately since we have the complete computer object
         const popup = document.getElementById('computerDetailsPopup');
         popup.classList.remove('hidden');
 
@@ -516,6 +484,10 @@ async function showDetailsPopup(computer) {
                 <div class="detail-item">
                     <span class="detail-label">IP Address:</span>
                     <span>${computer.ipAddress || 'N/A'}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">MAC Address:</span>
+                    <span>${computer.macAddress || 'N/A'}</span>
                 </div>
                 <div class="detail-item">
                     <span class="detail-label">Status:</span>
@@ -564,8 +536,16 @@ async function showDetailsPopup(computer) {
                     <span>${computer.specs?.network || 'N/A'}</span>
                 </div>
                 <div class="detail-item">
-                    <span class="detail-label">Network Speed:</span>
-                    <span class="network-speed">${computer.networkSpeed}</span> Mbps
+                    <span class="detail-label">Download Speed:</span>
+                    <span>${computer.networkSpeed?.download ? `${computer.networkSpeed.download.toFixed(2)} Mbps` : 'N/A'}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Upload Speed:</span>
+                    <span>${computer.networkSpeed?.upload ? `${computer.networkSpeed.upload.toFixed(2)} Mbps` : 'N/A'}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Ping:</span>
+                    <span>${computer.networkSpeed?.ping ? `${computer.networkSpeed.ping} ms` : 'N/A'}</span>
                 </div>
                 <div class="detail-item">
                     <span class="detail-label">Maintenance Required:</span>
@@ -576,20 +556,28 @@ async function showDetailsPopup(computer) {
             <div class="detail-section">
                 <h4>Hardware Connected</h4>
                 <div class="detail-item">
-                    <span class="detail-label">Mouse:</span>
-                    <span>N/A</span>
+                    <span class="detail-label">Keyboard:</span>
+                    <span>${computer.specs?.hardwareConnected?.keyboard ? '✔ Connected' : '✖ Not connected'}</span>
                 </div>
                 <div class="detail-item">
-                    <span class="detail-label">Keyboard:</span>
-                    <span>N/A</span>
+                    <span class="detail-label">Mouse:</span>
+                    <span>${computer.specs?.hardwareConnected?.mouse ? '✔ Connected' : '✖ Not connected'}</span>
                 </div>
                 <div class="detail-item">
                     <span class="detail-label">Monitor:</span>
-                    <span>N/A</span>
+                    <span>${computer.specs?.hardwareConnected?.monitor ? '✔ Connected' : '✖ Not connected'}</span>
                 </div>
                 <div class="detail-item">
-                    <span class="detail-label">External Drive:</span>
-                    <span>N/A</span>
+                    <span class="detail-label">Headphones:</span>
+                    <span>${computer.specs?.hardwareConnected?.headphone ? '✔ Connected' : '✖ Not connected'}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Microphone:</span>
+                    <span>${computer.specs?.hardwareConnected?.microphone ? '✔ Connected' : '✖ Not connected'}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">USB Drive:</span>
+                    <span>${computer.specs?.hardwareConnected?.pendrive ? '✔ Connected' : '✖ Not connected'}</span>
                 </div>
             </div>
             
@@ -615,6 +603,16 @@ async function showDetailsPopup(computer) {
                     <span class="detail-label">Registration Date:</span>
                     <span>${computer.registeredAt ? 
                         new Date(computer.registeredAt).toLocaleString() : 'N/A'}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Last Updated:</span>
+                    <span>${computer.lastUpdated ? 
+                        new Date(computer.lastUpdated).toLocaleString() : 'N/A'}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Updated At:</span>
+                    <span>${computer.updatedAt ? 
+                        new Date(computer.updatedAt).toLocaleString() : 'N/A'}</span>
                 </div>
             </div>
         `;
@@ -667,16 +665,6 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
-
-function simulateNetworkSpeedUpdates() {
-    setInterval(() => {
-        document.querySelectorAll('.network-speed').forEach(element => {
-            // Update speed with random value between 45-105 Mbps
-            const newSpeed = (Math.random() * 60 + 45).toFixed(2);
-            element.textContent = newSpeed;
-        });
-    }, 2000); // Update every 5 seconds
-}
 
 async function handleStatusChange(e) {
     try {
@@ -1373,45 +1361,142 @@ function saveEditing(e) {
     specItem.querySelector('.fa-pencil-alt').style.display = 'block';
 }
 
-function simulateSpeedTest() {
-    const testSpeedBtn = document.getElementById("test-speed-btn");
-    testSpeedBtn.disabled = true;
-    testSpeedBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Testing...';
+async function updateSystemSpecs() {
+    try {
+        // Fetch real-time specs from local endpoint
+        const specs = await fetchSystemSpecs();
+        
+        if (!specs) {
+            throw new Error('Could not fetch system specifications');
+        }
 
-    document.getElementById("download-speed").textContent = "0.00";
-    document.getElementById("upload-speed").textContent = "0.00";
-    document.getElementById("ping-value").textContent = "0";
-    document.getElementById("download-progress").style.width = "0%";
-    document.getElementById("upload-progress").style.width = "0%";
-    document.getElementById("ping-progress").style.width = "0%";
+        // Update basic specs
+        const specsContainer = document.getElementById('systemSpecsContainer');
+        specsContainer.innerHTML = ''; // Clear previous content
 
-    setTimeout(() => {
-        const downloadSpeed = (Math.random() * 100 + 50).toFixed(2);
-        document.getElementById("download-speed").textContent = downloadSpeed;
-        document.getElementById("download-progress").style.width = `${Math.min((downloadSpeed / 200) * 100, 100)}%`;
+        // Add system specifications section
+        const systemSpecsHTML = `
+            <div class="spec-section">
+                <h3>System Specifications</h3>
+                <div class="spec-grid">
+                    <div class="spec-item">
+                        <span class="spec-label">Processor:</span>
+                        <span class="spec-value">${specs.cpu || 'N/A'}</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label">Memory (RAM):</span>
+                        <span class="spec-value">${specs.ram || 'N/A'}</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label">Storage:</span>
+                        <span class="spec-value">${specs.storage || 'N/A'}</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label">Operating System:</span>
+                        <span class="spec-value">${specs.os || 'N/A'}</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label">Network Adapter:</span>
+                        <span class="spec-value">${specs.network || 'N/A'}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+        specsContainer.insertAdjacentHTML('beforeend', systemSpecsHTML);
 
-        setTimeout(() => {
-            const uploadSpeed = (Math.random() * 30 + 10).toFixed(2);
-            document.getElementById("upload-speed").textContent = uploadSpeed;
-            document.getElementById("upload-progress").style.width = `${Math.min((uploadSpeed / 50) * 100, 100)}%`;
+        // Add network performance section
+        const networkSpecsHTML = `
+            <div class="spec-section">
+                <h3>Network Performance</h3>
+                <div class="spec-grid">
+                    <div class="spec-item">
+                        <span class="spec-label">IP Address:</span>
+                        <span class="spec-value">${specs.ipAddress || 'N/A'}</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label">Download Speed:</span>
+                        <span class="spec-value">
+                            ${specs.networkSpeed?.download ? `${specs.networkSpeed.download.toFixed(2)} Mbps` : 'N/A'}
+                        </span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label">Upload Speed:</span>
+                        <span class="spec-value">
+                            ${specs.networkSpeed?.upload ? `${specs.networkSpeed.upload.toFixed(2)} Mbps` : 'N/A'}
+                        </span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label">Ping:</span>
+                        <span class="spec-value">
+                            ${specs.networkSpeed?.ping ? `${specs.networkSpeed.ping} ms` : 'N/A'}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        `;
+        specsContainer.insertAdjacentHTML('beforeend', networkSpecsHTML);
 
-            setTimeout(() => {
-                const ping = Math.floor(Math.random() * 30 + 5);
-                document.getElementById("ping-value").textContent = ping;
-                document.getElementById("ping-progress").style.width = `${Math.min(100 - (ping / 100) * 100, 100)}%`;
+        // Add hardware connected section as a list
+        const hardwareHTML = `
+            <div class="spec-section">
+                <h3>Hardware Connected</h3>
+                <ul class="hardware-list">
+                    ${specs.hardwareConnected ? `
+                        <li class="hardware-item ${specs.hardwareConnected.keyboard ? 'connected' : 'disconnected'}">
+                            Keyboard: ${specs.hardwareConnected.keyboard ? '✔ Connected' : '✖ Not connected'}
+                        </li>
+                        <li class="hardware-item ${specs.hardwareConnected.mouse ? 'connected' : 'disconnected'}">
+                            Mouse: ${specs.hardwareConnected.mouse ? '✔ Connected' : '✖ Not connected'}
+                        </li>
+                        <li class="hardware-item ${specs.hardwareConnected.monitor ? 'connected' : 'disconnected'}">
+                            Monitor: ${specs.hardwareConnected.monitor ? '✔ Connected' : '✖ Not connected'}
+                        </li>
+                        <li class="hardware-item ${specs.hardwareConnected.headphone ? 'connected' : 'disconnected'}">
+                            Headphones: ${specs.hardwareConnected.headphone ? '✔ Connected' : '✖ Not connected'}
+                        </li>
+                        <li class="hardware-item ${specs.hardwareConnected.microphone ? 'connected' : 'disconnected'}">
+                            Microphone: ${specs.hardwareConnected.microphone ? '✔ Connected' : '✖ Not connected'}
+                        </li>
+                        <li class="hardware-item ${specs.hardwareConnected.pendrive ? 'connected' : 'disconnected'}">
+                            USB Drive: ${specs.hardwareConnected.pendrive ? '✔ Connected' : '✖ Not connected'}
+                        </li>
+                    ` : `
+                        <li class="hardware-item disconnected">Hardware status unavailable</li>
+                    `}
+                </ul>
+            </div>
+        `;
+        specsContainer.insertAdjacentHTML('beforeend', hardwareHTML);
 
-                testSpeedBtn.disabled = false;
-                testSpeedBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Test Speed';
-            }, 500);
-        }, 1000);
-    }, 1500);
+        // Add refresh button functionality
+        const refreshBtn = document.getElementById('refreshSpecsBtn');
+        if (refreshBtn) {
+            refreshBtn.onclick = updateSystemSpecs;
+        }
+
+    } catch (error) {
+        console.error('Error updating system specs:', error);
+        const specsContainer = document.getElementById('systemSpecsContainer');
+        specsContainer.innerHTML = `
+            <div class="error-message">
+                <i class="fas fa-exclamation-triangle"></i>
+                <p>Could not load system specifications. Please try again later.</p>
+                <button id="retrySpecsBtn" class="btn-primary">Retry</button>
+            </div>
+        `;
+        document.getElementById('retrySpecsBtn').onclick = updateSystemSpecs;
+    }
 }
 
 // Initialize when This PC section is shown
 document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('test-speed-btn')?.addEventListener('click', simulateSpeedTest);
-    
     // Update specs when This PC section is shown
     document.querySelector('[data-target="thisPC"]')?.addEventListener('click', updateSystemSpecs);
+    
+    // Also update on initial load if we're already on the This PC page
+    if (window.location.pathname.includes('this-pc.html') || 
+        document.getElementById('systemSpecsContainer')) {
+        updateSystemSpecs();
+    }
 });
 

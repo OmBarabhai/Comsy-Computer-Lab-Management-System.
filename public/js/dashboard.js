@@ -133,8 +133,6 @@ const ws = new WebSocket('ws://localhost:8080');
 
 ws.onopen = () => {
     console.log('WebSocket connection established');
-    // Start fetching and sending speed data
-    fetchAndSendSpeed(ws);
 };
 
 ws.onmessage = (event) => {

@@ -1260,105 +1260,6 @@ document.getElementById('downloadPDF').addEventListener('click', async () => {
     window.open(`/api/bookings/attendance/pdf?from=${fromDate}&to=${toDate}`, '_blank');
 });
 
-// Add these functions to your dashboard.js or in a script tag
-async function fetchIPAddress() {
-    try {
-        const response = await fetch('https://api.ipify.org?format=json');
-        const data = await response.json();
-        return data.ip;
-    } catch (error) {
-        console.error('Error fetching IP address:', error);
-        return null;
-    }
-}
-
-async function fetchComputerDetails(ip) {
-    try {
-        const response = await fetch(`/api/computers?ip=${ip}`);
-        const data = await response.json();
-        return data;
-    } catch (error) {
-        console.error('Error fetching computer details:', error);
-        return null;
-    }
-}
-
-async function fetchRealTimeSpecs() {
-    try {
-        const response = await fetch('http://localhost:3000/api/specs');
-        if (!response.ok) throw new Error('Failed to fetch specs');
-        const specs = await response.json();
-        return specs;
-    } catch (error) {
-        console.error('Error fetching real-time specs:', error);
-        return null;
-    }
-}
-
-async function updateSystemSpecs() {
-    const ip = await fetchIPAddress();
-    if (ip) {
-        document.getElementById('computer-name').textContent = ip;
-        const computerDetails = await fetchComputerDetails(ip);
-        const realTimeSpecs = await fetchRealTimeSpecs();
-
-        const specsToUpdate = {
-            'os': realTimeSpecs?.os || computerDetails?.os,
-            'processor': realTimeSpecs?.cpu || computerDetails?.processor,
-            'memory': realTimeSpecs?.ram || computerDetails?.memory,
-            'storage': realTimeSpecs?.storage?.map(disk => disk.size).join(', ') || computerDetails?.storage,
-            'graphics': computerDetails?.graphics,
-            'resolution': computerDetails?.resolution
-        };
-
-        Object.entries(specsToUpdate).forEach(([key, value]) => {
-            const element = document.getElementById(`${key}-value`);
-            const input = document.getElementById(`${key}-input`);
-            
-            if (value) {
-                element.textContent = value;
-                input.value = value;
-            } else {
-                element.textContent = '--';
-                addEditButton(key);
-            }
-        });
-    }
-}
-
-function addEditButton(specId) {
-    const specItem = document.getElementById(`${specId}-value`).closest('.spec-item');
-    const editHtml = `
-        <i class="fas fa-pencil-alt edit-icon" data-spec="${specId}"></i>
-        <i class="fas fa-save edit-icon" data-spec="${specId}" style="display: none"></i>
-    `;
-    specItem.insertAdjacentHTML('beforeend', editHtml);
-    
-    specItem.querySelector('.fa-pencil-alt').addEventListener('click', startEditing);
-    specItem.querySelector('.fa-save').addEventListener('click', saveEditing);
-}
-
-function startEditing(e) {
-    const specItem = e.target.closest('.spec-item');
-    const specId = e.target.dataset.spec;
-    
-    specItem.classList.add('editing');
-    e.target.style.display = 'none';
-    specItem.querySelector('.fa-save').style.display = 'block';
-}
-
-function saveEditing(e) {
-    const specItem = e.target.closest('.spec-item');
-    const specId = e.target.dataset.spec;
-    const input = document.getElementById(`${specId}-input`);
-    const valueElement = document.getElementById(`${specId}-value`);
-    
-    valueElement.textContent = input.value || '--';
-    specItem.classList.remove('editing');
-    e.target.style.display = 'none';
-    specItem.querySelector('.fa-pencil-alt').style.display = 'block';
-}
-
 async function updateSystemSpecs() {
     try {
         // Fetch real-time specs from local endpoint
@@ -1490,11 +1391,5 @@ async function updateSystemSpecs() {
 document.addEventListener('DOMContentLoaded', function() {
     // Update specs when This PC section is shown
     document.querySelector('[data-target="thisPC"]')?.addEventListener('click', updateSystemSpecs);
-    
-    // Also update on initial load if we're already on the This PC page
-    if (window.location.pathname.includes('this-pc.html') || 
-        document.getElementById('systemSpecsContainer')) {
-        updateSystemSpecs();
-    }
 });
 

@@ -247,17 +247,6 @@
                                 <ion-icon name="calendar-outline"></ion-icon>
                             </div>
                         </div>
-
-                        <!-- Card 5: Current Speed (moved from cardBox) -->
-                        <div class="dashboard-card card5">
-                            <div class="card-content">
-                                <div class="numbers"><span id="currentSpeed">0</span> Mbps</div>
-                                <div class="cardName">Network Speed</div>
-                            </div>
-                            <div class="iconBx">
-                                <ion-icon name="speedometer-outline"></ion-icon>
-                            </div>
-                        </div>
                     </div>
                 </div>
                 <!-- Lab Computers Section -->
@@ -304,7 +293,12 @@
                 <!-- Reported Issues Section -->
                 <div id="reportedIssues" class="section-content hidden">
                     <div class="card">
-                        <h3>Reported Issues</h3>
+                        <div class="table-header">
+                            <h3>Reported Issues</h3>
+                            <button id="refreshIssuesBtn" class="refresh-btn">
+                                <i class="fas fa-sync-alt"></i> Refresh
+                            </button>
+                        </div>
                         <table id="issuesTable">
                             <thead>
                                 <tr>
@@ -362,7 +356,12 @@
                 <!-- Bookings Section -->
                 <div id="bookings" class="section-content hidden">
                     <div class="card">
-                        <h3>Bookings</h3>
+                        <div class="table-header">
+                            <h3>Bookings</h3>
+                            <button id="refreshBookingsBtn" class="refresh-btn">
+                                <i class="fas fa-sync-alt"></i> Refresh
+                            </button>
+                        </div>
                         <div class="table-container">
                             <table id="bookingsTable">
                                 <thead>

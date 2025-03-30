@@ -1,3 +1,5 @@
+let computersRefreshInterval = null;
+
 document.addEventListener('DOMContentLoaded', () => {
     const token = localStorage.getItem('token');
     const role = localStorage.getItem('role');
@@ -20,6 +22,10 @@ document.addEventListener('DOMContentLoaded', () => {
     setupEventListeners();
     loadRoleSpecificContent(role);
     checkComputerRegistration();
+
+    if (token && role === 'admin') {
+        loadAllComputers(); // This will start the interval
+    }
 
     async function verifyToken(token) {
         try {
@@ -195,21 +201,90 @@ function setupEventListeners() {
     document.getElementById('labBookingFormAdmin').addEventListener('submit', bookLab);
     document.getElementById('staffBookingForm').addEventListener('submit', handleStaffBooking);
     document.getElementById('profileBtn').addEventListener('click', () => {window.location.href = '/profile.html';});
-    document.querySelector('[href="dashboard.html"]').addEventListener('click', (e) => {
-        e.preventDefault();
-        document.querySelectorAll('.section-content').forEach(el => el.classList.add('hidden'));
-        document.getElementById('dashboardOverview').classList.remove('hidden');
-        loadDashboardData();
+    document.getElementById('refreshIssuesBtn')?.addEventListener('click', async function() {
+        const btn = this;
+        btn.disabled = true;
+        btn.classList.add('loading');
+        try {
+            await loadIssuesTable();
+        } finally {
+            btn.disabled = false;
+            btn.classList.remove('loading');
+        }
+    });
+
+    document.getElementById('refreshBookingsBtn')?.addEventListener('click', async function() {
+        const btn = this;
+        btn.disabled = true;
+        btn.classList.add('loading');
+        try {
+            await loadBookings();
+        } finally {
+            btn.disabled = false;
+            btn.classList.remove('loading');
+        }
     });
 }
 
+// Add refresh functionality to issues table
+document.getElementById('refreshIssuesBtn')?.addEventListener('click', async function() {
+    const btn = this;
+    btn.disabled = true;
+    btn.classList.add('loading');
+    
+    try {
+        await loadIssuesTable();
+    } catch (error) {
+        console.error('Error refreshing issues:', error);
+    } finally {
+        btn.disabled = false;
+        btn.classList.remove('loading');
+    }
+});
+
+// Add refresh functionality to bookings table
+document.getElementById('refreshBookingsBtn')?.addEventListener('click', async function() {
+    const btn = this;
+    btn.disabled = true;
+    btn.classList.add('loading');
+    
+    try {
+        await loadBookings();
+    } catch (error) {
+        console.error('Error refreshing bookings:', error);
+    } finally {
+        btn.disabled = false;
+        btn.classList.remove('loading');
+    }
+});
+
+window.addEventListener('beforeunload', () => {
+    if (computersRefreshInterval) {
+        clearInterval(computersRefreshInterval);
+        computersRefreshInterval = null;
+    }
+    const indicator = document.getElementById('computersRefreshIndicator');
+    if (indicator) indicator.classList.add('hidden');
+});
+
 function logout() {
+    // Clear the refresh interval
+    if (computersRefreshInterval) {
+        clearInterval(computersRefreshInterval);
+        computersRefreshInterval = null;
+    }
+    
     localStorage.clear();
     window.location.href = '/login.html';
 }
 
 // Update loadRoleSpecificContent
 function loadRoleSpecificContent(role) {
+
+    if (computersRefreshInterval) {
+        clearInterval(computersRefreshInterval);
+        computersRefreshInterval = null;
+    }
     // Hide all dashboards
     document.querySelectorAll('[id$="Dashboard"]').forEach(el => el.classList.add('hidden'));
     document.getElementById('adminView').classList.add('hidden');
@@ -369,99 +444,121 @@ function showAllComputers() {
 // Add these functions
 async function loadAllComputers() {
     try {
-        const response = await fetch('/api/computers', {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-        });
+        const indicator = document.getElementById('computersRefreshIndicator');
+        if (indicator) indicator.classList.remove('hidden');
 
-        if (!response.ok) throw new Error('Failed to fetch computers');
-        const computers = await response.json();
-
-        const tbody = document.querySelector('#computersTable tbody');
-        tbody.innerHTML = '';
-
-        // Populate dropdown for all roles
-        const issueComputerSelectStudent = document.getElementById('issueComputerSelectStudent');
-        if (issueComputerSelectStudent) {
-            issueComputerSelectStudent.innerHTML = '<option value="">Select Computer</option>';
-
-            computers.forEach(computer => {
-                if (computer.status === 'approved') {
-                    issueComputerSelectStudent.innerHTML += `
-                        <option value="${computer.id}">${computer.name}</option>
-                    `;
-                }
+        const loadData = async () => {
+            const response = await fetch('/api/computers', {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
             });
+
+            if (!response.ok) throw new Error('Failed to fetch computers');
+            const computers = await response.json();
+
+            const tbody = document.querySelector('#computersTable tbody');
+            tbody.innerHTML = '';
+
+            // Populate dropdown for all roles
+            const issueComputerSelectStudent = document.getElementById('issueComputerSelectStudent');
+            if (issueComputerSelectStudent) {
+                issueComputerSelectStudent.innerHTML = '<option value="">Select Computer</option>';
+
+                computers.forEach(computer => {
+                    if (computer.status === 'approved') {
+                        issueComputerSelectStudent.innerHTML += `
+                            <option value="${computer._id}">${computer.name}</option>
+                        `;
+                    }
+                });
+            }
+
+            // Populate table with real data
+            computers.forEach(computer => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${computer.name}</td>
+                    <td>
+                        <span class="status-indicator ${computer.operationalStatus}">
+                            ${computer.operationalStatus}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="approval-status ${computer.status}">
+                            ${computer.status}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="power-status ${computer.powerStatus}">
+                            ${computer.powerStatus.toUpperCase()}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="network-speed">${computer.networkSpeed?.download?.toFixed(2) || '0.00'}</span> Mbps
+                    </td>
+                    <td>
+                        <span class="network-speed">${computer.networkSpeed?.upload?.toFixed(2) || '0.00'}</span> Mbps
+                    </td>
+                    <td>${computer.ipAddress}</td>
+                    <td>
+                        <button class="btn-details">Details</button>
+                        <button class="btn-delete" data-ip="${computer.ipAddress}">Delete</button>
+                    </td>
+                `;
+                row.querySelector('.btn-details').addEventListener('click', () => {
+                    showDetailsPopup(computer); // Pass the complete computer object
+                });    
+                tbody.appendChild(row);
+            });
+
+            document.querySelectorAll('.btn-delete').forEach(button => {
+                button.addEventListener('click', async () => {
+                    const ipAddress = button.dataset.ip;
+                    if (confirm(`Are you sure you want to delete computer with IP ${ipAddress}?`)) {
+                        try {
+                            const response = await fetch(`/api/computers/ip/${ipAddress}`, {
+                                method: 'DELETE',
+                                headers: {
+                                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                                }
+                            });
+
+                            if (!response.ok) {
+                                const errorData = await response.json();
+                                throw new Error(errorData.message || 'Failed to delete computer');
+                            }
+
+                            alert('Computer deleted successfully!');
+                            loadAllComputers(); // Refresh the table
+                        } catch (error) {
+                            console.error('Delete error:', error);
+                            alert(`Error: ${error.message}`);
+                        }
+                    }
+                });
+            });
+        };
+        await loadData();
+
+        // Hide refresh indicator when done
+        if (indicator) indicator.classList.add('hidden');
+
+        // Set up auto-refresh
+        if (!computersRefreshInterval) {
+            computersRefreshInterval = setInterval(async () => {
+                if (indicator) indicator.classList.remove('hidden');
+                await loadData();
+                if (indicator) indicator.classList.add('hidden');
+            }, 20000);
         }
 
-        // Populate table with real data
-        computers.forEach(computer => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${computer.name}</td>
-                <td>
-                    <span class="status-indicator ${computer.operationalStatus}">
-                        ${computer.operationalStatus}
-                    </span>
-                </td>
-                <td>
-                    <span class="approval-status ${computer.status}">
-                        ${computer.status}
-                    </span>
-                </td>
-                <td>
-                    <span class="power-status ${computer.powerStatus}">
-                        ${computer.powerStatus.toUpperCase()}
-                    </span>
-                </td>
-                <td>
-                    <span class="network-speed">${computer.networkSpeed?.download?.toFixed(2) || '0.00'}</span> Mbps
-                </td>
-                <td>
-                    <span class="network-speed">${computer.networkSpeed?.upload?.toFixed(2) || '0.00'}</span> Mbps
-                </td>
-                <td>${computer.ipAddress}</td>
-                <td>
-                    <button class="btn-details">Details</button>
-                    <button class="btn-delete" data-ip="${computer.ipAddress}">Delete</button>
-                </td>
-            `;
-            row.querySelector('.btn-details').addEventListener('click', () => {
-                showDetailsPopup(computer); // Pass the complete computer object
-            });    
-            tbody.appendChild(row);
-        });
-
-        // Add delete button event listeners
-        document.querySelectorAll('.btn-delete').forEach(button => {
-            button.addEventListener('click', async () => {
-                const ipAddress = button.dataset.ip;
-                if (confirm(`Are you sure you want to delete computer with IP ${ipAddress}?`)) {
-                    try {
-                        const response = await fetch(`/api/computers/ip/${ipAddress}`, {
-                            method: 'DELETE',
-                            headers: {
-                                'Authorization': `Bearer ${localStorage.getItem('token')}`
-                            }
-                        });
-
-                        if (!response.ok) {
-                            const errorData = await response.json();
-                            throw new Error(errorData.message || 'Failed to delete computer');
-                        }
-
-                        alert('Computer deleted successfully!');
-                        loadAllComputers(); // Refresh the table
-                    } catch (error) {
-                        console.error('Delete error:', error);
-                        alert(`Error: ${error.message}`);
-                    }
-                }
-            });
-        });
-
-        // Remove the simulateNetworkSpeedUpdates call since we're using real data now
     } catch (error) {
         console.error('Error loading computers:', error);
+        const indicator = document.getElementById('computersRefreshIndicator');
+        if (indicator) {
+            indicator.classList.remove('hidden');
+            indicator.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Sync failed';
+            indicator.style.color = 'var(--danger)';
+        }
         alert(`Error: ${error.message}`);
     }
 }

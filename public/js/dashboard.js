@@ -641,10 +641,6 @@ async function showDetailsPopup(computer) {
                     <span>${computer.networkSpeed?.upload ? `${computer.networkSpeed.upload.toFixed(2)} Mbps` : 'N/A'}</span>
                 </div>
                 <div class="detail-item">
-                    <span class="detail-label">Ping:</span>
-                    <span>${computer.networkSpeed?.ping ? `${computer.networkSpeed.ping} ms` : 'N/A'}</span>
-                </div>
-                <div class="detail-item">
                     <span class="detail-label">Maintenance Required:</span>
                     <span>${computer.operationalStatus === 'maintenance' ? 'Yes' : 'No'}</span>
                 </div>
@@ -1060,30 +1056,26 @@ async function loadAvailableComputers() {
 document.getElementById('studentBookingForm').addEventListener('submit', async (e) => {
     e.preventDefault();
 
+    // Get form values
     const computerId = document.getElementById('studentComputerSelect').value;
     const bookingDate = document.getElementById('studentBookingDate').value;
     const startTime = document.getElementById('studentStartTime').value;
     const endTime = document.getElementById('studentEndTime').value;
     const purpose = document.getElementById('studentBookingPurpose').value;
 
-    // Client-side validation
-    const now = new Date();
-    const bookingDateTime = new Date(`${bookingDate}T${startTime}`);
+    // Create date strings with IST timezone offset
+    const istOffset = 330; // IST is UTC+5:30 (5*60 + 30 = 330 minutes)
+    const startDateTime = new Date(`${bookingDate}T${startTime}:00`);
+    const endDateTime = new Date(`${bookingDate}T${endTime}:00`);
     
-    if (bookingDateTime < now) {
-        alert('Cannot book for past dates/times');
-        return;
-    }
-
-    if (!computerId || !bookingDate || !startTime || !endTime || !purpose) {
-        alert('Please fill all fields.');
-        return;
-    }
+    // Add IST offset to maintain local time
+    startDateTime.setMinutes(startDateTime.getMinutes() - startDateTime.getTimezoneOffset() + istOffset);
+    endDateTime.setMinutes(endDateTime.getMinutes() - endDateTime.getTimezoneOffset() + istOffset);
 
     const bookingData = {
         computer: computerId,
-        startTime: `${bookingDate}T${startTime}:00`, // ISO format
-        endTime: `${bookingDate}T${endTime}:00`, // ISO format
+        startTime: startDateTime.toISOString(),
+        endTime: endDateTime.toISOString(),
         purpose
     };
 
@@ -1105,8 +1097,7 @@ document.getElementById('studentBookingForm').addEventListener('submit', async (
 
         alert('Computer booked successfully!');
         e.target.reset();
-        loadAvailableComputers();
-        loadBookings(); // Refresh the bookings table
+        loadAvailableComputers(); // Refresh the available computers list
     } catch (error) {
         console.error('Error booking computer:', error);
         alert(`Error: ${error.message}`);
@@ -1125,34 +1116,30 @@ async function loadBookings() {
         const tbody = document.querySelector('#bookingsTable tbody');
         tbody.innerHTML = '';
 
+        // IST configuration
+        const options = {
+            timeZone: 'Asia/Kolkata',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+        };
+
         bookings.forEach(booking => {
-            // Create date objects and explicitly set to Indian timezone (IST)
+            // Parse dates as UTC but display in IST
             const startDate = new Date(booking.startTime);
             const endDate = new Date(booking.endTime);
-            
-            // Format dates in Indian timezone
-            const options = { 
-                timeZone: 'Asia/Kolkata',
-                year: 'numeric', 
-                month: '2-digit', 
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit'
-            };
-            
-            const startDateStr = startDate.toLocaleDateString('en-IN', options);
-            const startTimeStr = startDate.toLocaleTimeString('en-IN', options);
-            const endTimeStr = endDate.toLocaleTimeString('en-IN', options);
 
             tbody.innerHTML += `
                 <tr>
                     <td>${booking._id}</td>
                     <td>${booking.computer?.name || 'N/A'}</td>
                     <td>${booking.user?.username || 'Unknown'}</td>
-                    <td>${startDateStr}</td>
-                    <td>${startTimeStr}</td>
-                    <td>${endTimeStr}</td>
+                    <td>${startDate.toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' })}</td>
+                    <td>${startDate.toLocaleTimeString('en-IN', options)}</td>
+                    <td>${endDate.toLocaleTimeString('en-IN', options)}</td>
                     <td>${booking.purpose}</td>
                     <td>
                         <span class="status-indicator ${booking.status}">
@@ -1168,7 +1155,28 @@ async function loadBookings() {
             `;
         });
 
-        // Rest of the cancel button event listeners remain the same...
+        // Add cancel event listeners
+        document.querySelectorAll('.btn-cancel').forEach(button => {
+            button.addEventListener('click', async () => {
+                if (confirm('Are you sure you want to cancel this booking?')) {
+                    try {
+                        const response = await fetch(`/api/bookings/${button.dataset.id}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'Authorization': `Bearer ${localStorage.getItem('token')}`
+                            }
+                        });
+
+                        if (!response.ok) throw new Error('Failed to cancel booking');
+                        alert('Booking cancelled successfully');
+                        loadBookings(); // Refresh the table
+                    } catch (error) {
+                        alert(`Error: ${error.message}`);
+                    }
+                }
+            });
+        });
+
     } catch (error) {
         console.error('Error loading bookings:', error);
         alert(`Error: ${error.message}`);
@@ -1181,22 +1189,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const startTimeInput = document.getElementById('studentStartTime');
     const endTimeInput = document.getElementById('studentEndTime');
     
-    // Set min date to today in Indian timezone
-    const now = new Date();
-    const today = new Date(now.getTime() + (5.5 * 60 * 60 * 1000)).toISOString().split('T')[0]; // Adjust for IST
+    // Set min date to today
+    const today = new Date().toISOString().split('T')[0];
     dateInput.setAttribute('min', today);
     
-    // If booking is for today, set min time to current time in IST
+    // If booking is for today, set min time to current time
     dateInput.addEventListener('change', () => {
         const selectedDate = dateInput.value;
-        const currentDate = new Date(now.getTime() + (5.5 * 60 * 60 * 1000)).toISOString().split('T')[0];
+        const now = new Date();
+        const currentDate = now.toISOString().split('T')[0];
         
         if (selectedDate === currentDate) {
-            // Calculate current time in IST + 15 minutes (buffer time)
-            const istOffset = 5.5 * 60 * 60 * 1000; // IST is UTC+5:30
-            const istNow = new Date(now.getTime() + istOffset);
-            const currentHours = istNow.getHours().toString().padStart(2, '0');
-            const currentMinutes = (istNow.getMinutes() + 15).toString().padStart(2, '0');
+            // Calculate current time + 15 minutes (buffer time)
+            const currentHours = now.getHours().toString().padStart(2, '0');
+            const currentMinutes = (now.getMinutes() + 15).toString().padStart(2, '0');
             const minTime = `${currentHours}:${currentMinutes}`;
             
             startTimeInput.setAttribute('min', minTime);

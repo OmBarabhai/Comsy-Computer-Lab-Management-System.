@@ -1,19 +1,21 @@
-import mongoose from 'mongoose'; // Add this line
+import mongoose from 'mongoose';
 import express from 'express';
 import Booking from '../models/Booking.js';
-import Computer from '../models/Computer.js'; // Import Computer model
+import Computer from '../models/Computer.js';
 import { authenticate } from '../middleware/authMiddleware.js';
-import { generateExcel, generatePDF } from '../utils/exportUtils.js'; 
+import { generateExcel, generatePDF } from '../utils/exportUtils.js';
 
 const router = express.Router();
+
+// Helper function to convert to IST (UTC+5:30)
+function toIST(date) {
+    return new Date(date.getTime() + (5.5 * 60 * 60 * 1000));
+}
 
 // Create new booking
 router.post('/', authenticate, async (req, res) => {
     try {
         const { computer, startTime, endTime, purpose } = req.body;
-
-        // Debugging: Log incoming data
-        console.log('Request Body:', req.body);
 
         // Validate required fields
         if (!computer || !startTime || !endTime || !purpose) {
@@ -27,19 +29,20 @@ router.post('/', authenticate, async (req, res) => {
 
         // Check if the computer exists and is available
         const computerDetails = await Computer.findById(computer);
-        console.log('Computer Details:', computerDetails); // Debugging log
-
         if (!computerDetails || computerDetails.status !== 'approved') {
             return res.status(400).json({ message: 'Computer is not available for booking.' });
         }
 
-        // Convert startTime and endTime to Date objects
+        // Convert startTime and endTime to Date objects in UTC
         const start = new Date(startTime);
         const end = new Date(endTime);
-        console.log('Parsed Start Time:', start);
-        console.log('Parsed End Time:', end);
 
-        // Check for overlapping bookings
+        // Validate time range (end time must be after start time)
+        if (end <= start) {
+            return res.status(400).json({ message: 'End time must be after start time.' });
+        }
+
+        // Check for overlapping bookings (using UTC times)
         const overlappingBooking = await Booking.findOne({
             computer: computer,
             status: { $in: ['upcoming', 'ongoing'] },
@@ -48,13 +51,11 @@ router.post('/', authenticate, async (req, res) => {
             ]
         });
 
-        console.log('Overlapping Booking:', overlappingBooking); // Debugging log
-
         if (overlappingBooking) {
             return res.status(400).json({ message: 'Computer is already booked for this time.' });
         }
 
-        // Create the booking
+        // Create the booking (storing times in UTC)
         const booking = new Booking({
             user: req.user.userId,
             computer: computer,
@@ -72,10 +73,12 @@ router.post('/', authenticate, async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 });
-// Add middleware to update booking statuses
+
+// Middleware to update booking statuses (using UTC)
 router.use(async (req, res, next) => {
     try {
-        const now = new Date();
+        const now = new Date(); // UTC time
+
         // Update ongoing bookings
         await Booking.updateMany(
             {
@@ -99,13 +102,11 @@ router.use(async (req, res, next) => {
         const ongoingBookings = await Booking.find({ status: 'ongoing' });
         const computerIds = ongoingBookings.map(b => b.computer);
         
-        // Set computers in ongoing bookings to 'in-use'
         await Computer.updateMany(
             { _id: { $in: computerIds } },
             { operationalStatus: 'in-use' }
         );
 
-        // Set computers not in ongoing bookings to 'available'
         await Computer.updateMany(
             { _id: { $nin: computerIds } },
             { operationalStatus: 'available' }
@@ -118,84 +119,85 @@ router.use(async (req, res, next) => {
     }
 });
 
-// Add cancel booking endpoint
-router.delete('/:id', authenticate, async (req, res) => {
-    try {
-        const booking = await Booking.findById(req.params.id);
-        if (!booking) return res.status(404).json({ message: 'Booking not found' });
-
-        // Only allow cancellation of upcoming bookings
-        if (booking.status !== 'upcoming') {
-            return res.status(400).json({ message: 'Only upcoming bookings can be cancelled' });
-        }
-
-        await Booking.findByIdAndDelete(req.params.id);
-        res.json({ message: 'Booking cancelled successfully' });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-});
-
-// Get all bookings (Admin only)
+// Get all bookings (Admin only) - Convert to IST before sending
 router.get('/', authenticate, async (req, res) => {
     try {
         const bookings = await Booking.find()
-            .populate('user', 'username') // Populate user details
-            .populate('computer', 'name specs'); // Populate computer details
-        res.json(bookings);
+            .populate('user', 'username')
+            .populate('computer', 'name specs');
+
+        // Convert UTC times to IST for response
+        const bookingsWithIST = bookings.map(booking => ({
+            ...booking.toObject(),
+            startTime: toIST(booking.startTime),
+            endTime: toIST(booking.endTime),
+            createdAt: toIST(booking.createdAt),
+            updatedAt: toIST(booking.updatedAt)
+        }));
+
+        res.json(bookingsWithIST);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 });
 
-// Download attendance
+// Download attendance - Convert to IST
 router.get('/attendance', authenticate, async (req, res) => {
     try {
         const { from, to } = req.query;
 
-        // Validate date range
         if (!from || !to) {
             return res.status(400).json({ message: 'Please provide a valid date range.' });
         }
 
-        // Fetch bookings within the date range
-        const bookings = await Booking.find({
-            startTime: { $gte: new Date(from) },
-            endTime: { $lte: new Date(to) }
-        })
-            .populate('user', 'username') // Populate user details
-            .populate('computer', 'name'); // Populate computer details
+        // Convert input dates from IST to UTC for query
+        const fromUTC = new Date(new Date(from).getTime() - (5.5 * 60 * 60 * 1000));
+        const toUTC = new Date(new Date(to).getTime() - (5.5 * 60 * 60 * 1000));
 
-        // Return JSON data for frontend display
-        res.json(bookings);
+        const bookings = await Booking.find({
+            startTime: { $gte: fromUTC },
+            endTime: { $lte: toUTC }
+        })
+        .populate('user', 'username')
+        .populate('computer', 'name');
+
+        // Convert to IST for response
+        const bookingsWithIST = bookings.map(booking => ({
+            ...booking.toObject(),
+            startTime: toIST(booking.startTime),
+            endTime: toIST(booking.endTime)
+        }));
+
+        res.json(bookingsWithIST);
     } catch (error) {
         console.error('Error fetching attendance:', error);
         res.status(500).json({ message: error.message });
     }
 });
 
-// Download attendance as Excel
+// Download attendance as Excel - Handle IST conversion in exportUtils
 router.get('/attendance/excel', authenticate, async (req, res) => {
     try {
         const { from, to } = req.query;
 
-        // Validate date range
         if (!from || !to) {
             return res.status(400).json({ message: 'Please provide a valid date range.' });
         }
 
-        // Fetch bookings within the date range
+        // Convert input dates from IST to UTC for query
+        const fromUTC = new Date(new Date(from).getTime() - (5.5 * 60 * 60 * 1000));
+        const toUTC = new Date(new Date(to).getTime() - (5.5 * 60 * 60 * 1000));
+
         const bookings = await Booking.find({
-            startTime: { $gte: new Date(from) },
-            endTime: { $lte: new Date(to) }
+            startTime: { $gte: fromUTC },
+            endTime: { $lte: toUTC }
         })
-            .populate('user', 'username') // Populate user details
-            .populate('computer', 'name'); // Populate computer details
+        .populate('user', 'username')
+        .populate('computer', 'name');
 
-        // Generate Excel file
-        const filePath = await generateExcel(bookings);
+        // Generate Excel with IST times (handle conversion in exportUtils)
+        const filePath = await generateExcel(bookings, true); // Pass true for IST conversion
 
-        // Send the file as a download
         res.download(filePath);
     } catch (error) {
         console.error('Error generating Excel:', error);
@@ -203,28 +205,29 @@ router.get('/attendance/excel', authenticate, async (req, res) => {
     }
 });
 
-// Download attendance as PDF
+// Download attendance as PDF - Handle IST conversion in exportUtils
 router.get('/attendance/pdf', authenticate, async (req, res) => {
     try {
         const { from, to } = req.query;
 
-        // Validate date range
         if (!from || !to) {
             return res.status(400).json({ message: 'Please provide a valid date range.' });
         }
 
-        // Fetch bookings within the date range
+        // Convert input dates from IST to UTC for query
+        const fromUTC = new Date(new Date(from).getTime() - (5.5 * 60 * 60 * 1000));
+        const toUTC = new Date(new Date(to).getTime() - (5.5 * 60 * 60 * 1000));
+
         const bookings = await Booking.find({
-            startTime: { $gte: new Date(from) },
-            endTime: { $lte: new Date(to) }
+            startTime: { $gte: fromUTC },
+            endTime: { $lte: toUTC }
         })
-            .populate('user', 'username') // Populate user details
-            .populate('computer', 'name'); // Populate computer details
+        .populate('user', 'username')
+        .populate('computer', 'name');
 
-        // Generate PDF file
-        const filePath = await generatePDF(bookings);
+        // Generate PDF with IST times (handle conversion in exportUtils)
+        const filePath = await generatePDF(bookings, true); // Pass true for IST conversion
 
-        // Send the file as a download
         res.download(filePath);
     } catch (error) {
         console.error('Error generating PDF:', error);

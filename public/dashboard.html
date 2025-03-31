@@ -24,7 +24,7 @@
         </div>
             <ul>
                 <li class="admin-tabs">
-                    <a href="dashboard.html" class="section-link active">
+                    <a href="#" data-target="dashboardOverview" class="section-link active">
                         <span class="icon">
                             <ion-icon name="speedometer-outline"></ion-icon>
                         </span>
@@ -464,13 +464,17 @@
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label>Start Time:</label>
-                                    <input type="datetime-local" id="studentStartTime" required>
-                                </div>
-                                <div class="form-group">
-                                    <label>End Time:</label>
-                                    <input type="datetime-local" id="studentEndTime" required>
-                                </div>
+                                    <label for="studentBookingDate">Booking Date</label>
+                                    <input type="date" id="studentBookingDate" required>
+                                  </div>
+                                  <div class="form-group">
+                                    <label for="studentStartTime">Start Time</label>
+                                    <input type="time" id="studentStartTime" required>
+                                  </div>
+                                  <div class="form-group">
+                                    <label for="studentEndTime">End Time</label>
+                                    <input type="time" id="studentEndTime" required>
+                                  </div>
                             </div>
                             <div class="form-group">
                                 <label>Purpose:</label>
@@ -525,50 +529,6 @@
                         </form>
                     </div>
                 </div>
-
-                <div id="reportIssueStudent" class="section-content hidden">
-                    <div class="card">
-                        <h3>Report Issue</h3>
-                        <form id="issueFormStudent">
-                            <div class="form-group">
-                                <label>Computer:</label>
-                                <select id="issueComputerSelectStudent" required></select>
-                            </div>
-                            <div class="form-group">
-                                <label>Description:</label>
-                                <textarea id="issueDescriptionStudent" required></textarea>
-                            </div>
-                            <button type="submit">Report Issue</button>
-                        </form>
-                    </div>
-                </div>
-
-                <div id="bookComputer" class="section-content">
-                    <div class="card">
-                        <h3>Book a Computer</h3>
-                        <form id="studentBookingForm">
-                            <div class="form-group">
-                                <label>Select Computer:</label>
-                                <select id="studentComputerSelect"></select>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label>Start Time:</label>
-                                    <input type="datetime-local" id="studentStartTime" required>
-                                </div>
-                                <div class="form-group">
-                                    <label>End Time:</label>
-                                    <input type="datetime-local" id="studentEndTime" required>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label>Purpose:</label>
-                                <textarea id="studentBookingPurpose" required></textarea>
-                            </div>
-                            <button type="submit">Book Now</button>
-                        </form>
-                    </div>
-                </div>
                  <!-- Report Issue Section for Staff -->
                 <div id="staffBookComputer" class="section-content">
                     <div class="card">
@@ -604,11 +564,11 @@
                         <form id="issueFormStaff">
                             <div class="form-group">
                                 <label>Computer:</label>
-                                <select id="issueComputerSelectStudent" required></select>
+                                <select id="issueComputerSelectStaff" required></select>
                             </div>
                             <div class="form-group">
                                 <label>Description:</label>
-                                <textarea id="issueDescriptionStudent" required></textarea>
+                                <textarea id="issueDescriptionStaff" required></textarea>
                             </div>
                             <button type="submit">Report Issue</button>
                         </form>

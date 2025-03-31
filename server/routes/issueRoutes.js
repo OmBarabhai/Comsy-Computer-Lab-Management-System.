@@ -9,33 +9,33 @@ const router = express.Router();
 // Route to report a new issue
 // issueRoutes.js (POST route
 router.post('/', authenticate, async (req, res) => {
-  try {
-    const { computer, description } = req.body;
-
-    // Validate computer ID
-    if (!mongoose.Types.ObjectId.isValid(computer)) {
-      return res.status(400).json({ error: 'Invalid computer ID' });
+    try {
+      const { computer, description } = req.body;
+  
+      // Validate computer ID
+      if (!mongoose.Types.ObjectId.isValid(computer)) {
+        return res.status(400).json({ error: 'Invalid computer ID' });
+      }
+  
+      const issue = new Issue({
+        computer,
+        description,
+        reportedBy: req.user.userId
+      });
+  
+      await issue.save();
+  
+      // Update computer status - this is correct
+      await Computer.findByIdAndUpdate(
+        computer,
+        { operationalStatus: 'maintenance' }
+      );
+  
+      res.status(201).json(issue);
+    } catch (error) {
+      console.error('Error reporting issue:', error);
+      res.status(400).json({ error: error.message });
     }
-
-    const issue = new Issue({
-      computer,
-      description,
-      reportedBy: req.user.userId
-    });
-
-    await issue.save();
-
-    // Update computer status
-    await Computer.findByIdAndUpdate(
-      computer,
-      { operationalStatus: 'maintenance' }
-    );
-
-    res.status(201).json(issue);
-  } catch (error) {
-    console.error('Error reporting issue:', error);
-    res.status(400).json({ error: error.message });
-  }
 });
 
 // Route to get all issues (Admin only)
@@ -51,27 +51,7 @@ router.get('/', authenticate, authorize(['admin']), async (req, res) => {
 });
 
 // Route to update issue status (Admin only)
-router.patch('/:id/status', authenticate, authorize(['admin']), async (req, res) => {
-    try {
-        const issue = await Issue.findByIdAndUpdate(
-            req.params.id,
-            { status: req.body.status },
-            { new: true }
-        );
 
-        // If the issue is resolved, set the computer's operational status back to "available"
-        if (req.body.status === 'resolved') {
-            await Computer.findByIdAndUpdate(
-                issue.computer,
-                { operationalStatus: 'available' }
-            );
-        }
-
-        res.json(issue);
-    } catch (error) {
-        res.status(400).json({ error: error.message });
-    }
-});
 
 // Route to resolve an issue (Admin only)
 router.patch('/:id/resolve', authenticate, authorize(['admin']), async (req, res) => {

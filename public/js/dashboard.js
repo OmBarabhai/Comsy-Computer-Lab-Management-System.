@@ -305,6 +305,7 @@ function loadRoleSpecificContent(role) {
             loadAllComputers();
             loadIssuesTable();
             loadBookings();
+            loadUsersTable(); 
             
             break;
         case 'student':
@@ -1011,9 +1012,84 @@ async function addNewUser(event) {
 
         alert('User added successfully!');
         event.target.reset();
+        loadUsersTable(); 
         
     } catch (error) {
         console.error('Error adding user:', error);
+        alert(`Error: ${error.message}`);
+    }
+}
+
+async function loadUsersTable() {
+    try {
+        const response = await fetch('/api/users', {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+
+        if (!response.ok) throw new Error('Failed to fetch users');
+        const users = await response.json();
+
+        const tbody = document.querySelector('#usersTable tbody');
+        tbody.innerHTML = '';
+
+        // Sort users by role (admin first, then staff, then student)
+        const sortedUsers = users.sort((a, b) => {
+            const roleOrder = { admin: 1, staff: 2, student: 3 };
+            return roleOrder[a.role] - roleOrder[b.role];
+        });
+
+        sortedUsers.forEach(user => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${user.name}</td>
+                <td>${user.username}</td>
+                <td>${user.email}</td>
+                <td>
+                    <span class="role-badge ${user.role}">
+                        ${user.role}
+                    </span>
+                </td>
+                <td>
+                    <button class="btn-delete-user" data-id="${user._id}">
+                        Delete
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+
+        // Add event listeners for delete buttons
+        document.querySelectorAll('.btn-delete-user').forEach(button => {
+            button.addEventListener('click', async () => {
+                const userId = button.dataset.id;
+                if (confirm('Are you sure you want to delete this user?')) {
+                    try {
+                        const response = await fetch(`/api/users/${userId}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'Authorization': `Bearer ${localStorage.getItem('token')}`
+                            }
+                        });
+
+                        if (!response.ok) {
+                            const errorData = await response.json();
+                            throw new Error(errorData.message || 'Failed to delete user');
+                        }
+
+                        alert('User deleted successfully!');
+                        loadUsersTable(); // Refresh the table
+                    } catch (error) {
+                        console.error('Delete error:', error);
+                        alert(`Error: ${error.message}`);
+                    }
+                }
+            });
+        });
+
+    } catch (error) {
+        console.error('Error loading users:', error);
         alert(`Error: ${error.message}`);
     }
 }

@@ -1321,6 +1321,68 @@ button:hover {
     animation: spin 1s linear infinite;
 }
 
+.users-table-container {
+    margin-top: 30px;
+}
+
+#usersTable {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+#usersTable th, #usersTable td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+#usersTable th {
+    background-color: var(--card-bg);
+    font-weight: 600;
+}
+
+#usersTable tr:hover {
+    background-color: var(--hover-bg);
+}
+
+.role-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-transform: capitalize;
+}
+
+.role-badge.admin {
+    background-color: #ffebee;
+    color: #c62828;
+}
+
+.role-badge.staff {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+}
+
+.role-badge.student {
+    background-color: #e3f2fd;
+    color: #1565c0;
+}
+
+.btn-delete-user {
+    background-color: var(--danger);
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-delete-user:hover {
+    background-color: #c62828;
+}
+
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }

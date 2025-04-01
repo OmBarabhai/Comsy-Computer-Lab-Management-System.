@@ -1056,26 +1056,20 @@ async function loadAvailableComputers() {
 document.getElementById('studentBookingForm').addEventListener('submit', async (e) => {
     e.preventDefault();
 
-    // Get form values
     const computerId = document.getElementById('studentComputerSelect').value;
-    const bookingDate = document.getElementById('studentBookingDate').value;
     const startTime = document.getElementById('studentStartTime').value;
     const endTime = document.getElementById('studentEndTime').value;
     const purpose = document.getElementById('studentBookingPurpose').value;
 
-    // Create date strings with IST timezone offset
-    const istOffset = 330; // IST is UTC+5:30 (5*60 + 30 = 330 minutes)
-    const startDateTime = new Date(`${bookingDate}T${startTime}:00`);
-    const endDateTime = new Date(`${bookingDate}T${endTime}:00`);
-    
-    // Add IST offset to maintain local time
-    startDateTime.setMinutes(startDateTime.getMinutes() - startDateTime.getTimezoneOffset() + istOffset);
-    endDateTime.setMinutes(endDateTime.getMinutes() - endDateTime.getTimezoneOffset() + istOffset);
+    if (!computerId || !startTime || !endTime || !purpose) {
+        alert('Please fill all fields.');
+        return;
+    }
 
     const bookingData = {
         computer: computerId,
-        startTime: startDateTime.toISOString(),
-        endTime: endDateTime.toISOString(),
+        startTime: startTime, // Plain date string
+        endTime: endTime, // Plain date string
         purpose
     };
 
@@ -1113,22 +1107,12 @@ async function loadBookings() {
         if (!response.ok) throw new Error('Failed to fetch bookings');
         const bookings = await response.json();
 
+        console.log('Fetched Bookings:', bookings); // Debugging log
+
         const tbody = document.querySelector('#bookingsTable tbody');
         tbody.innerHTML = '';
 
-        // IST configuration
-        const options = {
-            timeZone: 'Asia/Kolkata',
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: true
-        };
-
         bookings.forEach(booking => {
-            // Parse dates as UTC but display in IST
             const startDate = new Date(booking.startTime);
             const endDate = new Date(booking.endTime);
 
@@ -1137,9 +1121,9 @@ async function loadBookings() {
                     <td>${booking._id}</td>
                     <td>${booking.computer?.name || 'N/A'}</td>
                     <td>${booking.user?.username || 'Unknown'}</td>
-                    <td>${startDate.toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' })}</td>
-                    <td>${startDate.toLocaleTimeString('en-IN', options)}</td>
-                    <td>${endDate.toLocaleTimeString('en-IN', options)}</td>
+                    <td>${startDate.toLocaleDateString()}</td>
+                    <td>${startDate.toLocaleTimeString()}</td>
+                    <td>${endDate.toLocaleTimeString()}</td>
                     <td>${booking.purpose}</td>
                     <td>
                         <span class="status-indicator ${booking.status}">

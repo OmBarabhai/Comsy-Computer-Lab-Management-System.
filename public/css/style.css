@@ -1414,3 +1414,34 @@ button:hover {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
   }
+
+/* Add to your CSS */
+#pastBookingsTable {
+    margin-top: 30px;
+    background-color: var(--table-alt-bg);
+}
+
+#upcomingBookingsTable {
+    margin-bottom: 30px;
+}
+
+.status-indicator.completed {
+    background-color: var(--success-light);
+    color: var(--success);
+}
+
+.status-indicator.ongoing {
+    background-color: var(--warning-light);
+    color: var(--warning);
+}
+
+.status-indicator.upcoming {
+    background-color: var(--info-light);
+    color: var(--info);
+}
+
+.table-container h4 {
+    margin: 20px 0 10px;
+    color: var(--text-secondary);
+    font-weight: 600;
+}

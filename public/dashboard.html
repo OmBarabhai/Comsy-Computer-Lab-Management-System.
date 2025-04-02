@@ -383,7 +383,9 @@
                             </button>
                         </div>
                         <div class="table-container">
-                            <table id="bookingsTable">
+                            <!-- Upcoming Bookings Table -->
+                            <h4>Upcoming Bookings</h4>
+                            <table id="upcomingBookingsTable">
                                 <thead>
                                     <tr>
                                         <th>Booking ID</th>
@@ -395,6 +397,24 @@
                                         <th>Purpose</th>
                                         <th>Status</th>
                                         <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                
+                            <!-- Ongoing/Completed Bookings Table -->
+                            <h4 style="margin-top: 30px;">Ongoing & Completed Bookings</h4>
+                            <table id="pastBookingsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Booking ID</th>
+                                        <th>Computer</th>
+                                        <th>User</th>
+                                        <th>Date</th>
+                                        <th>Start Time</th>
+                                        <th>End Time</th>
+                                        <th>Purpose</th>
+                                        <th>Status</th>
                                     </tr>
                                 </thead>
                                 <tbody></tbody>

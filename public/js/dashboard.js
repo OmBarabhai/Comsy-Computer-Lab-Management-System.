@@ -1183,16 +1183,26 @@ async function loadBookings() {
         if (!response.ok) throw new Error('Failed to fetch bookings');
         const bookings = await response.json();
 
-        console.log('Fetched Bookings:', bookings); // Debugging log
+        // Sort all bookings by start time (newest first)
+        const sortedBookings = bookings.sort((a, b) => 
+            new Date(b.startTime) - new Date(a.startTime)
+        );
 
-        const tbody = document.querySelector('#bookingsTable tbody');
-        tbody.innerHTML = '';
+        // Split bookings into two groups
+        const upcomingBookings = sortedBookings.filter(b => b.status === 'upcoming');
+        const pastBookings = sortedBookings.filter(b => 
+            ['ongoing', 'completed'].includes(b.status)
+        );
 
-        bookings.forEach(booking => {
+        // Populate Upcoming Bookings Table
+        const upcomingTbody = document.querySelector('#upcomingBookingsTable tbody');
+        upcomingTbody.innerHTML = '';
+        
+        upcomingBookings.forEach(booking => {
             const startDate = new Date(booking.startTime);
             const endDate = new Date(booking.endTime);
 
-            tbody.innerHTML += `
+            upcomingTbody.innerHTML += `
                 <tr>
                     <td>${booking._id}</td>
                     <td>${booking.computer?.name || 'N/A'}</td>
@@ -1207,15 +1217,13 @@ async function loadBookings() {
                         </span>
                     </td>
                     <td>
-                        ${booking.status === 'upcoming' ? `
-                            <button class="btn-cancel" data-id="${booking._id}">Cancel</button>
-                        ` : '--'}
+                        <button class="btn-cancel" data-id="${booking._id}">Cancel</button>
                     </td>
                 </tr>
             `;
         });
 
-        // Add cancel event listeners
+        // Add cancel event listeners for upcoming bookings
         document.querySelectorAll('.btn-cancel').forEach(button => {
             button.addEventListener('click', async () => {
                 if (confirm('Are you sure you want to cancel this booking?')) {
@@ -1229,12 +1237,38 @@ async function loadBookings() {
 
                         if (!response.ok) throw new Error('Failed to cancel booking');
                         alert('Booking cancelled successfully');
-                        loadBookings(); // Refresh the table
+                        loadBookings();
                     } catch (error) {
                         alert(`Error: ${error.message}`);
                     }
                 }
             });
+        });
+
+        // Populate Past Bookings Table
+        const pastTbody = document.querySelector('#pastBookingsTable tbody');
+        pastTbody.innerHTML = '';
+        
+        pastBookings.forEach(booking => {
+            const startDate = new Date(booking.startTime);
+            const endDate = new Date(booking.endTime);
+
+            pastTbody.innerHTML += `
+                <tr>
+                    <td>${booking._id}</td>
+                    <td>${booking.computer?.name || 'N/A'}</td>
+                    <td>${booking.user?.username || 'Unknown'}</td>
+                    <td>${startDate.toLocaleDateString()}</td>
+                    <td>${startDate.toLocaleTimeString()}</td>
+                    <td>${endDate.toLocaleTimeString()}</td>
+                    <td>${booking.purpose}</td>
+                    <td>
+                        <span class="status-indicator ${booking.status}">
+                            ${booking.status}
+                        </span>
+                    </td>
+                </tr>
+            `;
         });
 
     } catch (error) {

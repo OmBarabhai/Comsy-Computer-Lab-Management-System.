@@ -1051,41 +1051,9 @@ async function loadUsersTable() {
                         ${user.role}
                     </span>
                 </td>
-                <td>
-                    <button class="btn-delete-user" data-id="${user._id}">
-                        Delete
-                    </button>
-                </td>
+            
             `;
             tbody.appendChild(row);
-        });
-
-        // Add event listeners for delete buttons
-        document.querySelectorAll('.btn-delete-user').forEach(button => {
-            button.addEventListener('click', async () => {
-                const userId = button.dataset.id;
-                if (confirm('Are you sure you want to delete this user?')) {
-                    try {
-                        const response = await fetch(`/api/users/${userId}`, {
-                            method: 'DELETE',
-                            headers: {
-                                'Authorization': `Bearer ${localStorage.getItem('token')}`
-                            }
-                        });
-
-                        if (!response.ok) {
-                            const errorData = await response.json();
-                            throw new Error(errorData.message || 'Failed to delete user');
-                        }
-
-                        alert('User deleted successfully!');
-                        loadUsersTable(); // Refresh the table
-                    } catch (error) {
-                        console.error('Delete error:', error);
-                        alert(`Error: ${error.message}`);
-                    }
-                }
-            });
         });
 
     } catch (error) {

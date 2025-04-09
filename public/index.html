@@ -3,8 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Comsy</title>
-    <link rel="icon" type="image/png" href="images/logo1.png">
+    <title>Comsy - Computer Lab Management System</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -13,6 +12,7 @@
     />
     <!-- CSS styles remain unchanged -->
     <style>
+      @import url('https://fonts.googleapis.com/css2?family=Caesar+Dressing&display=swap');
       /* CSS Variables for Theme Colors */
       :root {
         /* Light Theme Colors */
@@ -30,7 +30,7 @@
 
         /* Dark Theme Colors */
         --dark-bg: #111827;
-        --dark-bg-gradient: linear-gradient(135deg, #111827, #1e3a8a);
+        --dark-bg-gradient: linear-gradient(135deg, #0f1d3b, #1e3a8a);
         --dark-text: #ffffff;
         --dark-accent: #4f46e5;
         --dark-accent-gradient: linear-gradient(135deg, #4f46e5, #7c3aed);
@@ -76,9 +76,9 @@
         font-family: "Poppins", sans-serif;
         background: var(--bg-gradient);
         color: var(--text);
-        height: 100%;
-        padding-bottom: 50px;
+        min-height: 100vh;
         transition: all 0.3s ease;
+        position: relative;
       }
 
       header {
@@ -97,9 +97,10 @@
       }
 
       .logo {
-        font-size: 24px;
+        font-size: 25px;
         font-weight: bold;
         color: var(--text);
+        font-family: "Caesar Dressing", cursive;
       }
 
       .nav-links {
@@ -407,7 +408,7 @@
       }
 
       .tech-list li::before {
-        content: "•";
+        /* content: "•"; */
         color: var(--accent);
         font-weight: bold;
         display: inline-block;
@@ -475,9 +476,9 @@
         font-size: 40px;
         margin-bottom: 15px;
         display: inline-block;
-        background: var(--accent-gradient);
+        /* background: var(--accent-gradient); */
         -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        /* -webkit-text-fill-color: transparent; */
       }
 
       /* Testimonials Section */
@@ -513,15 +514,15 @@
           rgba(255, 255, 255, 0.05),
           rgba(255, 255, 255, 0.01)
         );
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        /* box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1); */
         position: relative;
         transition: all 0.3s ease;
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        border: 1px solid #80808029;
       }
 
       .testimonial-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+        /* box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15); */
       }
 
       .testimonial-text {
@@ -611,7 +612,7 @@
       }
 
       /* Footer */
-      footer {
+      /* footer {
         text-align: center;
         padding: 20px 0;
         position: fixed;
@@ -621,7 +622,235 @@
         background: var(--bg-gradient);
         color: var(--text);
         transition: all 0.3s ease;
+      } */
+
+      /*New Footer*/
+      .site-footer {
+        background: var(--bg);
+        padding: 60px 0px 0;
+        /* margin-top: 80px; */
       }
+
+      .footer-container {
+        /* display: flex; */
+        flex-wrap: wrap;
+        justify-content: space-between;
+        max-width: 1200px;
+        margin: 0 auto;
+        gap: 30px;
+      }
+
+      .footer-column {
+        /* flex: 1 1 250px; */
+        flex: 1 1 100%;
+        /* margin-right: 20px; */
+        margin-bottom: 30px;
+      }
+
+      .footer-main-heading {
+        font-size: 36px;
+        margin-bottom: 40px;
+        color: var(--text);
+        text-align: center;
+        position: relative;
+      }
+
+      /* .footer-main-heading::after {
+        content: "";
+        position: absolute;
+        bottom: -15px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 80px;
+        height: 3px;
+        background: var(--accent-gradient);
+        border-radius: 2px;
+      } */
+
+      .team-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 25px;
+        justify-items: center;
+        justify-items: end;
+      }
+
+      .team-member {
+        text-align: center;
+        padding: 20px;
+        /* background: rgba(255, 255, 255, 0.05); */
+        border-radius: 8px;
+        width: 72%;
+        /* max-width: 220px; */
+      }
+
+      .member-name {
+        font-weight: 600;
+        color: var(--text);
+        font-size: 18px;
+      }
+
+      .member-links {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+      }
+
+      .linkedin-icon,
+      .email-icon {
+        color: var(--text);
+        font-size: 20px;
+        transition: transform 0.2s ease;
+        text-decoration: none;
+      }
+
+      .linkedin-icon:hover,
+      .email-icon:hover {
+        transform: scale(1.1);
+      }
+
+      /* .footer-column {
+        flex: 1 1 200px;
+        margin-bottom: 30px;
+      } */
+
+      .footer-column h3 {
+        font-size: 20px;
+        margin-bottom: 20px;
+        color: var(--text);
+        position: relative;
+        padding-bottom: 10px;
+      }
+
+      .footer-column h3::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 40px;
+        height: 3px;
+        background: var(--accent-gradient);
+        border-radius: 2px;
+      }
+
+      .footer-column p {
+        font-size: 15px;
+        line-height: 1.6;
+        margin-bottom: 20px;
+        color: var(--text);
+      }
+
+      .footer-links {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      .footer-links li {
+        margin-bottom: 3px;
+        font-size: 15px;
+      }
+
+      .footer-links a {
+        color: var(--text);
+        text-decoration: none;
+        font-size: 15px;
+        transition: color 0.2s;
+        display: block;
+      }
+
+      .footer-links a:hover {
+        color: var(--accent);
+      }
+
+      .services-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 10px;
+      }
+
+      .services-list li {
+        color: var(--text);
+        font-size: 14px;
+        padding: 8px 12px;
+        /* background: rgba(255, 255, 255, 0.05); */
+        border-radius: 4px;
+        text-align: center;
+      }
+
+      #contactUsBtn {
+        background-color: var(--accent);
+        color: white;
+        border: none;
+        border-radius: 5px;
+        padding: 8px 20px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: transform 0.2s, box-shadow 0.2s;
+      }
+
+      #contactUsBtn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      /* .social-icons {
+        margin-top: 15px;
+        margin-bottom: 15px;
+      }
+
+      .social-icons a {
+        margin-right: 15px;
+        text-decoration: none;
+        color: var(--text);
+      }
+
+      .team-members div {
+        margin-bottom: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .team-members span {
+        font-size: 15px;
+        font-weight: bold;
+        color: var(--text);
+      }
+
+      .team-members a {
+        text-decoration: none;
+        color: var(--text);
+        margin-right: 8px;
+      } */
+
+      /* New Copyright Section */
+      .copyright-section {
+        background: var(--accent);
+        padding: 15px 0;
+        text-align: center;
+        margin-top: 50px;
+      }
+
+      .copyright-section p {
+        color: var(--card-text);
+        font-size: 14px;
+        margin: 0;
+        font-weight: 500;
+        letter-spacing: 0.5px;
+      }
+
+      /* Light theme adjustments for copyright */
+      /* html[data-theme="light"] .copyright-section {
+        background: var(--accent);
+      }
+
+      html[data-theme="light"] .copyright-section p {
+        color: white;
+      } */
 
       /* Responsive Adjustments */
       @media (max-width: 768px) {
@@ -646,6 +875,14 @@
         .hero-content h3 {
           font-size: 20px;
         }
+        
+        .footer-column {
+          flex: 1 1 100%;
+        }
+        
+        .services-list {
+          grid-template-columns: repeat(2, 1fr);
+        }
       }
     </style>
   </head>
@@ -664,11 +901,9 @@
           <li><a href="#home">Home</a></li>
           <li><a href="login.html" id="loginBtn">Login</a></li>
           <li><a href="#about-project">About</a></li>
-          <li><a href="#features">Features</a></li>
           <li><a href="#tech-stack">Tech Stack</a></li>
-          <li><a href="#benefits">Benefits</a></li>
-          <!-- Testimonials link removed from nav bar as requested -->
-          <li><a href="#contact">Contact</a></li>
+          <li><a href="#benefits">Features</a></li>
+          <li><a href="#team">Our Team</a></li>
           <li class="theme-toggle-wrapper">
             <input type="checkbox" id="toggle" />
             <label for="toggle" class="theme-toggle-label">
@@ -771,7 +1006,6 @@
 
     <section id="home" class="hero">
         <div class="hero-content animate-on-scroll">
-      <div class="hero-content">
         <h1>Comsy</h1>
         <h3>Computer Lab Management System</h3>
         <p>
@@ -792,7 +1026,6 @@
             Learn More
           </button>
         </div>
-      </div>
     </section>
 
     <section id="about-project" class="about-project">
@@ -845,52 +1078,134 @@
       </div>
     </section>
 
-    <!-- Technologies Used Section -->
-    <section id="tech-stack" class="tech-stack">
-        <h2 class="animate-on-scroll">Built With</h2>
-        <div class="tech-categories stagger-animation">
-            <div class="tech-category animate-on-scroll">
-          <h3>Frontend</h3>
-          <ul class="tech-list">
-            <li>HTML</li>
-            <li>CSS</li>
-            <li>JavaScript</li>
-          </ul>
-        </div>
-         <div class="tech-category animate-on-scroll">
-          <h3>Backend</h3>
-          <ul class="tech-list">
-            <li>Node.js</li>
-            <li>Express.js</li>
-          </ul>
-        </div>
-         <div class="tech-category animate-on-scroll">
-          <h3>Database</h3>
-          <ul class="tech-list">
-            <li>MongoDB</li>
-          </ul>
-        </div>
-         <div class="tech-category animate-on-scroll">
-          <h3>Authentication</h3>
-          <ul class="tech-list">
-            <li>JWT (JSON Web Tokens)</li>
-          </ul>
-        </div>
-         <div class="tech-category animate-on-scroll">
-          <h3>Real-Time Updates</h3>
-          <ul class="tech-list">
-            <li>WebSocket</li>
-          </ul>
-        </div>
-         <div class="tech-category animate-on-scroll">
-          <h3>Version Control</h3>
-          <ul class="tech-list">
-            <li>GitHub</li>
-          </ul>
-        </div>
-      </div>
-    </section>
-
+    <!DOCTYPE html>
+    <lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <style>
+            .tech-stack {
+                text-align: center;
+                padding: 50px 20px;
+                background: var(--bg-gradient);
+            }
+    
+            .tech-categories {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 20px;
+            }
+    
+            .tech-category {
+                background: rgba(255, 255, 255, 0.1);
+                border-radius: 10px;
+                padding: 20px;
+                width: 200px;
+                transition: transform 0.3s ease;
+            }
+    
+            .tech-category:hover {
+                transform: scale(1.05);
+            }
+    
+            .tech-category h3 {
+                margin-bottom: 15px;
+                color: var(--text);
+            }
+    
+            .tech-list {
+                list-style-type: none;
+                padding: 0;
+            }
+    
+            .tech-list li {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-bottom: 10px;
+                gap: 10px;
+                color: var(--text-light);
+            }
+    
+            .tech-logo {
+                width: 30px;
+                height: 30px;
+            }
+        </style>
+    </head>
+    
+        <section id="tech-stack" class="tech-stack">
+            <h2 class="animate-on-scroll">Built With</h2>
+            <div class="tech-categories stagger-animation">
+                <div class="tech-category animate-on-scroll">
+                    <h3>Frontend</h3>
+                    <ul class="tech-list">
+                        <li>
+                          <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/html5/html5-original.svg" alt="HTML" height="30px" width="30px">                       
+                            HTML
+                        </li>
+                        <li>
+                          <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/css3/css3-original.svg" alt="CSS" height="30px" width="30px">                       
+                            CSS
+                        </li>
+                        <li>
+                          <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/javascript/javascript-original.svg" alt="JavaScript" height="30px" width="30px">
+                            JavaScript
+                        </li>
+                    </ul>
+                </div>
+                <div class="tech-category animate-on-scroll">
+                    <h3>Backend</h3>
+                    <ul class="tech-list">
+                        <li>
+                          <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nodejs/nodejs-original.svg" alt="Node.js" height="30px" width="30px">
+                            Node.js
+                        </li>
+                        <li>
+                          <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/express/express-original.svg" alt="Express.js" height="30px" width="30px">
+                            Express.js
+                        </li>
+                    </ul>
+                </div>
+                <div class="tech-category animate-on-scroll">
+                    <h3>Database</h3>
+                    <ul class="tech-list">
+                        <li>
+                          <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/mongodb/mongodb-original.svg" alt="MongoDB" height="30px" width="30px">
+                            MongoDB
+                        </li>
+                    </ul>
+                </div>
+                <div class="tech-category animate-on-scroll">
+                    <h3>Authentication</h3>
+                    <ul class="tech-list">
+                        <li>
+                          <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/json/json-original.svg" alt="JWT" height="30px" width="30px">
+                            JWT
+                        </li>
+                    </ul>
+                </div>
+                <div class="tech-category animate-on-scroll">
+                    <h3>Real-Time Updates</h3>
+                    <ul class="tech-list">
+                        <li>
+                          <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/socketio/socketio-original.svg" alt="WebSocket" height="30px" width="30px">
+                            WebSocket
+                        </li>
+                    </ul>
+                </div>
+                <div class="tech-category animate-on-scroll">
+                    <h3>Version Control</h3>
+                    <ul class="tech-list">
+                        <li>
+                          <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/github/github-original.svg" alt="GitHub" height="30px" width="30px">
+                            GitHub
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+  
     <!-- Benefits Section -->
     <section id="benefits" class="benefits">
         <h2 class="animate-on-scroll">Why Choose Comsy?</h2>
@@ -955,200 +1270,316 @@
             </div>
         </div>
     </section>
-    <!-- Footer with Contact Form -->
-    <footer style="position: relative; padding-top: 60px; padding-bottom: 20px">
-      <div
-        class="footer-container"
-        style="
+    
+    <!-- Footer -->
+    <footer id="team" class="site-footer">
+      <div class="footer-container">
+            <!-- Our Team Section -->
+            <div class="footer-main-section">
+              <h2 class="footer-main-heading">Our Team</h2>
+              <div class="team-grid">
+                <!-- Team Member 1 -->
+                <div class="team-member">
+                  <div class="member-name">Sahil Kalmegh</div>
+                  <div class="job-role">'Engineer'</div>
+                  <div class="member-links">
+                    <a href="https://www.linkedin.com/in/sahilkalmegh?lipi=urn%3Ali%3Apage%3Ad_flagship3_profile_view_base_contact_details%3B%2FdUBM6AvT1Gp6TCyYI202w%3D%3D" target="_blank" class="linkedin-icon"><svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="30" height="30" viewBox="0 0 48 48">
+                      <path fill="#0288D1" d="M42,37c0,2.762-2.238,5-5,5H11c-2.761,0-5-2.238-5-5V11c0-2.762,2.239-5,5-5h26c2.762,0,5,2.238,5,5V37z"></path><path fill="#FFF" d="M12 19H17V36H12zM14.485 17h-.028C12.965 17 12 15.888 12 14.499 12 13.08 12.995 12 14.514 12c1.521 0 2.458 1.08 2.486 2.499C17 15.887 16.035 17 14.485 17zM36 36h-5v-9.099c0-2.198-1.225-3.698-3.192-3.698-1.501 0-2.313 1.012-2.707 1.99C24.957 25.543 25 26.511 25 27v9h-5V19h5v2.616C25.721 20.5 26.85 19 29.738 19c3.578 0 6.261 2.25 6.261 7.274L36 36 36 36z"></path>
+                      </svg></a>
+                    <a href="mailto:sahilkalmegh274@gmail.com" class="email-icon"><img width="30" height="30" src="https://img.icons8.com/fluency/48/filled-message.png" alt="filled-message"/></a>
+                  </div>
+                </div>
+                
+                <!-- Team Member 2 -->
+                <div class="team-member">
+                  <div class="member-name">Pavan Barange</div>
+                  <div class="job-role">'Engineer'</div>
+                  <div class="member-links">
+                    <a href="#" target="_blank" class="linkedin-icon"><svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="30" height="30" viewBox="0 0 48 48">
+                      <path fill="#0288D1" d="M42,37c0,2.762-2.238,5-5,5H11c-2.761,0-5-2.238-5-5V11c0-2.762,2.239-5,5-5h26c2.762,0,5,2.238,5,5V37z"></path><path fill="#FFF" d="M12 19H17V36H12zM14.485 17h-.028C12.965 17 12 15.888 12 14.499 12 13.08 12.995 12 14.514 12c1.521 0 2.458 1.08 2.486 2.499C17 15.887 16.035 17 14.485 17zM36 36h-5v-9.099c0-2.198-1.225-3.698-3.192-3.698-1.501 0-2.313 1.012-2.707 1.99C24.957 25.543 25 26.511 25 27v9h-5V19h5v2.616C25.721 20.5 26.85 19 29.738 19c3.578 0 6.261 2.25 6.261 7.274L36 36 36 36z"></path>
+                      </svg></a>
+                    <a href="mailto:pavanbarange108@gmail.com" class="email-icon"><img width="30" height="30" src="https://img.icons8.com/fluency/48/filled-message.png" alt="filled-message"/></a>
+                  </div>
+                </div>
+                
+                <!-- Team Member 3 -->
+                <div class="team-member">
+                  <div class="member-name">Om Barabhai</div>
+                  <div class="job-role">'Engineer'</div>
+                  <div class="member-links">
+                    <a href="https://www.linkedin.com/in/om-%E2%80%8Ebarabhai-616493230" target="_blank" class="linkedin-icon"><svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="30" height="30" viewBox="0 0 48 48">
+                      <path fill="#0288D1" d="M42,37c0,2.762-2.238,5-5,5H11c-2.761,0-5-2.238-5-5V11c0-2.762,2.239-5,5-5h26c2.762,0,5,2.238,5,5V37z"></path><path fill="#FFF" d="M12 19H17V36H12zM14.485 17h-.028C12.965 17 12 15.888 12 14.499 12 13.08 12.995 12 14.514 12c1.521 0 2.458 1.08 2.486 2.499C17 15.887 16.035 17 14.485 17zM36 36h-5v-9.099c0-2.198-1.225-3.698-3.192-3.698-1.501 0-2.313 1.012-2.707 1.99C24.957 25.543 25 26.511 25 27v9h-5V19h5v2.616C25.721 20.5 26.85 19 29.738 19c3.578 0 6.261 2.25 6.261 7.274L36 36 36 36z"></path>
+                      </svg></a>
+                    <a href="mailto:om.r.barabhai@gmail.com" class="email-icon"><img width="30" height="30" src="https://img.icons8.com/fluency/48/filled-message.png" alt="filled-message"/></a>
+                  </div>
+                </div>
+                
+                <!-- Team Member 4 -->
+                <div class="team-member">
+                  <div class="member-name">Ayush More</div>
+                  <div class="job-role">'Engineer'</div>
+                  <div class="member-links">
+                    <a href="http://www.linkedin.com/in/ayush-more-71b927284" target="_blank" class="linkedin-icon"><svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="30" height="30" viewBox="0 0 48 48">
+                      <path fill="#0288D1" d="M42,37c0,2.762-2.238,5-5,5H11c-2.761,0-5-2.238-5-5V11c0-2.762,2.239-5,5-5h26c2.762,0,5,2.238,5,5V37z"></path><path fill="#FFF" d="M12 19H17V36H12zM14.485 17h-.028C12.965 17 12 15.888 12 14.499 12 13.08 12.995 12 14.514 12c1.521 0 2.458 1.08 2.486 2.499C17 15.887 16.035 17 14.485 17zM36 36h-5v-9.099c0-2.198-1.225-3.698-3.192-3.698-1.501 0-2.313 1.012-2.707 1.99C24.957 25.543 25 26.511 25 27v9h-5V19h5v2.616C25.721 20.5 26.85 19 29.738 19c3.578 0 6.261 2.25 6.261 7.274L36 36 36 36z"></path>
+                      </svg></a>
+                    <a href="mailto:ayushmorey181@gmail.com" class="email-icon"><img width="30" height="30" src="https://img.icons8.com/fluency/48/filled-message.png" alt="filled-message"/></a>
+                  </div>
+                </div>
+                
+                <!-- Team Member 5 -->
+                <div class="team-member">
+                  <div class="member-name">Ganesh Goliwar</div>
+                  <div class="job-role">'Engineer'</div>
+                  <div class="member-links">
+                    <a href="https://www.linkedin.com/in/ganesh-golliwar-5197522b5?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app" target="_blank" class="linkedin-icon"><svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="30" height="30" viewBox="0 0 48 48">
+                      <path fill="#0288D1" d="M42,37c0,2.762-2.238,5-5,5H11c-2.761,0-5-2.238-5-5V11c0-2.762,2.239-5,5-5h26c2.762,0,5,2.238,5,5V37z"></path><path fill="#FFF" d="M12 19H17V36H12zM14.485 17h-.028C12.965 17 12 15.888 12 14.499 12 13.08 12.995 12 14.514 12c1.521 0 2.458 1.08 2.486 2.499C17 15.887 16.035 17 14.485 17zM36 36h-5v-9.099c0-2.198-1.225-3.698-3.192-3.698-1.501 0-2.313 1.012-2.707 1.99C24.957 25.543 25 26.511 25 27v9h-5V19h5v2.616C25.721 20.5 26.85 19 29.738 19c3.578 0 6.261 2.25 6.261 7.274L36 36 36 36z"></path>
+                      </svg></a>
+                    <a href="mailto:ganeshgolliwar294@gmail.com" class="email-icon"><img width="30" height="30" src="https://img.icons8.com/fluency/48/filled-message.png" alt="filled-message"/></a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>  
+            <!-- Three Column Section -->
+          <div class="footer-columns-container"
+          style="
+              margin-left: 70px;
+              margin-right: 70px;">
+              <!-- About Comsy -->
+              <div class="footer-column"
+              style="padding-left: 60px;">
+                <h3>About Comsy</h3>
+                  <p>
+                    Comsy is a comprehensive computer lab management system designed to streamline operations, enhance monitoring, and improve resource utilization in educational institutions.
+                  </p>
+                  <button id="contactUsBtn">Contact Us</button>
+              </div>
+        
+              <!-- Quick Links Section -->
+              <div class="footer-column"
+              style="padding-left: 60px;">
+                <h3>Quick Links</h3>
+                <ul class="footer-links">
+                  <li><a href="#home">Home</a></li>
+                  <li><a href="#about-project">About</a></li>
+                  <li><a href="#tech-stack">Tech Stack</a></li>
+                  <li><a href="#benefits">Features</a></li>
+                  <li><a href="login.html">Login</a></li>
+                </ul>
+              </div>
+
+              <!-- New Services Section -->
+              <div class="footer-column"
+              style="padding-left: 60px;">
+                <h3>Services</h3>
+                <ul class="footer-links">
+                  <li>Authentication</li>
+                  <li>Authorization</li>
+                  <li>Monitoring</li>
+                  <li>Booking</li>
+                  <li>IssueTracking</li>
+                  <li>UserManagement</li>
+                  <li>Attendance</li>
+                  <li>Reporting</li>
+                  <li>Security</li>
+                </ul>
+              </div>
+            </div>
+      
+      <!-- Copyright Section -->
+      <div class="copyright-section">
+        <p>&copy; 2025 Comsy - Computer Lab Management System. All Rights Reserved.</p>
+      </div>
+      </footer>
+      <style>
+        /* Three Column Layout */
+        .footer-columns-container {
           display: flex;
-          flex-wrap: wrap;
           justify-content: space-between;
-          max-width: 1200px;
-          margin: 0 auto;
-          padding: 0 20px;
-        "
-      >
-        <!-- Column 1: About -->
-        <div class="footer-column" style="flex: 1 1 250px; margin-bottom: 30px">
-          <h3 style="color: var(--text); font-size: 20px; margin-bottom: 15px">
-            About Comsy
-          </h3>
-          <p style="color: var(--text); font-size: 14px; line-height: 1.6">
-            Comsy is a comprehensive computer lab management system designed to
-            streamline operations, enhance monitoring, and improve resource
-            utilization in educational institutions.
-          </p>
-          <div class="social-icons" style="margin-top: 15px">
-            <a href="#" style="color: var(--text); margin-right: 15px"
-              ><i>📱</i></a
-            >
-            <a href="#" style="color: var(--text); margin-right: 15px"
-              ><i>💻</i></a
-            >
-            <a href="#" style="color: var(--text); margin-right: 15px"
-              ><i>📧</i></a
-            >
-            <a href="#" style="color: var(--text)"><i>🌐</i></a>
-          </div>
-        </div>
+          gap: 130px;
+          /* width: 100%; */
+          margin-top: 41px;
+        }
+      
+        .footer-column {
+          flex: 1;
+          /* min-width: 250px; */
+        }
+      
+        /* Job Role Styling */
+        .job-role {
+          font-style: italic;
+          color: var(--text);
+          opacity: 0.8;
+          margin-bottom: 12px;
+          font-size: 14px;
+        }
+      
+        /* Team Member Adjustments */
+        .team-member {
+          text-align: center;
+          padding: 20px;
+          margin: 10px;
+        }
+      
+        .member-name {
+          font-size: 18px;
+          /* margin-bottom: 5px; */
+        }
+      
+        /* Responsive Design */
+        @media (max-width: 500px) {
+          .footer-columns-container {
+            flex-direction: column;
+            gap: 60px;
+          }
+          
+          .footer-column {
+            width: 100%;
+            max-width: none;
+          }
+          
+          .team-grid {
+            grid-template-columns: repeat(2, 1fr);
+          }
+        }
 
-        <!-- Column 2: Quick Links -->
-        <div class="footer-column" style="flex: 1 1 200px; margin-bottom: 30px">
-          <h3 style="color: var(--text); font-size: 20px; margin-bottom: 15px">
-            Quick Links
-          </h3>
-          <ul style="list-style: none; padding: 0; margin: 0">
-            <li style="margin-bottom: 8px">
-              <a href="#home" style="color: var(--text); text-decoration: none"
-                >Home</a
-              >
-            </li>
-            <li style="margin-bottom: 8px">
-              <a
-                href="#about-project"
-                style="color: var(--text); text-decoration: none"
-                >About</a
-              >
-            </li>
-            <li style="margin-bottom: 8px">
-              <a
-                href="#tech-stack"
-                style="color: var(--text); text-decoration: none"
-                >Tech Stack</a
-              >
-            </li>
-            <li style="margin-bottom: 8px">
-              <a
-                href="#benefits"
-                style="color: var(--text); text-decoration: none"
-                >Benefits</a
-              >
-            </li>
-            <li style="margin-bottom: 8px">
-              <a
-                href="login.html"
-                style="color: var(--text); text-decoration: none"
-                >Login</a
-              >
-            </li>
-          </ul>
-        </div>
+        /* Modified Services List */
+  .services-list {
+    /* display: flex;
+    flex-wrap: wrap; */
+    gap: 15px;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
 
-        <!-- Column 3: Services -->
-        <div class="footer-column" style="flex: 1 1 200px; margin-bottom: 30px">
-          <h3 style="color: var(--text); font-size: 20px; margin-bottom: 15px">
-            Services
-          </h3>
-          <ul style="list-style: none; padding: 0; margin: 0">
-            <li style="margin-bottom: 8px">
-              <a href="#" style="color: var(--text); text-decoration: none"
-                >Lab Monitoring</a
-              >
-            </li>
-            <li style="margin-bottom: 8px">
-              <a href="#" style="color: var(--text); text-decoration: none"
-                >Resource Booking</a
-              >
-            </li>
-            <li style="margin-bottom: 8px">
-              <a href="#" style="color: var(--text); text-decoration: none"
-                >Issue Tracking</a
-              >
-            </li>
-            <li style="margin-bottom: 8px">
-              <a href="#" style="color: var(--text); text-decoration: none"
-                >User Management</a
-              >
-            </li>
-            <li style="margin-bottom: 8px">
-              <a href="#" style="color: var(--text); text-decoration: none"
-                >Reports & Analytics</a
-              >
-            </li>
-          </ul>
-        </div>
+  .services-list li {
+    display: inline-block;
+    color: var(--text);
+    font-size: 15px;
+    padding: 5px 0;
+    margin-right: 15px;
+    position: relative;
+  }
 
-        <!-- Column 4: Contact Form -->
-        <div class="footer-column" style="flex: 1 1 300px; margin-bottom: 30px">
-            <h3 class="animate-on-scroll">Contact Us</h3>
-          <form class="animate-on-scroll" style="display: flex; flex-direction: column; gap: 10px">
-            <input
-              type="text"
-              placeholder="Your Name"
-              required
-              style="
-                padding: 8px;
-                border-radius: 4px;
-                border: 1px solid rgba(255, 255, 255, 0.1);
-                background: var(--input-bg);
-                color: var(--text);
-                font-size: 14px;
-              "
-            />
-            <input
-              type="email"
-              placeholder="Your Email"
-              required
-              style="
-                padding: 8px;
-                border-radius: 4px;
-                border: 1px solid rgba(255, 255, 255, 0.1);
-                background: var(--input-bg);
-                color: var(--text);
-                font-size: 14px;
-              "
-            />
-            <textarea
-              placeholder="Your Message"
-              rows="3"
-              required
-              style="
-                padding: 8px;
-                border-radius: 4px;
-                border: 1px solid rgba(255, 255, 255, 0.1);
-                background: var(--input-bg);
-                color: var(--text);
-                font-size: 14px;
-                resize: vertical;
-              "
-            ></textarea>
-            <button
-              type="submit"
-              style="
-                padding: 8px;
-                background: var(--accent-gradient);
-                color: white;
-                border: none;
-                border-radius: 4px;
-                cursor: pointer;
-                font-size: 14px;
-              "
-            >
-              Send
-            </button>
+  .services-list li:not(:last-child)::after {
+    position: absolute;
+    right: -10px;
+    color: var(--text);
+    opacity: 0.5;
+  }
+
+
+  @media (max-width: 768px) {
+    .services-list {
+      flex-direction: column;
+    }
+    
+    .services-list li::after {
+      content: none;
+    }
+    
+    .services-list li {
+      margin-right: 0;
+      padding: 3px 0;
+    }
+  }
+      </style>
+
+      <!-- Contact Form Modal -->
+      <div id="contactModal" style="display: none; 
+                                    position: fixed; 
+                                    z-index: 1000; left: 0; 
+                                    top: 0; width: 100%; 
+                                    height: 100%; 
+                                    overflow: auto; 
+                                    background-color: rgba(0,0,0,0.4);
+                                    bottom: 144px;">
+        <div style="background-color: white;
+                    color: black; 
+                    margin: 15% auto; 
+                    padding: 20px; 
+                    border: 1px solid #888; 
+                    width: 80%; 
+                    max-width: 500px; 
+                    border-radius: 5px; 
+                    position: relative;">
+          <span id="closeModal" style="position: absolute; right: 20px; top: 10px; font-size: 24px; font-weight: bold; cursor: pointer;">&times;</span>
+          <h2 style="margin-top: 0; margin-bottom: 20px;">Contact Us</h2>
+          <form id="contactForm">
+            <div style="margin-bottom: 15px;">
+              <label for="name" style="display: block; margin-bottom: 5px;">Name:</label>
+              <input type="text" id="name" required style="width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px;" />
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+              <label for="email" style="display: block; margin-bottom: 5px;">Email:</label>
+              <input type="email" id="email" required style="width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px;" />
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+              <label for="subject" style="display: block; margin-bottom: 5px;">Subject:</label>
+              <input type="text" id="subject" required style="width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px;" />
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+              <label for="message" style="display: block; margin-bottom: 5px;">Message:</label>
+              <textarea id="message" required style="width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; height: 100px;"></textarea>
+            </div>
+            
+            <button type="submit" style="background-color: #4b56d2; color: white; border: none; border-radius: 5px; padding: 10px 15px; cursor: pointer;">Send</button>
           </form>
         </div>
       </div>
-    </footer>
-
-    <footer
-      style="
-        position: relative;
-        width: 100%;
-        background: var(--bg-gradient);
-        padding: 20px 0;
-        margin-top: 60px;
-      "
-    >
-      <!-- Copyright Bar -->
-      <div class="copyright" style="text-align: center">
-        <p style="color: var(--text); font-size: 14px; margin: 0">
-          &copy; 2025 Comsy - Computer Lab Management System. All Rights
-          Reserved.
-        </p>
-      </div>
-    </footer>
-
+      
+      <!-- JavaScript for Contact Form -->
+      <script>
+        document.addEventListener('DOMContentLoaded', function() {
+          // Get modal elements
+          const contactModal = document.getElementById('contactModal');
+          const contactBtn = document.getElementById('contactUsBtn');
+          const closeBtn = document.getElementById('closeModal');
+          const contactForm = document.getElementById('contactForm');
+          
+          // Open modal when Contact Us button is clicked
+          contactBtn.addEventListener('click', function() {
+            contactModal.style.display = 'block';
+          });
+          
+          // Close modal when X is clicked
+          closeBtn.addEventListener('click', function() {
+            contactModal.style.display = 'none';
+          });
+          
+          // Close modal when clicking outside of it
+          window.addEventListener('click', function(event) {
+            if (event.target === contactModal) {
+              contactModal.style.display = 'none';
+            }
+          });
+          
+          // Handle form submission
+          contactForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            
+            // Get form data
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const subject = document.getElementById('subject').value;
+            const message = document.getElementById('message').value;
+            
+            // Here you would normally send the data to your server
+            // For demonstration, we'll just show an alert
+            alert(`Successful!\nMessage sent to the manager!\n\nName: ${name}\nEmail: ${email}\nSubject: ${subject}`);
+            
+            // Reset form and close modal
+            contactForm.reset();
+            contactModal.style.display = 'none';
+          });
+        });
+      </script>
+    
     <script>
       // Theme toggle functionality
       const toggle = document.getElementById("toggle");
@@ -1236,10 +1667,10 @@
       });
 
       // Add hover effect for testimonial cards
-      const testimonialCards = document.querySelectorAll(".testimonial-card");
-      testimonialCards.forEach((card) => {
+      const testimonialCards1 = document.querySelectorAll(".testimonial-card");
+      testimonialCards1.forEach((card) => {
         card.addEventListener("mouseenter", () => {
-          testimonialCards.forEach((c) => {
+          testimonialCards1.forEach((c) => {
             if (c !== card) {
               c.style.opacity = "0.7";
               c.style.transform = "scale(0.95)";
@@ -1248,7 +1679,7 @@
         });
 
         card.addEventListener("mouseleave", () => {
-          testimonialCards.forEach((c) => {
+          testimonialCards1.forEach((c) => {
             c.style.opacity = "1";
             c.style.transform = "scale(1)";
           });
@@ -1311,6 +1742,20 @@
             }
           });
         });
+      
+        // Testimonial hover effect
+        const testimonialCards = document.querySelectorAll('.testimonial-card');
+        testimonialCards.forEach(card => {
+          card.addEventListener('mouseenter', () => {
+            testimonialCards.forEach(c => {
+              if (c !== card) c.style.transform = 'scale(0.95)';
+            });
+          });
+          
+          card.addEventListener('mouseleave', () => {
+            testimonialCards.forEach(c => c.style.transform = 'scale(1)');
+          });
+        });
       </script>
       
       <style>
@@ -1361,6 +1806,151 @@
         .stagger-animation > *:nth-child(4) { animation-delay: 0.4s; }
         .stagger-animation > *:nth-child(5) { animation-delay: 0.5s; }
         .stagger-animation > *:nth-child(6) { animation-delay: 0.6s; }
+
+        
       </style>     
+      <style>:root {
+        --primary: #4f46e5; /* Define primary color */
+        --modal-bg: #ffffff; /* Modal background color */
+        --modal-text: #333333; /* Modal text color */
+        --input-border: #ccc; /* Input border color */
+        --button-hover: #4338ca; /* Button hover color */
+      }
+      
+      /* Ensure Modal is Centered and Visible */
+      .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        justify-content: center;
+        align-items: center;
+      }
+      
+      .modal-content {
+        background: var(--modal-bg);
+        color: var(--modal-text);
+        padding: 20px;
+        border-radius: 8px;
+        width: 350px;
+        text-align: left;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      }
+      
+      .close {
+        float: right;
+        font-size: 20px;
+        font-weight: bold;
+        cursor: pointer;
+        color: var(--primary);
+      }
+      
+      .close:hover {
+        color: var(--button-hover);
+      }
+      
+      /* Input and Textarea Styles */
+      input, textarea {
+        width: 100%;
+        margin-top: 5px;
+        padding: 10px;
+        border: 1px solid var(--input-border);
+        border-radius: 5px;
+        font-size: 16px;
+        background: #f9f9f9;
+        color: #333;
+      }
+      
+      textarea {
+        resize: vertical;
+        min-height: 80px;
+      }
+      
+      /* Button Styles */
+      button {
+        margin-top: 15px;
+        padding: 10px 15px;
+        background-color: var(--primary);
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        transition: background 0.3s ease;
+      }
+      
+      button:hover {
+        background-color: var(--button-hover);
+      }
+      
+
+        </style>
+
+      <script>
+ document.addEventListener("DOMContentLoaded", function () {
+  const contactModal = document.getElementById("contactModal");
+  const contactUsBtn = document.getElementById("contactUsBtn");
+  const closeModal = document.querySelector(".close");
+  const contactForm = document.getElementById("contactForm");
+
+  if (!contactModal || !contactUsBtn || !closeModal || !contactForm) {
+    console.error("One or more elements not found!");
+    return;
+  }
+
+  // Open Modal on Button Click
+  contactUsBtn.addEventListener("click", () => {
+    contactModal.style.display = "flex"; // Show modal
+  });
+
+  // Close Modal when clicking "X"
+  closeModal.addEventListener("click", () => {
+    contactModal.style.display = "none"; // Hide modal
+  });
+
+  // Close Modal when clicking outside the modal
+  window.addEventListener("click", (event) => {
+    if (event.target === contactModal) {
+      contactModal.style.display = "none";
+    }
+  });
+
+  // Handle Form Submission
+  contactForm.addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    const formData = {
+      name: document.getElementById("name").value,
+      email: document.getElementById("email").value,
+      subject: document.getElementById("subject").value,
+      message: document.getElementById("message").value,
+    };
+
+    // Send Data to Backend
+    fetch("/api/contact", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(formData),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        alert("Message sent successfully!");
+        contactModal.style.display = "none"; // Hide modal after submission
+        contactForm.reset();
+      })
+      .catch((error) => {
+        alert("Error sending message!");
+        console.error(error);
+      });
+  });
+});
+
+      </script>
   </body>
 </html>

@@ -851,7 +851,6 @@ document.getElementById('issueFormStudent').addEventListener('submit', async (e)
         alert('Issue reported successfully!');
         e.target.reset();
         loadIssuesTable();
-        loadAllComputers(); // Refresh the issues table
     } catch (error) {
         console.error('Error reporting issue:', error);
         alert(`Error: ${error.message}`);
@@ -869,10 +868,15 @@ async function loadIssuesTable() {
         if (!response.ok) throw new Error('Failed to fetch issues');
         const issues = await response.json();
 
+        // Sort issues by createdAt date (newest first)
+        const sortedIssues = issues.sort((a, b) => {
+            return new Date(b.createdAt) - new Date(a.createdAt);
+        });
+
         const tbody = document.querySelector('#issuesTable tbody');
         tbody.innerHTML = '';
 
-        issues.forEach(issue => {
+        sortedIssues.forEach(issue => {
             tbody.innerHTML += `
                 <tr>
                     <td>${issue._id}</td>
@@ -891,6 +895,7 @@ async function loadIssuesTable() {
                 </tr>
             `;
         });
+        
         // Add event listeners for buttons
         document.querySelectorAll('.btn-resolve').forEach(button => {
             button.addEventListener('click', async () => {

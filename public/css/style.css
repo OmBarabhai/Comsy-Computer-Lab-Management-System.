@@ -592,7 +592,6 @@ button {
     border-radius: 8px;
     cursor: pointer;
     transition: var(--transition);
-    font-size: 1rem;
     font-weight: 500;
     box-shadow: var(--shadow);
 }

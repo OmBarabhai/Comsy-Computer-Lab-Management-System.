@@ -178,7 +178,6 @@ document.querySelectorAll('.status-select').forEach(select => {
         }
     });
 });
-// Submit issue report
 
 // Theme Management
 function initializeTheme() {
@@ -480,6 +479,8 @@ async function loadAllComputers() {
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${computer.name}</td>
+                    <td>${computer.macAddress || 'N/A'}</td>
+                    <td>${computer.ipAddress}</td>
                     <td>
                         <span class="status-indicator ${computer.operationalStatus}">
                             ${computer.operationalStatus}
@@ -491,17 +492,11 @@ async function loadAllComputers() {
                         </span>
                     </td>
                     <td>
-                        <span class="power-status ${computer.powerStatus}">
-                            ${computer.powerStatus.toUpperCase()}
-                        </span>
-                    </td>
-                    <td>
                         <span class="network-speed">${computer.networkSpeed?.download?.toFixed(2) || '0.00'}</span> Mbps
                     </td>
                     <td>
                         <span class="network-speed">${computer.networkSpeed?.upload?.toFixed(2) || '0.00'}</span> Mbps
                     </td>
-                    <td>${computer.ipAddress}</td>
                     <td>
                         <button class="btn-details">Details</button>
                         <button class="btn-delete" data-ip="${computer.ipAddress}">Delete</button>
@@ -676,23 +671,7 @@ async function showDetailsPopup(computer) {
             </div>
             
             <div class="detail-section">
-                <h4>Current User</h4>
-                <div class="detail-item">
-                    <span class="detail-label">Name:</span>
-                    <span>N/A</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">Role:</span>
-                    <span>N/A</span>
-                </div>
-            </div>
-
-            <div class="detail-section">
                 <h4>Registration Details</h4>
-                <div class="detail-item">
-                    <span class="detail-label">Registered By:</span>
-                    <span>${computer.registeredBy?.name || 'N/A'}</span>
-                </div>
                 <div class="detail-item">
                     <span class="detail-label">Registration Date:</span>
                     <span>${computer.registeredAt ? 
@@ -1102,23 +1081,81 @@ async function loadAvailableComputers() {
     }
 }
 
+document.addEventListener('DOMContentLoaded', () => {
+    // Set minimum date to today
+    const dateInput = document.getElementById('studentBookingDate');
+    const startTimeInput = document.getElementById('studentStartTime');
+    const endTimeInput = document.getElementById('studentEndTime');
+    
+    // Set min date to today
+    const today = new Date().toISOString().split('T')[0];
+    dateInput.setAttribute('min', today);
+    
+    // If booking is for today, set min time to current time
+    dateInput.addEventListener('change', () => {
+        const selectedDate = dateInput.value;
+        const now = new Date();
+        const currentDate = now.toISOString().split('T')[0];
+        
+        if (selectedDate === currentDate) {
+            // Calculate current time + 15 minutes (buffer time)
+            const currentHours = now.getHours().toString().padStart(2, '0');
+            const currentMinutes = (now.getMinutes() + 15).toString().padStart(2, '0');
+            const minTime = `${currentHours}:${currentMinutes}`;
+            
+            startTimeInput.setAttribute('min', minTime);
+            endTimeInput.setAttribute('min', minTime);
+        } else {
+            // For future dates, allow any time
+            startTimeInput.removeAttribute('min');
+            endTimeInput.removeAttribute('min');
+        }
+    });
+    
+    // Validate start time is before end time
+    startTimeInput.addEventListener('change', () => {
+        endTimeInput.setAttribute('min', startTimeInput.value);
+    });
+});
+
+// Update the booking form submission handler
 document.getElementById('studentBookingForm').addEventListener('submit', async (e) => {
     e.preventDefault();
 
     const computerId = document.getElementById('studentComputerSelect').value;
+    const bookingDate = document.getElementById('studentBookingDate').value;
     const startTime = document.getElementById('studentStartTime').value;
     const endTime = document.getElementById('studentEndTime').value;
     const purpose = document.getElementById('studentBookingPurpose').value;
 
-    if (!computerId || !startTime || !endTime || !purpose) {
+    if (!computerId || !bookingDate || !startTime || !endTime || !purpose) {
         alert('Please fill all fields.');
+        return;
+    }
+
+    // Combine date and time into full datetime strings
+    const startDateTime = `${bookingDate}T${startTime}`;
+    const endDateTime = `${bookingDate}T${endTime}`;
+
+    // Additional validation for current date/time
+    const now = new Date();
+    const selectedStart = new Date(startDateTime);
+    const selectedEnd = new Date(endDateTime);
+
+    if (selectedStart < now) {
+        alert('Cannot book for past dates/times.');
+        return;
+    }
+
+    if (selectedEnd <= selectedStart) {
+        alert('End time must be after start time.');
         return;
     }
 
     const bookingData = {
         computer: computerId,
-        startTime: startTime, // Plain date string
-        endTime: endTime, // Plain date string
+        startTime: startDateTime,
+        endTime: endDateTime,
         purpose
     };
 

@@ -181,9 +181,6 @@
         <div class="details">
             <!-- Admin Content -->
             <div id="adminDashboard" class="hidden">
-                <!-- Admin Section Contents -->
-                <!-- Add this inside the adminDashboard div, at the top of the section-content divs -->
-                <!-- Replace the existing dashboardOverview section with this -->
                 <div id="dashboardOverview" class="section-content">
                     <div class="dashboard-grid">
                         <!-- Card 1: All Computers (span 2 columns and 2 rows) -->
@@ -263,11 +260,12 @@
                                 <thead>
                                     <tr>
                                         <th>Name</th>
+                                        <th>MAC Address</th>
+                                        <th>IP Address</th>
                                         <th>Operational Status</th>
                                         <th>Approval Status</th>
-                                        <th>Power Status</th>
                                         <th>Download Speed</th>
-                                        <th>Upload Speed</th>                                        <th>IP Address</th>
+                                        <th>Upload Speed</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
@@ -498,12 +496,16 @@
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
+                                    <label>Date:</label>
+                                    <input type="date" id="studentBookingDate" required>
+                                </div>
+                                <div class="form-group">
                                     <label>Start Time:</label>
-                                    <input type="datetime-local" id="studentStartTime" required>
+                                    <input type="time" id="studentStartTime" required>
                                 </div>
                                 <div class="form-group">
                                     <label>End Time:</label>
-                                    <input type="datetime-local" id="studentEndTime" required>
+                                    <input type="time" id="studentEndTime" required>
                                 </div>
                             </div>
                             <div class="form-group">

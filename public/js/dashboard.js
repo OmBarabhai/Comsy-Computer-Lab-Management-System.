@@ -457,7 +457,6 @@ async function loadAllComputers() {
 
             const tbody = document.querySelector('#computersTable tbody');
             tbody.innerHTML = '';
-
             // Populate dropdown for all roles
             const issueComputerSelectStudent = document.getElementById('issueComputerSelectStudent');
             if (issueComputerSelectStudent) {
@@ -471,17 +470,27 @@ async function loadAllComputers() {
                     }
                 });
             }
-
             // Populate table with real data
-            computers.forEach(computer => {
-                const row = document.createElement('tr');
+            computers.forEach((computer, index) => {
+                // Determine power status based on lastUpdated time
+                const currentTime = new Date();
+                const lastUpdatedTime = new Date(computer.lastUpdated);
+                const timeDiffInMinutes = (currentTime - lastUpdatedTime) / (1000 * 60);
+                const powerStatus = timeDiffInMinutes > 2 ? 'off' : 'on';
+
+             const row = document.createElement('tr');
                 row.innerHTML = `
+                    <td>${index + 1}</td>
                     <td>${computer.name}</td>
-                    <td>${computer.macAddress || 'N/A'}</td>
                     <td>${computer.ipAddress}</td>
                     <td>
                         <span class="status-indicator ${computer.operationalStatus}">
                             ${computer.operationalStatus}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="power-status ${powerStatus}">
+                            ${powerStatus.toUpperCase()}
                         </span>
                     </td>
                     <td>
@@ -493,7 +502,7 @@ async function loadAllComputers() {
                         <span class="network-speed">${computer.networkSpeed?.download?.toFixed(2) || '0.00'}</span> Mbps
                     </td>
                     <td>
-                        <span class="network-speed">${computer.networkSpeed?.upload?.toFixed(2) || '0.00'}</span> Mbps
+                        <span class="ping-value">${computer.networkSpeed?.ping || '0'}</span> ms
                     </td>
                     <td>
                         <button class="btn-details">Details</button>
@@ -501,7 +510,7 @@ async function loadAllComputers() {
                     </td>
                 `;
                 row.querySelector('.btn-details').addEventListener('click', () => {
-                    showDetailsPopup(computer); // Pass the complete computer object
+                    showDetailsPopup(computer);
                 });    
                 tbody.appendChild(row);
             });
@@ -564,6 +573,14 @@ async function showDetailsPopup(computer) {
         const popup = document.getElementById('computerDetailsPopup');
         popup.classList.remove('hidden');
 
+        // Determine power status based on lastUpdated time
+        const currentTime = new Date();
+        const lastUpdatedTime = new Date(computer.lastUpdated);
+        const timeDiffInMinutes = (currentTime - lastUpdatedTime) / (1000 * 60);
+        
+        // If last update was more than 2 minutes ago, consider the computer offline
+        const powerStatus = timeDiffInMinutes > 2 ? 'off' : 'on';
+
         const popupContent = document.getElementById('popupDetails');
         popupContent.innerHTML = `
             <div class="detail-section">
@@ -594,9 +611,17 @@ async function showDetailsPopup(computer) {
                 </div>
                 <div class="detail-item">
                     <span class="detail-label">Power Status:</span>
-                    <span class="power-status ${computer.powerStatus || 'unknown'}">
-                        ${computer.powerStatus ? computer.powerStatus.toUpperCase() : 'N/A'}
+                    <span class="power-status ${powerStatus || 'unknown'}">
+                        ${powerStatus ? powerStatus.toUpperCase() : 'N/A'}
                     </span>
+                    ${timeDiffInMinutes > 2 ? 
+                      `<span class="last-updated-warning">(Last updated: ${timeDiffInMinutes.toFixed(0)} minutes ago)</span>` : 
+                      ''}
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Last Updated:</span>
+                    <span>${computer.lastUpdated ? 
+                        new Date(computer.lastUpdated).toLocaleString() : 'N/A'}</span>
                 </div>
             </div>
 
@@ -680,11 +705,6 @@ async function showDetailsPopup(computer) {
                         new Date(computer.registeredAt).toLocaleString() : 'N/A'}</span>
                 </div>
                 <div class="detail-item">
-                    <span class="detail-label">Last Updated:</span>
-                    <span>${computer.lastUpdated ? 
-                        new Date(computer.lastUpdated).toLocaleString() : 'N/A'}</span>
-                </div>
-                <div class="detail-item">
                     <span class="detail-label">Updated At:</span>
                     <span>${computer.updatedAt ? 
                         new Date(computer.updatedAt).toLocaleString() : 'N/A'}</span>
@@ -737,6 +757,18 @@ style.textContent = `
     .blur {
         filter: blur(5px);
         pointer-events: none; /* Prevent interaction with blurred content */
+    }
+    .last-updated-warning {
+        color: var(--warning);
+        font-size: 0.8em;
+        margin-left: 8px;
+        font-style: italic;
+    }
+    .power-status.off {
+        color: var(--danger);
+    }
+    .power-status.on {
+        color: var(--success);
     }
 `;
 document.head.appendChild(style);

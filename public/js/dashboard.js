@@ -157,8 +157,6 @@ ws.onerror = (error) => {
     console.error('WebSocket error:', error);
 };
 
-// Update computer status
-// Update computer status - Fix the status update
 document.querySelectorAll('.status-select').forEach(select => {
     select.addEventListener('change', async (e) => {
         try {
@@ -635,6 +633,10 @@ async function showDetailsPopup(computer) {
                 <div class="detail-item">
                     <span class="detail-label">Upload Speed:</span>
                     <span>${computer.networkSpeed?.upload ? `${computer.networkSpeed.upload.toFixed(2)} Mbps` : 'N/A'}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Ping:</span>
+                    <span>${computer.networkSpeed?.ping ? `${computer.networkSpeed.ping} ms` : 'N/A'}</span>
                 </div>
                 <div class="detail-item">
                     <span class="detail-label">Maintenance Required:</span>

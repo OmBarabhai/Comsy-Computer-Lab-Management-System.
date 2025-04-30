@@ -51,6 +51,7 @@ async function updateSpecsDisplay() {
                 <h4>Network Speed</h4>
                 <p>Download: ${specs.networkSpeed.download.toFixed(2)} Mbps</p>
                 <p>Upload: ${specs.networkSpeed.upload.toFixed(2)} Mbps</p>
+                <p>Ping: ${specs.networkSpeed.ping} ms</p>
             `;
         }
 

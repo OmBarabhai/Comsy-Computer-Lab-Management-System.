@@ -195,7 +195,7 @@ body.dark {
 /* =========== Main Content ============ */
 .main {
     margin-left: 250px;
-    padding: 0 20px 20px 20px; /* Top padding removed since topbar is sticky */
+    padding: 0 5px 5px 5px; /* Top padding removed since topbar is sticky */
     transition: var(--transition);
     min-height: 100vh;
 }
@@ -1443,4 +1443,130 @@ button:hover {
     margin: 20px 0 10px;
     color: var(--text-secondary);
     font-weight: 600;
+}
+.view-controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.view-toggle-btn {
+    padding: 5px 10px;
+    border: 1px solid var(--border-color);
+    background: var(--card-bg);
+    color: var(--text);
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.view-toggle-btn.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+.grid-container {
+    margin-top: 20px;
+}
+
+.computers-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+    gap: 10px;
+}
+
+.computer-card {
+    background: var(--card-bg);
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.computer-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.computer-card-title {
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.computer-card-status {
+    display: flex;
+    gap: 10px;
+}
+
+.computer-card-details {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.computer-card-detail {
+    font-size: 0.9rem;
+}
+
+.computer-card-detail-label {
+    font-weight: bold;
+    color: var(--text-light);
+}
+
+.computer-card-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.computer-card-btn {
+    padding: 5px 10px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+}
+/* Add to style.css */
+.sort-controls {
+    position: relative;
+    display: inline-block;
+}
+
+.sort-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    z-index: 100;
+    min-width: 180px;
+    padding: 5px 0;
+}
+
+.sort-dropdown button {
+    display: block;
+    width: 100%;
+    padding: 8px 15px;
+    text-align: left;
+    background: none;
+    border: none;
+    color: var(--text-color);
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.sort-dropdown button:hover {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+#sortDropdownBtn {
+    margin-right: 10px;
 }

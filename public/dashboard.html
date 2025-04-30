@@ -249,13 +249,35 @@
                 <!-- Lab Computers Section -->
                 <div id="labComputers" class="section-content">
                     <div class="card">
+                        <!-- In the computers-table-header div -->
                         <div class="computers-table-header">
                             <h3>Lab Computers</h3>
-                            <div id="computersRefreshIndicator" class="refresh-indicator hidden">
-                              <i class="fas fa-sync-alt fa-spin"></i>
+                            <div class="view-controls">
+                                <div id="computersRefreshIndicator" class="refresh-indicator hidden">
+                                    <i class="fas fa-sync-alt fa-spin"></i>
+                                </div>
+                                <div class="sort-controls">
+                                    <button id="sortDropdownBtn" class="view-toggle-btn">
+                                        <i class="fas fa-sort"></i> Sort By
+                                    </button>
+                                    <div id="sortDropdown" class="sort-dropdown hidden">
+                                        <button data-sort="name">Name</button>
+                                        <button data-sort="operationalStatus">Operational Status</button>
+                                        <button data-sort="powerStatus">Power Status</button>
+                                        <button data-sort="approvalStatus">Approval Status</button>
+                                        <button data-sort="downloadSpeed">Download Speed</button>
+                                    </div>
+                                </div>
+                                <button id="viewToggleBtn" class="view-toggle-btn active" data-view="list">
+                                    <i class="fas fa-list"></i> List
+                                </button>
+                                <button id="gridViewBtn" class="view-toggle-btn" data-view="grid">
+                                    <i class="fas fa-th-large"></i> Grid
+                                </button>
                             </div>
                         </div>
-                        <div class="table-container">
+                        <!-- List View (existing table) -->
+                        <div id="computersListView" class="table-container">
                             <table id="computersTable">
                                 <thead>
                                     <tr>
@@ -272,6 +294,12 @@
                                 </thead>
                                 <tbody></tbody>
                             </table>
+                        </div>
+                        <!-- Grid View (new) -->
+                        <div id="computersGridView" class="grid-container hidden">
+                            <div class="computers-grid" id="computersGrid">
+                                <!-- Grid items will be inserted here by JavaScript -->
+                            </div>
                         </div>
                     </div>
                 </div>

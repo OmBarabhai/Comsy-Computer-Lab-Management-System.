@@ -1,4 +1,6 @@
 let computersRefreshInterval = null;
+let currentSortField = 'name';
+let currentSortDirection = 'asc';
 
 document.addEventListener('DOMContentLoaded', () => {
     const token = localStorage.getItem('token');
@@ -115,7 +117,6 @@ async function checkComputerRegistration() {
     }
 }
 
-// Add this helper function to fetch system specs (similar to computer-registration.js)
 async function fetchSystemSpecs() {
     try {
         const response = await fetch('http://localhost:4000/api/specs');
@@ -222,6 +223,31 @@ function setupEventListeners() {
             btn.classList.remove('loading');
         }
     });
+
+    document.querySelectorAll('.view-toggle-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const viewType = this.dataset.view;
+            
+            // Toggle active state
+            document.querySelectorAll('.view-toggle-btn').forEach(btn => {
+                btn.classList.toggle('active', btn === this);
+            });
+            
+            // Show/hide views
+            if (viewType === 'list') {
+                document.getElementById('computersListView').classList.remove('hidden');
+                document.getElementById('computersGridView').classList.add('hidden');
+            } else {
+                document.getElementById('computersListView').classList.add('hidden');
+                document.getElementById('computersGridView').classList.remove('hidden');
+            }
+        });
+    });
+    document.getElementById('sortDropdownBtn').addEventListener('click', function(e) {
+        e.stopPropagation();
+        document.getElementById('sortDropdown').classList.toggle('hidden');
+    });
+    
 }
 
 // Add refresh functionality to issues table
@@ -441,6 +467,54 @@ function showAllComputers() {
     document.getElementById('allComputers').classList.remove('hidden');
     document.getElementById('registrationRequests').classList.add('hidden');
 }
+
+function sortComputers(computers, sortField, sortDirection) {
+    return [...computers].sort((a, b) => {
+        let valueA, valueB;
+        
+        // Handle different sort fields
+        switch(sortField) {
+            case 'name':
+                valueA = a.name.toLowerCase();
+                valueB = b.name.toLowerCase();
+                break;
+            case 'operationalStatus':
+                valueA = a.operationalStatus.toLowerCase();
+                valueB = b.operationalStatus.toLowerCase();
+                break;
+            case 'powerStatus':
+                // Calculate power status based on lastUpdated time
+                const currentTime = new Date();
+                const lastUpdatedA = new Date(a.lastUpdated);
+                const lastUpdatedB = new Date(b.lastUpdated);
+                const timeDiffA = (currentTime - lastUpdatedA) / (1000 * 60);
+                const timeDiffB = (currentTime - lastUpdatedB) / (1000 * 60);
+                valueA = timeDiffA > 2 ? 'off' : 'on';
+                valueB = timeDiffB > 2 ? 'off' : 'on';
+                break;
+            case 'downloadSpeed':
+                valueA = a.networkSpeed?.download || 0;
+                valueB = b.networkSpeed?.download || 0;
+                break;
+            case 'approvalStatus':
+                valueA = a.status.toLowerCase();
+                valueB = b.status.toLowerCase();
+                break;
+            default:
+                valueA = a.name.toLowerCase();
+                valueB = b.name.toLowerCase();
+        }
+        
+        // Handle numeric vs string comparison
+        if (typeof valueA === 'number' && typeof valueB === 'number') {
+            return sortDirection === 'asc' ? valueA - valueB : valueB - valueA;
+        } else {
+            if (valueA < valueB) return sortDirection === 'asc' ? -1 : 1;
+            if (valueA > valueB) return sortDirection === 'asc' ? 1 : -1;
+            return 0;
+        }
+    });
+}
 // Add these functions
 async function loadAllComputers() {
     try {
@@ -455,13 +529,16 @@ async function loadAllComputers() {
             if (!response.ok) throw new Error('Failed to fetch computers');
             const computers = await response.json();
 
+            // Clear existing data
             const tbody = document.querySelector('#computersTable tbody');
             tbody.innerHTML = '';
+            const grid = document.getElementById('computersGrid');
+            grid.innerHTML = '';
+
             // Populate dropdown for all roles
             const issueComputerSelectStudent = document.getElementById('issueComputerSelectStudent');
             if (issueComputerSelectStudent) {
                 issueComputerSelectStudent.innerHTML = '<option value="">Select Computer</option>';
-
                 computers.forEach(computer => {
                     if (computer.status === 'approved') {
                         issueComputerSelectStudent.innerHTML += `
@@ -470,15 +547,17 @@ async function loadAllComputers() {
                     }
                 });
             }
-            // Populate table with real data
-            computers.forEach((computer, index) => {
-                // Determine power status based on lastUpdated time
+            // Populate both views
+            const sortedComputers = sortComputers(computers, currentSortField, currentSortDirection);
+            sortedComputers.forEach((computer, index) => {
+                // Determine power status
                 const currentTime = new Date();
                 const lastUpdatedTime = new Date(computer.lastUpdated);
                 const timeDiffInMinutes = (currentTime - lastUpdatedTime) / (1000 * 60);
                 const powerStatus = timeDiffInMinutes > 2 ? 'off' : 'on';
 
-             const row = document.createElement('tr');
+                // List View
+                const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${index + 1}</td>
                     <td>${computer.name}</td>
@@ -511,10 +590,61 @@ async function loadAllComputers() {
                 `;
                 row.querySelector('.btn-details').addEventListener('click', () => {
                     showDetailsPopup(computer);
-                });    
+                });
                 tbody.appendChild(row);
+
+                // Grid View
+                const card = document.createElement('div');
+                card.className = 'computer-card';
+                card.innerHTML = `
+                    <div class="computer-card-header">
+                        <div class="computer-card-title">${computer.name}</div>
+                        <div class="computer-card-actions">
+                        <button class="computer-card-btn btn-details">Details</button>
+                        <button class="computer-card-btn btn-delete" data-ip="${computer.ipAddress}">Delete</button>
+                        </div>
+                    </div>
+                    </div>
+                    <div class="computer-card-details">
+                        <div class="computer-card-detail">
+                            <div class="computer-card-detail-label">IP Address</div>
+                            <div>${computer.ipAddress}</div>
+                        </div>
+                        <div class="computer-card-detail">
+                            <div class="computer-card-detail-label">Power</div>
+                            <div class="power-status ${powerStatus}">
+                                ${powerStatus.toUpperCase()}
+                            </div>
+                        </div>
+                        <div class="computer-card-detail">
+                            <div class="computer-card-detail-label">Download</div>
+                            <div>${computer.networkSpeed?.download?.toFixed(2) || '0.00'} Mbps</div>
+                        </div>
+                        <div class="computer-card-detail">
+                            <div class="computer-card-detail-label">Op-Status</div>
+                            <div class="status-indicator ${computer.operationalStatus}">
+                                ${computer.operationalStatus}
+                            </div>
+                        </div>
+                        <div class="computer-card-detail">
+                            <div class="computer-card-detail-label">Ping</div>
+                            <div>${computer.networkSpeed?.ping || '0'} ms</div>
+                        </div>
+                        <div class="computer-card-detail">
+                            <div class="computer-card-detail-label">Approval Status</div>
+                            <div class="approval-status ${computer.status}">
+                                ${computer.status}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                card.querySelector('.btn-details').addEventListener('click', () => {
+                    showDetailsPopup(computer);
+                });
+                grid.appendChild(card);
             });
 
+            // Add delete event listeners for both views
             document.querySelectorAll('.btn-delete').forEach(button => {
                 button.addEventListener('click', async () => {
                     const ipAddress = button.dataset.ip;
@@ -542,6 +672,7 @@ async function loadAllComputers() {
                 });
             });
         };
+
         await loadData();
 
         // Hide refresh indicator when done
@@ -1568,3 +1699,31 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelector('[data-target="thisPC"]')?.addEventListener('click', updateSystemSpecs);
 });
 
+document.querySelectorAll('#sortDropdown button').forEach(button => {
+    button.addEventListener('click', function() {
+        const sortField = this.dataset.sort;
+        
+        // Toggle direction if same field is clicked again
+        if (sortField === currentSortField) {
+            currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            currentSortField = sortField;
+            currentSortDirection = 'asc';
+        }
+        
+        // Update button text
+        document.getElementById('sortDropdownBtn').innerHTML = 
+            `<i class="fas fa-sort"></i> ${this.textContent} ` + 
+            (currentSortDirection === 'asc' ? '<i class="fas fa-arrow-up"></i>' : '<i class="fas fa-arrow-down"></i>');
+        
+        // Close dropdown
+        document.getElementById('sortDropdown').classList.add('hidden');
+        
+        // Reload computers with new sort
+        loadAllComputers();
+    });
+});
+// Close dropdown when clicking elsewhere
+document.addEventListener('click', function() {
+    document.getElementById('sortDropdown').classList.add('hidden');
+});

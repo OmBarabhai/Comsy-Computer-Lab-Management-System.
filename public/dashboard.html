@@ -331,20 +331,44 @@
                                 <i class="fas fa-sync-alt"></i> Refresh
                             </button>
                         </div>
-                        <table id="issuesTable">
-                            <thead>
-                                <tr>
-                                    <th>Issue ID</th>
-                                    <th>Computer</th>
-                                    <th>Reported By</th>
-                                    <th>Date Reported</th>
-                                    <th>Description</th>
-                                    <th>Status</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
+                        
+                        <!-- Open Issues Table -->
+                        <div class="table-container">
+                            <h4>Open Issues</h4>
+                            <table id="openIssuesTable">
+                                <thead>
+                                    <tr>
+                                        <th>Issue ID</th>
+                                        <th>Computer</th>
+                                        <th>Reported By</th>
+                                        <th>Date Reported</th>
+                                        <th>Description</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Resolved Issues Table -->
+                        <div class="table-container" style="margin-top: 30px;">
+                            <h4>Resolved Issues</h4>
+                            <table id="resolvedIssuesTable">
+                                <thead>
+                                    <tr>
+                                        <th>Issue ID</th>
+                                        <th>Computer</th>
+                                        <th>Reported By</th>
+                                        <th>Date Reported</th>
+                                        <th>Date Resolved</th>
+                                        <th>Description</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
                 

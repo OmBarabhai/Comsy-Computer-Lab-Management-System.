@@ -1017,11 +1017,16 @@ async function loadIssuesTable() {
             return new Date(b.createdAt) - new Date(a.createdAt);
         });
 
-        const tbody = document.querySelector('#issuesTable tbody');
-        tbody.innerHTML = '';
+        // Separate issues into open and resolved
+        const openIssues = sortedIssues.filter(issue => issue.status === 'open');
+        const resolvedIssues = sortedIssues.filter(issue => issue.status === 'resolved');
 
-        sortedIssues.forEach(issue => {
-            tbody.innerHTML += `
+        // Populate Open Issues Table
+        const openTbody = document.querySelector('#openIssuesTable tbody');
+        openTbody.innerHTML = '';
+
+        openIssues.forEach(issue => {
+            openTbody.innerHTML += `
                 <tr>
                     <td>${issue._id}</td>
                     <td>${issue.computer?.name || 'N/A'}</td>
@@ -1034,13 +1039,35 @@ async function loadIssuesTable() {
                         </span>
                     </td>
                     <td>
-                        <button class="btn-resolve" data-id="${issue._id}">Issue Resolved</button>
+                        <button class="btn-resolve" data-id="${issue._id}">Mark Resolved</button>
                     </td>
                 </tr>
             `;
         });
-        
-        // Add event listeners for buttons
+
+        // Populate Resolved Issues Table
+        const resolvedTbody = document.querySelector('#resolvedIssuesTable tbody');
+        resolvedTbody.innerHTML = '';
+
+        resolvedIssues.forEach(issue => {
+            resolvedTbody.innerHTML += `
+                <tr>
+                    <td>${issue._id}</td>
+                    <td>${issue.computer?.name || 'N/A'}</td>
+                    <td>${issue.reportedBy?.username || 'Unknown'}</td>
+                    <td>${new Date(issue.createdAt).toLocaleDateString()}</td>
+                    <td>${new Date(issue.updatedAt).toLocaleDateString()}</td>
+                    <td>${issue.description}</td>
+                    <td>
+                        <span class="status-indicator ${issue.status}">
+                            ${issue.status}
+                        </span>
+                    </td>
+                </tr>
+            `;
+        });
+
+        // Add event listeners for resolve buttons
         document.querySelectorAll('.btn-resolve').forEach(button => {
             button.addEventListener('click', async () => {
                 const issueId = button.dataset.id;
@@ -1055,7 +1082,7 @@ async function loadIssuesTable() {
 
                     if (!response.ok) throw new Error('Failed to resolve issue');
                     alert('Issue resolved successfully!');
-                    loadIssuesTable(); // Refresh the issues table
+                    loadIssuesTable(); // Refresh the issues tables
                     loadAllComputers(); // Refresh the computers table
                 } catch (error) {
                     alert(`Error: ${error.message}`);

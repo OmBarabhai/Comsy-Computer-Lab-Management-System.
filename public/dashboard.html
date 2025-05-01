@@ -562,8 +562,23 @@
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label>Purpose:</label>
-                                <textarea id="studentBookingPurpose" required></textarea>
+                                <label for="purpose">Purpose of Work:</label>
+                                <select id="purpose" name="purpose" required>
+                                    <option value="" disabled selected>---Select purpose of work---</option>
+                                    <option value="Practical Work">Practical Work</option>
+                                    <option value="Individual Practical">Individual Practical</option>
+                                    <option value="Project Work">Project</option>
+                                    <option value="Documentation">Documentation</option>
+                                    <option value="Presentation">Presentation</option>
+                                    <option value="Practical Exam">Practical Exam</option>
+                                    <option value="Online Exams or Assessments">Online Exams or Assessments</option>
+                                    <option value="Assignment Completion">Assignment Completion</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div class="form-group" id="otherPurposeContainer" style="display: none;">
+                                <label>Please specify:</label>
+                                <textarea id="otherPurpose" placeholder="Please specify your purpose..."></textarea>
                             </div>
                             <button type="submit">Book Now</button>
                         </form>

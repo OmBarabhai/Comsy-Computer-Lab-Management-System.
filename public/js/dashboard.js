@@ -853,56 +853,7 @@ async function showDetailsPopup(computer) {
         alert('Failed to load computer details');
     }
 }
-const style = document.createElement('style');
-style.textContent = `
-    .popup {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.5);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 1000;
-    }
-    .popup-content {
-        background: white;
-        padding: 20px;
-        border-radius: 10px;
-        max-width: 500px;
-        width: 100%;
-        position: relative;
-    }
-    .close-button {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        background: none;
-        border: none;
-        font-size: 20px;
-        cursor: pointer;
-        color: #000;
-    }
-    .blur {
-        filter: blur(5px);
-        pointer-events: none; /* Prevent interaction with blurred content */
-    }
-    .last-updated-warning {
-        color: var(--warning);
-        font-size: 0.8em;
-        margin-left: 8px;
-        font-style: italic;
-    }
-    .power-status.off {
-        color: var(--danger);
-    }
-    .power-status.on {
-        color: var(--success);
-    }
-`;
-document.head.appendChild(style);
+
 
 async function handleStatusChange(e) {
     try {
@@ -1310,7 +1261,15 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// Update the booking form submission handler
+document.getElementById('purpose').addEventListener('change', function() {
+    const otherPurposeContainer = document.getElementById('otherPurposeContainer');
+    if (this.value === 'Other') {
+        otherPurposeContainer.style.display = 'block';
+    } else {
+        otherPurposeContainer.style.display = 'none';
+    }
+});
+
 document.getElementById('studentBookingForm').addEventListener('submit', async (e) => {
     e.preventDefault();
 
@@ -1318,7 +1277,10 @@ document.getElementById('studentBookingForm').addEventListener('submit', async (
     const bookingDate = document.getElementById('studentBookingDate').value;
     const startTime = document.getElementById('studentStartTime').value;
     const endTime = document.getElementById('studentEndTime').value;
-    const purpose = document.getElementById('studentBookingPurpose').value;
+    const purposeSelect = document.getElementById('purpose');
+    const purpose = purposeSelect.value === 'Other' 
+        ? document.getElementById('otherPurpose').value 
+        : purposeSelect.value;
 
     if (!computerId || !bookingDate || !startTime || !endTime || !purpose) {
         alert('Please fill all fields.');

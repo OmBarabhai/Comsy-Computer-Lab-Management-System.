@@ -1,3 +1,7 @@
+let computersRefreshInterval = null;
+let currentSortField = 'name';
+let currentSortDirection = 'asc';
+
 document.addEventListener('DOMContentLoaded', () => {
     const token = localStorage.getItem('token');
     const role = localStorage.getItem('role');
@@ -21,6 +25,10 @@ document.addEventListener('DOMContentLoaded', () => {
     loadRoleSpecificContent(role);
     checkComputerRegistration();
 
+    if (token && role === 'admin') {
+        loadAllComputers(); // This will start the interval
+    }
+
     async function verifyToken(token) {
         try {
             const response = await fetch('/api/auth/verify-token', {
@@ -40,8 +48,14 @@ async function checkComputerRegistration() {
     const ipDisplay = document.getElementById('detectedIp');
     
     try {
-        // Get client IP
-        const clientIp = await getClientIp();
+        // Get system specs which includes IP address from localhost:4000
+        const specs = await fetchSystemSpecs();
+        const clientIp = specs.ipAddress;
+        
+        if (!clientIp) {
+            throw new Error('Could not detect IP address');
+        }
+        
         ipDisplay.textContent = `Checking: ${clientIp}`;
         
         // Fetch all computers
@@ -103,24 +117,17 @@ async function checkComputerRegistration() {
     }
 }
 
-async function getClientIp() {
+async function fetchSystemSpecs() {
     try {
-        // Try public IP first
-        const response = await fetch('https://api.ipify.org?format=json');
-        const data = await response.json();
-        return data.ip;
+        const response = await fetch('http://localhost:4000/api/specs');
+        if (!response.ok) throw new Error('Failed to fetch specs');
+        return await response.json();
     } catch (error) {
-        console.log('Could not get public IP:', error);
-        
-        // Fallback for local development
-        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-            return '127.0.0.1';
-        }
-
-        // Final fallback
-        return 'unknown-ip';
+        console.error('Error fetching specs:', error);
+        return { ipAddress: null, networkSpeed: { download: 0, upload: 0, ping: 0 } };
     }
 }
+
 document.getElementById('togglePasswordAddUser').addEventListener('click', function () {
     const passwordInput = document.getElementById('userPassword');
     const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
@@ -133,8 +140,6 @@ const ws = new WebSocket('ws://localhost:8080');
 
 ws.onopen = () => {
     console.log('WebSocket connection established');
-    // Start fetching and sending speed data
-    fetchAndSendSpeed(ws);
 };
 
 ws.onmessage = (event) => {
@@ -153,37 +158,6 @@ ws.onerror = (error) => {
     console.error('WebSocket error:', error);
 };
 
-// Function to fetch and send internet speed
-async function fetchAndSendSpeed(ws) {
-    try {
-        const speed = await fetchInternetSpeed();
-        if (ws.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify({ type: 'speed', speed }));
-        }
-        document.getElementById('currentSpeed').textContent = speed;
-    } catch (error) {
-        console.error('Error fetching speed:', error);
-        document.getElementById('currentSpeed').textContent = '0';
-    }
-
-    // Fetch speed every 5 seconds
-    setTimeout(() => fetchAndSendSpeed(ws), 5000);
-}
-
-// Function to fetch internet speed
-async function fetchInternetSpeed() {
-    try {
-        // Simulate a random speed for testing
-        const speed = (Math.random() * 100).toFixed(2); // Random speed between 0 and 100 Mbps
-        console.log('Simulated speed:', speed);
-        return speed;
-    } catch (error) {
-        console.error('Error fetching internet speed:', error);
-        return 0; // Return 0 in case of error
-    }
-}
-
-// Update computer status
 document.querySelectorAll('.status-select').forEach(select => {
     select.addEventListener('change', async (e) => {
         try {
@@ -193,7 +167,7 @@ document.querySelectorAll('.status-select').forEach(select => {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 },
-                body: JSON.stringify({ status: e.target.value })
+                body: JSON.stringify({ operationalStatus: e.target.value }) // Changed from 'status' to 'operationalStatus'
             });
             
             if (!response.ok) throw new Error('Status update failed');
@@ -203,7 +177,6 @@ document.querySelectorAll('.status-select').forEach(select => {
         }
     });
 });
-// Submit issue report
 
 // Theme Management
 function initializeTheme() {
@@ -227,22 +200,115 @@ function setupEventListeners() {
     document.getElementById('labBookingFormAdmin').addEventListener('submit', bookLab);
     document.getElementById('staffBookingForm').addEventListener('submit', handleStaffBooking);
     document.getElementById('profileBtn').addEventListener('click', () => {window.location.href = '/profile.html';});
-    document.querySelector('[href="dashboard.html"]').addEventListener('click', (e) => {
-        e.preventDefault();
-        document.querySelectorAll('.section-content').forEach(el => el.classList.add('hidden'));
-        document.getElementById('dashboardOverview').classList.remove('hidden');
-        loadDashboardData();
+    document.getElementById('refreshIssuesBtn')?.addEventListener('click', async function() {
+        const btn = this;
+        btn.disabled = true;
+        btn.classList.add('loading');
+        try {
+            await loadIssuesTable();
+        } finally {
+            btn.disabled = false;
+            btn.classList.remove('loading');
+        }
     });
+
+    document.getElementById('refreshBookingsBtn')?.addEventListener('click', async function() {
+        const btn = this;
+        btn.disabled = true;
+        btn.classList.add('loading');
+        try {
+            await loadBookings();
+        } finally {
+            btn.disabled = false;
+            btn.classList.remove('loading');
+        }
+    });
+
+    document.querySelectorAll('.view-toggle-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const viewType = this.dataset.view;
+            
+            // Toggle active state
+            document.querySelectorAll('.view-toggle-btn').forEach(btn => {
+                btn.classList.toggle('active', btn === this);
+            });
+            
+            // Show/hide views
+            if (viewType === 'list') {
+                document.getElementById('computersListView').classList.remove('hidden');
+                document.getElementById('computersGridView').classList.add('hidden');
+            } else {
+                document.getElementById('computersListView').classList.add('hidden');
+                document.getElementById('computersGridView').classList.remove('hidden');
+            }
+        });
+    });
+    document.getElementById('sortDropdownBtn').addEventListener('click', function(e) {
+        e.stopPropagation();
+        document.getElementById('sortDropdown').classList.toggle('hidden');
+    });
+    
 }
 
+// Add refresh functionality to issues table
+document.getElementById('refreshIssuesBtn')?.addEventListener('click', async function() {
+    const btn = this;
+    btn.disabled = true;
+    btn.classList.add('loading');
+    
+    try {
+        await loadIssuesTable();
+    } catch (error) {
+        console.error('Error refreshing issues:', error);
+    } finally {
+        btn.disabled = false;
+        btn.classList.remove('loading');
+    }
+});
+
+// Add refresh functionality to bookings table
+document.getElementById('refreshBookingsBtn')?.addEventListener('click', async function() {
+    const btn = this;
+    btn.disabled = true;
+    btn.classList.add('loading');
+    
+    try {
+        await loadBookings();
+    } catch (error) {
+        console.error('Error refreshing bookings:', error);
+    } finally {
+        btn.disabled = false;
+        btn.classList.remove('loading');
+    }
+});
+
+window.addEventListener('beforeunload', () => {
+    if (computersRefreshInterval) {
+        clearInterval(computersRefreshInterval);
+        computersRefreshInterval = null;
+    }
+    const indicator = document.getElementById('computersRefreshIndicator');
+    if (indicator) indicator.classList.add('hidden');
+});
+
 function logout() {
+    // Clear the refresh interval
+    if (computersRefreshInterval) {
+        clearInterval(computersRefreshInterval);
+        computersRefreshInterval = null;
+    }
+    
     localStorage.clear();
     window.location.href = '/login.html';
 }
 
-// Role-Based Content Loading
 // Update loadRoleSpecificContent
 function loadRoleSpecificContent(role) {
+
+    if (computersRefreshInterval) {
+        clearInterval(computersRefreshInterval);
+        computersRefreshInterval = null;
+    }
     // Hide all dashboards
     document.querySelectorAll('[id$="Dashboard"]').forEach(el => el.classList.add('hidden'));
     document.getElementById('adminView').classList.add('hidden');
@@ -262,11 +328,13 @@ function loadRoleSpecificContent(role) {
             loadAllComputers();
             loadIssuesTable();
             loadBookings();
+            loadUsersTable(); 
             
             break;
         case 'student':
             document.getElementById('studentDashboard').classList.remove('hidden');
             loadAvailableComputers();
+            loadAllComputers();
             break;
         case 'staff':
             document.getElementById('staffDashboard').classList.remove('hidden');
@@ -399,111 +467,250 @@ function showAllComputers() {
     document.getElementById('allComputers').classList.remove('hidden');
     document.getElementById('registrationRequests').classList.add('hidden');
 }
+
+function sortComputers(computers, sortField, sortDirection) {
+    return [...computers].sort((a, b) => {
+        let valueA, valueB;
+        
+        // Handle different sort fields
+        switch(sortField) {
+            case 'name':
+                valueA = a.name.toLowerCase();
+                valueB = b.name.toLowerCase();
+                break;
+            case 'operationalStatus':
+                valueA = a.operationalStatus.toLowerCase();
+                valueB = b.operationalStatus.toLowerCase();
+                break;
+            case 'powerStatus':
+                // Calculate power status based on lastUpdated time
+                const currentTime = new Date();
+                const lastUpdatedA = new Date(a.lastUpdated);
+                const lastUpdatedB = new Date(b.lastUpdated);
+                const timeDiffA = (currentTime - lastUpdatedA) / (1000 * 60);
+                const timeDiffB = (currentTime - lastUpdatedB) / (1000 * 60);
+                valueA = timeDiffA > 2 ? 'off' : 'on';
+                valueB = timeDiffB > 2 ? 'off' : 'on';
+                break;
+            case 'downloadSpeed':
+                valueA = a.networkSpeed?.download || 0;
+                valueB = b.networkSpeed?.download || 0;
+                break;
+            case 'approvalStatus':
+                valueA = a.status.toLowerCase();
+                valueB = b.status.toLowerCase();
+                break;
+            default:
+                valueA = a.name.toLowerCase();
+                valueB = b.name.toLowerCase();
+        }
+        
+        // Handle numeric vs string comparison
+        if (typeof valueA === 'number' && typeof valueB === 'number') {
+            return sortDirection === 'asc' ? valueA - valueB : valueB - valueA;
+        } else {
+            if (valueA < valueB) return sortDirection === 'asc' ? -1 : 1;
+            if (valueA > valueB) return sortDirection === 'asc' ? 1 : -1;
+            return 0;
+        }
+    });
+}
 // Add these functions
 async function loadAllComputers() {
     try {
-        const response = await fetch('/api/computers', {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-        });
+        const indicator = document.getElementById('computersRefreshIndicator');
+        if (indicator) indicator.classList.remove('hidden');
 
-        if (!response.ok) throw new Error('Failed to fetch computers');
-        const computers = await response.json();
-
-        const tbody = document.querySelector('#computersTable tbody');
-        tbody.innerHTML = '';
-
-        // Populate dropdown for all roles
-        const issueComputerSelectStudent = document.getElementById('issueComputerSelectStudent');
-        if (issueComputerSelectStudent) {
-            issueComputerSelectStudent.innerHTML = '<option value="">Select Computer</option>';
-
-            computers.forEach(computer => {
-                if (computer.status === 'approved') {
-                    issueComputerSelectStudent.innerHTML += `
-                        <option value="${computer.id}">${computer.name}</option>
-                    `;
-                }
+        const loadData = async () => {
+            const response = await fetch('/api/computers', {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
             });
-        }
 
-        // Populate table with real data
-        computers.forEach(computer => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${computer.id}</td>
-                <td>${computer.name}</td>
-                <td>
-                    <span class="status-indicator ${computer.operationalStatus}">
-                        ${computer.operationalStatus}
-                    </span>
-                </td>
-                <td>
-                    <span class="approval-status ${computer.status}">
-                        ${computer.status}
-                    </span>
-                </td>
-                <td>
-                    <span class="power-status ${computer.powerStatus}">
-                        ${computer.powerStatus.toUpperCase()}
-                    </span>
-                </td>
-                <td>
-                    <span class="network-speed">${computer.networkSpeed}</span> Mbps
-                </td>
-                <td>${computer.ipAddress}</td>
-                <td>
-                    <button class="btn-details">Details</button>
-                    <button class="btn-delete" data-ip="${computer.ipAddress}">Delete</button>
-                </td>
-            `;
-            row.querySelector('.btn-details').addEventListener('click', () => {
-                showDetailsPopup(computer); // Pass the complete computer object
-            });    
-            tbody.appendChild(row);
-        });
+            if (!response.ok) throw new Error('Failed to fetch computers');
+            const computers = await response.json();
 
-        // Add delete button event listeners
-        document.querySelectorAll('.btn-delete').forEach(button => {
-            button.addEventListener('click', async () => {
-                const ipAddress = button.dataset.ip;
-                if (confirm(`Are you sure you want to delete computer with IP ${ipAddress}?`)) {
-                    try {
-                        const response = await fetch(`/api/computers/ip/${ipAddress}`, {
-                            method: 'DELETE',
-                            headers: {
-                                'Authorization': `Bearer ${localStorage.getItem('token')}`
-                            }
-                        });
+            // Clear existing data
+            const tbody = document.querySelector('#computersTable tbody');
+            tbody.innerHTML = '';
+            const grid = document.getElementById('computersGrid');
+            grid.innerHTML = '';
 
-                        if (!response.ok) {
-                            const errorData = await response.json();
-                            throw new Error(errorData.message || 'Failed to delete computer');
-                        }
-
-                        alert('Computer deleted successfully!');
-                        loadAllComputers(); // Refresh the table
-                    } catch (error) {
-                        console.error('Delete error:', error);
-                        alert(`Error: ${error.message}`);
+            // Populate dropdown for all roles
+            const issueComputerSelectStudent = document.getElementById('issueComputerSelectStudent');
+            if (issueComputerSelectStudent) {
+                issueComputerSelectStudent.innerHTML = '<option value="">Select Computer</option>';
+                computers.forEach(computer => {
+                    if (computer.status === 'approved') {
+                        issueComputerSelectStudent.innerHTML += `
+                            <option value="${computer.id}">${computer.name}</option>
+                        `;
                     }
-                }
-            });
-        });
+                });
+            }
+            // Populate both views
+            const sortedComputers = sortComputers(computers, currentSortField, currentSortDirection);
+            sortedComputers.forEach((computer, index) => {
+                // Determine power status
+                const currentTime = new Date();
+                const lastUpdatedTime = new Date(computer.lastUpdated);
+                const timeDiffInMinutes = (currentTime - lastUpdatedTime) / (1000 * 60);
+                const powerStatus = timeDiffInMinutes > 2 ? 'off' : 'on';
 
-        // Simulate network speed updates
-        simulateNetworkSpeedUpdates();
+                // List View
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${computer.name}</td>
+                    <td>${computer.ipAddress}</td>
+                    <td>
+                        <span class="status-indicator ${computer.operationalStatus}">
+                            ${computer.operationalStatus}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="power-status ${powerStatus}">
+                            ${powerStatus.toUpperCase()}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="approval-status ${computer.status}">
+                            ${computer.status}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="network-speed">${computer.networkSpeed?.download?.toFixed(2) || '0.00'}</span> Mbps
+                    </td>
+                    <td>
+                        <span class="ping-value">${computer.networkSpeed?.ping || '0'}</span> ms
+                    </td>
+                    <td>
+                        <button class="btn-details">Details</button>
+                        <button class="btn-delete" data-ip="${computer.ipAddress}">Delete</button>
+                    </td>
+                `;
+                row.querySelector('.btn-details').addEventListener('click', () => {
+                    showDetailsPopup(computer);
+                });
+                tbody.appendChild(row);
+
+                // Grid View
+                const card = document.createElement('div');
+                card.className = 'computer-card';
+                card.innerHTML = `
+                    <div class="computer-card-header">
+                        <div class="computer-card-title">${computer.name}</div>
+                        <div class="computer-card-actions">
+                        <button class="computer-card-btn btn-details">Details</button>
+                        <button class="computer-card-btn btn-delete" data-ip="${computer.ipAddress}">Delete</button>
+                        </div>
+                    </div>
+                    </div>
+                    <div class="computer-card-details">
+                        <div class="computer-card-detail">
+                            <div class="computer-card-detail-label">IP Address</div>
+                            <div>${computer.ipAddress}</div>
+                        </div>
+                        <div class="computer-card-detail">
+                            <div class="computer-card-detail-label">Power</div>
+                            <div class="power-status ${powerStatus}">
+                                ${powerStatus.toUpperCase()}
+                            </div>
+                        </div>
+                        <div class="computer-card-detail">
+                            <div class="computer-card-detail-label">Download</div>
+                            <div>${computer.networkSpeed?.download?.toFixed(2) || '0.00'} Mbps</div>
+                        </div>
+                        <div class="computer-card-detail">
+                            <div class="computer-card-detail-label">Op-Status</div>
+                            <div class="status-indicator ${computer.operationalStatus}">
+                                ${computer.operationalStatus}
+                            </div>
+                        </div>
+                        <div class="computer-card-detail">
+                            <div class="computer-card-detail-label">Ping</div>
+                            <div>${computer.networkSpeed?.ping || '0'} ms</div>
+                        </div>
+                        <div class="computer-card-detail">
+                            <div class="computer-card-detail-label">Approval Status</div>
+                            <div class="approval-status ${computer.status}">
+                                ${computer.status}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                card.querySelector('.btn-details').addEventListener('click', () => {
+                    showDetailsPopup(computer);
+                });
+                grid.appendChild(card);
+            });
+
+            // Add delete event listeners for both views
+            document.querySelectorAll('.btn-delete').forEach(button => {
+                button.addEventListener('click', async () => {
+                    const ipAddress = button.dataset.ip;
+                    if (confirm(`Are you sure you want to delete computer with IP ${ipAddress}?`)) {
+                        try {
+                            const response = await fetch(`/api/computers/ip/${ipAddress}`, {
+                                method: 'DELETE',
+                                headers: {
+                                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                                }
+                            });
+
+                            if (!response.ok) {
+                                const errorData = await response.json();
+                                throw new Error(errorData.message || 'Failed to delete computer');
+                            }
+
+                            alert('Computer deleted successfully!');
+                            loadAllComputers(); // Refresh the table
+                        } catch (error) {
+                            console.error('Delete error:', error);
+                            alert(`Error: ${error.message}`);
+                        }
+                    }
+                });
+            });
+        };
+
+        await loadData();
+
+        // Hide refresh indicator when done
+        if (indicator) indicator.classList.add('hidden');
+
+        // Set up auto-refresh
+        if (!computersRefreshInterval) {
+            computersRefreshInterval = setInterval(async () => {
+                if (indicator) indicator.classList.remove('hidden');
+                await loadData();
+                if (indicator) indicator.classList.add('hidden');
+            }, 20000);
+        }
 
     } catch (error) {
         console.error('Error loading computers:', error);
+        const indicator = document.getElementById('computersRefreshIndicator');
+        if (indicator) {
+            indicator.classList.remove('hidden');
+            indicator.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Sync failed';
+            indicator.style.color = 'var(--danger)';
+        }
         alert(`Error: ${error.message}`);
     }
 }
+
 async function showDetailsPopup(computer) {
     try {
-        // Use the computer object passed from the clicked row
-        // No need to fetch IP separately since we have the complete computer object
         const popup = document.getElementById('computerDetailsPopup');
         popup.classList.remove('hidden');
+
+        // Determine power status based on lastUpdated time
+        const currentTime = new Date();
+        const lastUpdatedTime = new Date(computer.lastUpdated);
+        const timeDiffInMinutes = (currentTime - lastUpdatedTime) / (1000 * 60);
+        
+        // If last update was more than 2 minutes ago, consider the computer offline
+        const powerStatus = timeDiffInMinutes > 2 ? 'off' : 'on';
 
         const popupContent = document.getElementById('popupDetails');
         popupContent.innerHTML = `
@@ -516,6 +723,10 @@ async function showDetailsPopup(computer) {
                 <div class="detail-item">
                     <span class="detail-label">IP Address:</span>
                     <span>${computer.ipAddress || 'N/A'}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">MAC Address:</span>
+                    <span>${computer.macAddress || 'N/A'}</span>
                 </div>
                 <div class="detail-item">
                     <span class="detail-label">Status:</span>
@@ -531,9 +742,17 @@ async function showDetailsPopup(computer) {
                 </div>
                 <div class="detail-item">
                     <span class="detail-label">Power Status:</span>
-                    <span class="power-status ${computer.powerStatus || 'unknown'}">
-                        ${computer.powerStatus ? computer.powerStatus.toUpperCase() : 'N/A'}
+                    <span class="power-status ${powerStatus || 'unknown'}">
+                        ${powerStatus ? powerStatus.toUpperCase() : 'N/A'}
                     </span>
+                    ${timeDiffInMinutes > 2 ? 
+                      `<span class="last-updated-warning">(Last updated: ${timeDiffInMinutes.toFixed(0)} minutes ago)</span>` : 
+                      ''}
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Last Updated:</span>
+                    <span>${computer.lastUpdated ? 
+                        new Date(computer.lastUpdated).toLocaleString() : 'N/A'}</span>
                 </div>
             </div>
 
@@ -564,8 +783,16 @@ async function showDetailsPopup(computer) {
                     <span>${computer.specs?.network || 'N/A'}</span>
                 </div>
                 <div class="detail-item">
-                    <span class="detail-label">Network Speed:</span>
-                    <span class="network-speed">${computer.networkSpeed}</span> Mbps
+                    <span class="detail-label">Download Speed:</span>
+                    <span>${computer.networkSpeed?.download ? `${computer.networkSpeed.download.toFixed(2)} Mbps` : 'N/A'}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Upload Speed:</span>
+                    <span>${computer.networkSpeed?.upload ? `${computer.networkSpeed.upload.toFixed(2)} Mbps` : 'N/A'}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Ping:</span>
+                    <span>${computer.networkSpeed?.ping ? `${computer.networkSpeed.ping} ms` : 'N/A'}</span>
                 </div>
                 <div class="detail-item">
                     <span class="detail-label">Maintenance Required:</span>
@@ -576,45 +803,42 @@ async function showDetailsPopup(computer) {
             <div class="detail-section">
                 <h4>Hardware Connected</h4>
                 <div class="detail-item">
-                    <span class="detail-label">Mouse:</span>
-                    <span>N/A</span>
+                    <span class="detail-label">Keyboard:</span>
+                    <span>${computer.specs?.hardwareConnected?.keyboard ? '✔ Connected' : '✖ Not connected'}</span>
                 </div>
                 <div class="detail-item">
-                    <span class="detail-label">Keyboard:</span>
-                    <span>N/A</span>
+                    <span class="detail-label">Mouse:</span>
+                    <span>${computer.specs?.hardwareConnected?.mouse ? '✔ Connected' : '✖ Not connected'}</span>
                 </div>
                 <div class="detail-item">
                     <span class="detail-label">Monitor:</span>
-                    <span>N/A</span>
+                    <span>${computer.specs?.hardwareConnected?.monitor ? '✔ Connected' : '✖ Not connected'}</span>
                 </div>
                 <div class="detail-item">
-                    <span class="detail-label">External Drive:</span>
-                    <span>N/A</span>
+                    <span class="detail-label">Headphones:</span>
+                    <span>${computer.specs?.hardwareConnected?.headphone ? '✔ Connected' : '✖ Not connected'}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Microphone:</span>
+                    <span>${computer.specs?.hardwareConnected?.microphone ? '✔ Connected' : '✖ Not connected'}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">USB Drive:</span>
+                    <span>${computer.specs?.hardwareConnected?.pendrive ? '✔ Connected' : '✖ Not connected'}</span>
                 </div>
             </div>
             
             <div class="detail-section">
-                <h4>Current User</h4>
-                <div class="detail-item">
-                    <span class="detail-label">Name:</span>
-                    <span>N/A</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">Role:</span>
-                    <span>N/A</span>
-                </div>
-            </div>
-
-            <div class="detail-section">
                 <h4>Registration Details</h4>
-                <div class="detail-item">
-                    <span class="detail-label">Registered By:</span>
-                    <span>${computer.registeredBy?.name || 'N/A'}</span>
-                </div>
                 <div class="detail-item">
                     <span class="detail-label">Registration Date:</span>
                     <span>${computer.registeredAt ? 
                         new Date(computer.registeredAt).toLocaleString() : 'N/A'}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Updated At:</span>
+                    <span>${computer.updatedAt ? 
+                        new Date(computer.updatedAt).toLocaleString() : 'N/A'}</span>
                 </div>
             </div>
         `;
@@ -665,18 +889,20 @@ style.textContent = `
         filter: blur(5px);
         pointer-events: none; /* Prevent interaction with blurred content */
     }
+    .last-updated-warning {
+        color: var(--warning);
+        font-size: 0.8em;
+        margin-left: 8px;
+        font-style: italic;
+    }
+    .power-status.off {
+        color: var(--danger);
+    }
+    .power-status.on {
+        color: var(--success);
+    }
 `;
 document.head.appendChild(style);
-
-function simulateNetworkSpeedUpdates() {
-    setInterval(() => {
-        document.querySelectorAll('.network-speed').forEach(element => {
-            // Update speed with random value between 45-105 Mbps
-            const newSpeed = (Math.random() * 60 + 45).toFixed(2);
-            element.textContent = newSpeed;
-        });
-    }, 2000); // Update every 5 seconds
-}
 
 async function handleStatusChange(e) {
     try {
@@ -768,50 +994,7 @@ document.getElementById('issueFormStudent').addEventListener('submit', async (e)
 
         alert('Issue reported successfully!');
         e.target.reset();
-        loadIssuesTable(); // Refresh the issues table
-    } catch (error) {
-        console.error('Error reporting issue:', error);
-        alert(`Error: ${error.message}`);
-    }
-});
-
-document.getElementById('issueFormStaff').addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    const computerId = document.getElementById('issueComputerSelectStudent').value;
-    const description = document.getElementById('issueDescriptionStudent').value;
-
-    if (!computerId) {
-        alert('Please select a computer.');
-        return;
-    }
-
-    const issueData = {
-        computer: computerId,
-        description: description
-    };
-
-    console.log('Issue Data:', issueData); // Debugging log
-
-    try {
-        const response = await fetch('/api/issues', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            },
-            body: JSON.stringify(issueData)
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            throw new Error(data.message || 'Failed to report issue');
-        }
-
-        alert('Issue reported successfully!');
-        e.target.reset();
-        loadIssuesTable(); // Refresh the issues table
+        loadIssuesTable();
     } catch (error) {
         console.error('Error reporting issue:', error);
         alert(`Error: ${error.message}`);
@@ -826,37 +1009,24 @@ async function loadIssuesTable() {
             }
         });
 
-        let issues = [];
+        if (!response.ok) throw new Error('Failed to fetch issues');
+        const issues = await response.json();
 
-        if (!response.ok) {
-            console.warn('Failed to fetch issues. Using dummy data instead.');
-            issues = [
-                {
-                    _id: '64f8b1e2a1b2c3d4e5f6a7b8',
-                    computer: { name: 'Computer 1' },
-                    reportedBy: { username: 'student1' },
-                    description: 'Keyboard not working',
-                    status: 'open',
-                    createdAt: new Date()
-                },
-                {
-                    _id: '64f8b1e2a1b2c3d4e5f6a7b9',
-                    computer: { name: 'Computer 2' },
-                    reportedBy: { username: 'staff1' },
-                    description: 'Monitor not displaying',
-                    status: 'in-progress',
-                    createdAt: new Date()
-                }
-            ];
-        } else {
-            issues = await response.json();
-        }
+        // Sort issues by createdAt date (newest first)
+        const sortedIssues = issues.sort((a, b) => {
+            return new Date(b.createdAt) - new Date(a.createdAt);
+        });
 
-        const tbody = document.querySelector('#issuesTable tbody');
-        tbody.innerHTML = '';
+        // Separate issues into open and resolved
+        const openIssues = sortedIssues.filter(issue => issue.status === 'open');
+        const resolvedIssues = sortedIssues.filter(issue => issue.status === 'resolved');
 
-        issues.forEach(issue => {
-            tbody.innerHTML += `
+        // Populate Open Issues Table
+        const openTbody = document.querySelector('#openIssuesTable tbody');
+        openTbody.innerHTML = '';
+
+        openIssues.forEach(issue => {
+            openTbody.innerHTML += `
                 <tr>
                     <td>${issue._id}</td>
                     <td>${issue.computer?.name || 'N/A'}</td>
@@ -869,13 +1039,35 @@ async function loadIssuesTable() {
                         </span>
                     </td>
                     <td>
-                        <button class="btn-resolve" data-id="${issue._id}">Issue Resolved</button>
+                        <button class="btn-resolve" data-id="${issue._id}">Mark Resolved</button>
                     </td>
                 </tr>
             `;
         });
 
-        // Add event listeners for buttons
+        // Populate Resolved Issues Table
+        const resolvedTbody = document.querySelector('#resolvedIssuesTable tbody');
+        resolvedTbody.innerHTML = '';
+
+        resolvedIssues.forEach(issue => {
+            resolvedTbody.innerHTML += `
+                <tr>
+                    <td>${issue._id}</td>
+                    <td>${issue.computer?.name || 'N/A'}</td>
+                    <td>${issue.reportedBy?.username || 'Unknown'}</td>
+                    <td>${new Date(issue.createdAt).toLocaleDateString()}</td>
+                    <td>${new Date(issue.updatedAt).toLocaleDateString()}</td>
+                    <td>${issue.description}</td>
+                    <td>
+                        <span class="status-indicator ${issue.status}">
+                            ${issue.status}
+                        </span>
+                    </td>
+                </tr>
+            `;
+        });
+
+        // Add event listeners for resolve buttons
         document.querySelectorAll('.btn-resolve').forEach(button => {
             button.addEventListener('click', async () => {
                 const issueId = button.dataset.id;
@@ -890,7 +1082,7 @@ async function loadIssuesTable() {
 
                     if (!response.ok) throw new Error('Failed to resolve issue');
                     alert('Issue resolved successfully!');
-                    loadIssuesTable(); // Refresh the issues table
+                    loadIssuesTable(); // Refresh the issues tables
                     loadAllComputers(); // Refresh the computers table
                 } catch (error) {
                     alert(`Error: ${error.message}`);
@@ -903,7 +1095,6 @@ async function loadIssuesTable() {
         alert(`Error: ${error.message}`);
     }
 }
-// Computer Approval/Rejection
 // Updated approveComputer function
 async function approveComputer(computerId) {
     try {
@@ -997,9 +1188,52 @@ async function addNewUser(event) {
 
         alert('User added successfully!');
         event.target.reset();
+        loadUsersTable(); 
         
     } catch (error) {
         console.error('Error adding user:', error);
+        alert(`Error: ${error.message}`);
+    }
+}
+
+async function loadUsersTable() {
+    try {
+        const response = await fetch('/api/users', {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+
+        if (!response.ok) throw new Error('Failed to fetch users');
+        const users = await response.json();
+
+        const tbody = document.querySelector('#usersTable tbody');
+        tbody.innerHTML = '';
+
+        // Sort users by role (admin first, then staff, then student)
+        const sortedUsers = users.sort((a, b) => {
+            const roleOrder = { admin: 1, staff: 2, student: 3 };
+            return roleOrder[a.role] - roleOrder[b.role];
+        });
+
+        sortedUsers.forEach(user => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${user.name}</td>
+                <td>${user.username}</td>
+                <td>${user.email}</td>
+                <td>
+                    <span class="role-badge ${user.role}">
+                        ${user.role}
+                    </span>
+                </td>
+            
+            `;
+            tbody.appendChild(row);
+        });
+
+    } catch (error) {
+        console.error('Error loading users:', error);
         alert(`Error: ${error.message}`);
     }
 }
@@ -1039,67 +1273,81 @@ async function loadAvailableComputers() {
     }
 }
 
+document.addEventListener('DOMContentLoaded', () => {
+    // Set minimum date to today
+    const dateInput = document.getElementById('studentBookingDate');
+    const startTimeInput = document.getElementById('studentStartTime');
+    const endTimeInput = document.getElementById('studentEndTime');
+    
+    // Set min date to today
+    const today = new Date().toISOString().split('T')[0];
+    dateInput.setAttribute('min', today);
+    
+    // If booking is for today, set min time to current time
+    dateInput.addEventListener('change', () => {
+        const selectedDate = dateInput.value;
+        const now = new Date();
+        const currentDate = now.toISOString().split('T')[0];
+        
+        if (selectedDate === currentDate) {
+            // Calculate current time + 15 minutes (buffer time)
+            const currentHours = now.getHours().toString().padStart(2, '0');
+            const currentMinutes = (now.getMinutes() + 15).toString().padStart(2, '0');
+            const minTime = `${currentHours}:${currentMinutes}`;
+            
+            startTimeInput.setAttribute('min', minTime);
+            endTimeInput.setAttribute('min', minTime);
+        } else {
+            // For future dates, allow any time
+            startTimeInput.removeAttribute('min');
+            endTimeInput.removeAttribute('min');
+        }
+    });
+    
+    // Validate start time is before end time
+    startTimeInput.addEventListener('change', () => {
+        endTimeInput.setAttribute('min', startTimeInput.value);
+    });
+});
+
+// Update the booking form submission handler
 document.getElementById('studentBookingForm').addEventListener('submit', async (e) => {
     e.preventDefault();
 
     const computerId = document.getElementById('studentComputerSelect').value;
+    const bookingDate = document.getElementById('studentBookingDate').value;
     const startTime = document.getElementById('studentStartTime').value;
     const endTime = document.getElementById('studentEndTime').value;
     const purpose = document.getElementById('studentBookingPurpose').value;
 
-    if (!computerId || !startTime || !endTime || !purpose) {
+    if (!computerId || !bookingDate || !startTime || !endTime || !purpose) {
         alert('Please fill all fields.');
+        return;
+    }
+
+    // Combine date and time into full datetime strings
+    const startDateTime = `${bookingDate}T${startTime}`;
+    const endDateTime = `${bookingDate}T${endTime}`;
+
+    // Additional validation for current date/time
+    const now = new Date();
+    const selectedStart = new Date(startDateTime);
+    const selectedEnd = new Date(endDateTime);
+
+    if (selectedStart < now) {
+        alert('Cannot book for past dates/times.');
+        return;
+    }
+
+    if (selectedEnd <= selectedStart) {
+        alert('End time must be after start time.');
         return;
     }
 
     const bookingData = {
         computer: computerId,
-        startTime: startTime, // Plain date string
-        endTime: endTime, // Plain date string
-        purpose
-    };
-
-    try {
-        const response = await fetch('/api/bookings', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            },
-            body: JSON.stringify(bookingData)
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            throw new Error(data.message || 'Failed to book computer');
-        }
-
-        alert('Computer booked successfully!');
-        e.target.reset();
-        loadAvailableComputers(); // Refresh the available computers list
-    } catch (error) {
-        console.error('Error booking computer:', error);
-        alert(`Error: ${error.message}`);
-    }
-});
-document.getElementById('staffBookingForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    const computerId = document.getElementById('studentComputerSelect').value;
-    const startTime = document.getElementById('studentStartTime').value;
-    const endTime = document.getElementById('studentEndTime').value;
-    const purpose = document.getElementById('studentBookingPurpose').value;
-
-    if (!computerId || !startTime || !endTime || !purpose) {
-        alert('Please fill all fields.');
-        return;
-    }
-
-    const bookingData = {
-        computer: computerId,
-        startTime: startTime, // Plain date string
-        endTime: endTime, // Plain date string
+        startTime: startDateTime,
+        endTime: endDateTime,
         purpose
     };
 
@@ -1137,16 +1385,26 @@ async function loadBookings() {
         if (!response.ok) throw new Error('Failed to fetch bookings');
         const bookings = await response.json();
 
-        console.log('Fetched Bookings:', bookings); // Debugging log
+        // Sort all bookings by start time (newest first)
+        const sortedBookings = bookings.sort((a, b) => 
+            new Date(b.startTime) - new Date(a.startTime)
+        );
 
-        const tbody = document.querySelector('#bookingsTable tbody');
-        tbody.innerHTML = '';
+        // Split bookings into two groups
+        const upcomingBookings = sortedBookings.filter(b => b.status === 'upcoming');
+        const pastBookings = sortedBookings.filter(b => 
+            ['ongoing', 'completed'].includes(b.status)
+        );
 
-        bookings.forEach(booking => {
+        // Populate Upcoming Bookings Table
+        const upcomingTbody = document.querySelector('#upcomingBookingsTable tbody');
+        upcomingTbody.innerHTML = '';
+        
+        upcomingBookings.forEach(booking => {
             const startDate = new Date(booking.startTime);
             const endDate = new Date(booking.endTime);
 
-            tbody.innerHTML += `
+            upcomingTbody.innerHTML += `
                 <tr>
                     <td>${booking._id}</td>
                     <td>${booking.computer?.name || 'N/A'}</td>
@@ -1161,15 +1419,13 @@ async function loadBookings() {
                         </span>
                     </td>
                     <td>
-                        ${booking.status === 'upcoming' ? `
-                            <button class="btn-cancel" data-id="${booking._id}">Cancel</button>
-                        ` : '--'}
+                        <button class="btn-cancel" data-id="${booking._id}">Cancel</button>
                     </td>
                 </tr>
             `;
         });
 
-        // Add cancel event listeners
+        // Add cancel event listeners for upcoming bookings
         document.querySelectorAll('.btn-cancel').forEach(button => {
             button.addEventListener('click', async () => {
                 if (confirm('Are you sure you want to cancel this booking?')) {
@@ -1183,7 +1439,7 @@ async function loadBookings() {
 
                         if (!response.ok) throw new Error('Failed to cancel booking');
                         alert('Booking cancelled successfully');
-                        loadBookings(); // Refresh the table
+                        loadBookings();
                     } catch (error) {
                         alert(`Error: ${error.message}`);
                     }
@@ -1191,11 +1447,74 @@ async function loadBookings() {
             });
         });
 
+        // Populate Past Bookings Table
+        const pastTbody = document.querySelector('#pastBookingsTable tbody');
+        pastTbody.innerHTML = '';
+        
+        pastBookings.forEach(booking => {
+            const startDate = new Date(booking.startTime);
+            const endDate = new Date(booking.endTime);
+
+            pastTbody.innerHTML += `
+                <tr>
+                    <td>${booking._id}</td>
+                    <td>${booking.computer?.name || 'N/A'}</td>
+                    <td>${booking.user?.username || 'Unknown'}</td>
+                    <td>${startDate.toLocaleDateString()}</td>
+                    <td>${startDate.toLocaleTimeString()}</td>
+                    <td>${endDate.toLocaleTimeString()}</td>
+                    <td>${booking.purpose}</td>
+                    <td>
+                        <span class="status-indicator ${booking.status}">
+                            ${booking.status}
+                        </span>
+                    </td>
+                </tr>
+            `;
+        });
+
     } catch (error) {
         console.error('Error loading bookings:', error);
         alert(`Error: ${error.message}`);
     }
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Set minimum date to today
+    const dateInput = document.getElementById('studentBookingDate');
+    const startTimeInput = document.getElementById('studentStartTime');
+    const endTimeInput = document.getElementById('studentEndTime');
+    
+    // Set min date to today
+    const today = new Date().toISOString().split('T')[0];
+    dateInput.setAttribute('min', today);
+    
+    // If booking is for today, set min time to current time
+    dateInput.addEventListener('change', () => {
+        const selectedDate = dateInput.value;
+        const now = new Date();
+        const currentDate = now.toISOString().split('T')[0];
+        
+        if (selectedDate === currentDate) {
+            // Calculate current time + 15 minutes (buffer time)
+            const currentHours = now.getHours().toString().padStart(2, '0');
+            const currentMinutes = (now.getMinutes() + 15).toString().padStart(2, '0');
+            const minTime = `${currentHours}:${currentMinutes}`;
+            
+            startTimeInput.setAttribute('min', minTime);
+            endTimeInput.setAttribute('min', minTime);
+        } else {
+            // For future dates, allow any time
+            startTimeInput.removeAttribute('min');
+            endTimeInput.removeAttribute('min');
+        }
+    });
+    
+    // Validate start time is before end time
+    startTimeInput.addEventListener('change', () => {
+        endTimeInput.setAttribute('min', startTimeInput.value);
+    });
+});
 
 // View Attendance
 document.getElementById('attendanceForm').addEventListener('submit', async (e) => {
@@ -1274,144 +1593,164 @@ document.getElementById('downloadPDF').addEventListener('click', async () => {
     window.open(`/api/bookings/attendance/pdf?from=${fromDate}&to=${toDate}`, '_blank');
 });
 
-// Add these functions to your dashboard.js or in a script tag
-async function fetchIPAddress() {
-    try {
-        const response = await fetch('https://api.ipify.org?format=json');
-        const data = await response.json();
-        return data.ip;
-    } catch (error) {
-        console.error('Error fetching IP address:', error);
-        return null;
-    }
-}
-
-async function fetchComputerDetails(ip) {
-    try {
-        const response = await fetch(`/api/computers?ip=${ip}`);
-        const data = await response.json();
-        return data;
-    } catch (error) {
-        console.error('Error fetching computer details:', error);
-        return null;
-    }
-}
-
-async function fetchRealTimeSpecs() {
-    try {
-        const response = await fetch('http://localhost:3000/api/specs');
-        if (!response.ok) throw new Error('Failed to fetch specs');
-        const specs = await response.json();
-        return specs;
-    } catch (error) {
-        console.error('Error fetching real-time specs:', error);
-        return null;
-    }
-}
-
 async function updateSystemSpecs() {
-    const ip = await fetchIPAddress();
-    if (ip) {
-        document.getElementById('computer-name').textContent = ip;
-        const computerDetails = await fetchComputerDetails(ip);
-        const realTimeSpecs = await fetchRealTimeSpecs();
+    try {
+        // Fetch real-time specs from local endpoint
+        const specs = await fetchSystemSpecs();
+        
+        if (!specs) {
+            throw new Error('Could not fetch system specifications');
+        }
 
-        const specsToUpdate = {
-            'os': realTimeSpecs?.os || computerDetails?.os,
-            'processor': realTimeSpecs?.cpu || computerDetails?.processor,
-            'memory': realTimeSpecs?.ram || computerDetails?.memory,
-            'storage': realTimeSpecs?.storage?.map(disk => disk.size).join(', ') || computerDetails?.storage,
-            'graphics': computerDetails?.graphics,
-            'resolution': computerDetails?.resolution
-        };
+        // Update basic specs
+        const specsContainer = document.getElementById('systemSpecsContainer');
+        specsContainer.innerHTML = ''; // Clear previous content
 
-        Object.entries(specsToUpdate).forEach(([key, value]) => {
-            const element = document.getElementById(`${key}-value`);
-            const input = document.getElementById(`${key}-input`);
-            
-            if (value) {
-                element.textContent = value;
-                input.value = value;
-            } else {
-                element.textContent = '--';
-                addEditButton(key);
-            }
-        });
+        // Add system specifications section
+        const systemSpecsHTML = `
+            <div class="spec-section">
+                <h3>System Specifications</h3>
+                <div class="spec-grid">
+                    <div class="spec-item">
+                        <span class="spec-label">Processor:</span>
+                        <span class="spec-value">${specs.cpu || 'N/A'}</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label">Memory (RAM):</span>
+                        <span class="spec-value">${specs.ram || 'N/A'}</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label">Storage:</span>
+                        <span class="spec-value">${specs.storage || 'N/A'}</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label">Operating System:</span>
+                        <span class="spec-value">${specs.os || 'N/A'}</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label">Network Adapter:</span>
+                        <span class="spec-value">${specs.network || 'N/A'}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+        specsContainer.insertAdjacentHTML('beforeend', systemSpecsHTML);
+
+        // Add network performance section
+        const networkSpecsHTML = `
+            <div class="spec-section">
+                <h3>Network Performance</h3>
+                <div class="spec-grid">
+                    <div class="spec-item">
+                        <span class="spec-label">IP Address:</span>
+                        <span class="spec-value">${specs.ipAddress || 'N/A'}</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label">Download Speed:</span>
+                        <span class="spec-value">
+                            ${specs.networkSpeed?.download ? `${specs.networkSpeed.download.toFixed(2)} Mbps` : 'N/A'}
+                        </span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label">Upload Speed:</span>
+                        <span class="spec-value">
+                            ${specs.networkSpeed?.upload ? `${specs.networkSpeed.upload.toFixed(2)} Mbps` : 'N/A'}
+                        </span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label">Ping:</span>
+                        <span class="spec-value">
+                            ${specs.networkSpeed?.ping ? `${specs.networkSpeed.ping} ms` : 'N/A'}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        `;
+        specsContainer.insertAdjacentHTML('beforeend', networkSpecsHTML);
+
+        // Add hardware connected section as a list
+        const hardwareHTML = `
+            <div class="spec-section">
+                <h3>Hardware Connected</h3>
+                <ul class="hardware-list">
+                    ${specs.hardwareConnected ? `
+                        <li class="hardware-item ${specs.hardwareConnected.keyboard ? 'connected' : 'disconnected'}">
+                            Keyboard: ${specs.hardwareConnected.keyboard ? '✔ Connected' : '✖ Not connected'}
+                        </li>
+                        <li class="hardware-item ${specs.hardwareConnected.mouse ? 'connected' : 'disconnected'}">
+                            Mouse: ${specs.hardwareConnected.mouse ? '✔ Connected' : '✖ Not connected'}
+                        </li>
+                        <li class="hardware-item ${specs.hardwareConnected.monitor ? 'connected' : 'disconnected'}">
+                            Monitor: ${specs.hardwareConnected.monitor ? '✔ Connected' : '✖ Not connected'}
+                        </li>
+                        <li class="hardware-item ${specs.hardwareConnected.headphone ? 'connected' : 'disconnected'}">
+                            Headphones: ${specs.hardwareConnected.headphone ? '✔ Connected' : '✖ Not connected'}
+                        </li>
+                        <li class="hardware-item ${specs.hardwareConnected.microphone ? 'connected' : 'disconnected'}">
+                            Microphone: ${specs.hardwareConnected.microphone ? '✔ Connected' : '✖ Not connected'}
+                        </li>
+                        <li class="hardware-item ${specs.hardwareConnected.pendrive ? 'connected' : 'disconnected'}">
+                            USB Drive: ${specs.hardwareConnected.pendrive ? '✔ Connected' : '✖ Not connected'}
+                        </li>
+                    ` : `
+                        <li class="hardware-item disconnected">Hardware status unavailable</li>
+                    `}
+                </ul>
+            </div>
+        `;
+        specsContainer.insertAdjacentHTML('beforeend', hardwareHTML);
+
+        // Add refresh button functionality
+        const refreshBtn = document.getElementById('refreshSpecsBtn');
+        if (refreshBtn) {
+            refreshBtn.onclick = updateSystemSpecs;
+        }
+
+    } catch (error) {
+        console.error('Error updating system specs:', error);
+        const specsContainer = document.getElementById('systemSpecsContainer');
+        specsContainer.innerHTML = `
+            <div class="error-message">
+                <i class="fas fa-exclamation-triangle"></i>
+                <p>Could not load system specifications. Please try again later.</p>
+                <button id="retrySpecsBtn" class="btn-primary">Retry</button>
+            </div>
+        `;
+        document.getElementById('retrySpecsBtn').onclick = updateSystemSpecs;
     }
-}
-
-function addEditButton(specId) {
-    const specItem = document.getElementById(`${specId}-value`).closest('.spec-item');
-    const editHtml = `
-        <i class="fas fa-pencil-alt edit-icon" data-spec="${specId}"></i>
-        <i class="fas fa-save edit-icon" data-spec="${specId}" style="display: none"></i>
-    `;
-    specItem.insertAdjacentHTML('beforeend', editHtml);
-    
-    specItem.querySelector('.fa-pencil-alt').addEventListener('click', startEditing);
-    specItem.querySelector('.fa-save').addEventListener('click', saveEditing);
-}
-
-function startEditing(e) {
-    const specItem = e.target.closest('.spec-item');
-    const specId = e.target.dataset.spec;
-    
-    specItem.classList.add('editing');
-    e.target.style.display = 'none';
-    specItem.querySelector('.fa-save').style.display = 'block';
-}
-
-function saveEditing(e) {
-    const specItem = e.target.closest('.spec-item');
-    const specId = e.target.dataset.spec;
-    const input = document.getElementById(`${specId}-input`);
-    const valueElement = document.getElementById(`${specId}-value`);
-    
-    valueElement.textContent = input.value || '--';
-    specItem.classList.remove('editing');
-    e.target.style.display = 'none';
-    specItem.querySelector('.fa-pencil-alt').style.display = 'block';
-}
-
-function simulateSpeedTest() {
-    const testSpeedBtn = document.getElementById("test-speed-btn");
-    testSpeedBtn.disabled = true;
-    testSpeedBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Testing...';
-
-    document.getElementById("download-speed").textContent = "0.00";
-    document.getElementById("upload-speed").textContent = "0.00";
-    document.getElementById("ping-value").textContent = "0";
-    document.getElementById("download-progress").style.width = "0%";
-    document.getElementById("upload-progress").style.width = "0%";
-    document.getElementById("ping-progress").style.width = "0%";
-
-    setTimeout(() => {
-        const downloadSpeed = (Math.random() * 100 + 50).toFixed(2);
-        document.getElementById("download-speed").textContent = downloadSpeed;
-        document.getElementById("download-progress").style.width = `${Math.min((downloadSpeed / 200) * 100, 100)}%`;
-
-        setTimeout(() => {
-            const uploadSpeed = (Math.random() * 30 + 10).toFixed(2);
-            document.getElementById("upload-speed").textContent = uploadSpeed;
-            document.getElementById("upload-progress").style.width = `${Math.min((uploadSpeed / 50) * 100, 100)}%`;
-
-            setTimeout(() => {
-                const ping = Math.floor(Math.random() * 30 + 5);
-                document.getElementById("ping-value").textContent = ping;
-                document.getElementById("ping-progress").style.width = `${Math.min(100 - (ping / 100) * 100, 100)}%`;
-
-                testSpeedBtn.disabled = false;
-                testSpeedBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Test Speed';
-            }, 500);
-        }, 1000);
-    }, 1500);
 }
 
 // Initialize when This PC section is shown
 document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('test-speed-btn')?.addEventListener('click', simulateSpeedTest);
-    
     // Update specs when This PC section is shown
     document.querySelector('[data-target="thisPC"]')?.addEventListener('click', updateSystemSpecs);
 });
 
+document.querySelectorAll('#sortDropdown button').forEach(button => {
+    button.addEventListener('click', function() {
+        const sortField = this.dataset.sort;
+        
+        // Toggle direction if same field is clicked again
+        if (sortField === currentSortField) {
+            currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            currentSortField = sortField;
+            currentSortDirection = 'asc';
+        }
+        
+        // Update button text
+        document.getElementById('sortDropdownBtn').innerHTML = 
+            `<i class="fas fa-sort"></i> ${this.textContent} ` + 
+            (currentSortDirection === 'asc' ? '<i class="fas fa-arrow-up"></i>' : '<i class="fas fa-arrow-down"></i>');
+        
+        // Close dropdown
+        document.getElementById('sortDropdown').classList.add('hidden');
+        
+        // Reload computers with new sort
+        loadAllComputers();
+    });
+});
+// Close dropdown when clicking elsewhere
+document.addEventListener('click', function() {
+    document.getElementById('sortDropdown').classList.add('hidden');
+});

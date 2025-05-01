@@ -24,7 +24,7 @@
         </div>
             <ul>
                 <li class="admin-tabs">
-                    <a href="dashboard.html" class="section-link active">
+                    <a href="#" data-target="dashboardOverview" class="section-link active">
                         <span class="icon">
                             <ion-icon name="speedometer-outline"></ion-icon>
                         </span>
@@ -181,9 +181,6 @@
         <div class="details">
             <!-- Admin Content -->
             <div id="adminDashboard" class="hidden">
-                <!-- Admin Section Contents -->
-                <!-- Add this inside the adminDashboard div, at the top of the section-content divs -->
-                <!-- Replace the existing dashboardOverview section with this -->
                 <div id="dashboardOverview" class="section-content">
                     <div class="dashboard-grid">
                         <!-- Card 1: All Computers (span 2 columns and 2 rows) -->
@@ -247,39 +244,62 @@
                                 <ion-icon name="calendar-outline"></ion-icon>
                             </div>
                         </div>
-
-                        <!-- Card 5: Current Speed (moved from cardBox) -->
-                        <div class="dashboard-card card5">
-                            <div class="card-content">
-                                <div class="numbers"><span id="currentSpeed">0</span> Mbps</div>
-                                <div class="cardName">Network Speed</div>
-                            </div>
-                            <div class="iconBx">
-                                <ion-icon name="speedometer-outline"></ion-icon>
-                            </div>
-                        </div>
                     </div>
                 </div>
                 <!-- Lab Computers Section -->
                 <div id="labComputers" class="section-content">
                     <div class="card">
-                        <h3>Lab Computers</h3>
-                        <div class="table-container">
+                        <!-- In the computers-table-header div -->
+                        <div class="computers-table-header">
+                            <h3>Lab Computers</h3>
+                            <div class="view-controls">
+                                <div id="computersRefreshIndicator" class="refresh-indicator hidden">
+                                    <i class="fas fa-sync-alt fa-spin"></i>
+                                </div>
+                                <div class="sort-controls">
+                                    <button id="sortDropdownBtn" class="view-toggle-btn">
+                                        <i class="fas fa-sort"></i> Sort By
+                                    </button>
+                                    <div id="sortDropdown" class="sort-dropdown hidden">
+                                        <button data-sort="name">Name</button>
+                                        <button data-sort="operationalStatus">Operational Status</button>
+                                        <button data-sort="powerStatus">Power Status</button>
+                                        <button data-sort="approvalStatus">Approval Status</button>
+                                        <button data-sort="downloadSpeed">Download Speed</button>
+                                    </div>
+                                </div>
+                                <button id="viewToggleBtn" class="view-toggle-btn active" data-view="list">
+                                    <i class="fas fa-list"></i> List
+                                </button>
+                                <button id="gridViewBtn" class="view-toggle-btn" data-view="grid">
+                                    <i class="fas fa-th-large"></i> Grid
+                                </button>
+                            </div>
+                        </div>
+                        <!-- List View (existing table) -->
+                        <div id="computersListView" class="table-container">
                             <table id="computersTable">
                                 <thead>
                                     <tr>
-                                        <th>Computer ID</th>
+                                        <th>Serial No.</th>
                                         <th>Name</th>
-                                        <th>Operational Status</th>
-                                        <th>Approval Status</th>
-                                        <th>Power Status</th>
-                                        <th>Network Speed</th>
                                         <th>IP Address</th>
+                                        <th>Operational Status</th>
+                                        <th>Power Status</th>
+                                        <th>Approval Status</th>
+                                        <th>Download Speed</th>
+                                        <th>Ping</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody></tbody>
                             </table>
+                        </div>
+                        <!-- Grid View (new) -->
+                        <div id="computersGridView" class="grid-container hidden">
+                            <div class="computers-grid" id="computersGrid">
+                                <!-- Grid items will be inserted here by JavaScript -->
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -305,21 +325,50 @@
                 <!-- Reported Issues Section -->
                 <div id="reportedIssues" class="section-content hidden">
                     <div class="card">
-                        <h3>Reported Issues</h3>
-                        <table id="issuesTable">
-                            <thead>
-                                <tr>
-                                    <th>Issue ID</th>
-                                    <th>Computer</th>
-                                    <th>Reported By</th>
-                                    <th>Date Reported</th>
-                                    <th>Description</th>
-                                    <th>Status</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
+                        <div class="table-header">
+                            <h3>Reported Issues</h3>
+                            <button id="refreshIssuesBtn" class="refresh-btn">
+                                <i class="fas fa-sync-alt"></i> Refresh
+                            </button>
+                        </div>
+                        
+                        <!-- Open Issues Table -->
+                        <div class="table-container">
+                            <h4>Open Issues</h4>
+                            <table id="openIssuesTable">
+                                <thead>
+                                    <tr>
+                                        <th>Issue ID</th>
+                                        <th>Computer</th>
+                                        <th>Reported By</th>
+                                        <th>Date Reported</th>
+                                        <th>Description</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Resolved Issues Table -->
+                        <div class="table-container" style="margin-top: 30px;">
+                            <h4>Resolved Issues</h4>
+                            <table id="resolvedIssuesTable">
+                                <thead>
+                                    <tr>
+                                        <th>Issue ID</th>
+                                        <th>Computer</th>
+                                        <th>Reported By</th>
+                                        <th>Date Reported</th>
+                                        <th>Date Resolved</th>
+                                        <th>Description</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
                 
@@ -357,15 +406,36 @@
                             </div>
                             <button type="submit">Add User</button>
                         </form>
+                        <div class="users-table-container">
+                            <h3>Existing Users</h3>
+                            <table id="usersTable">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Username</th>
+                                        <th>Email</th>
+                                        <th>Role</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
                 
                 <!-- Bookings Section -->
                 <div id="bookings" class="section-content hidden">
                     <div class="card">
-                        <h3>Bookings</h3>
+                        <div class="table-header">
+                            <h3>Bookings</h3>
+                            <button id="refreshBookingsBtn" class="refresh-btn">
+                                <i class="fas fa-sync-alt"></i> Refresh
+                            </button>
+                        </div>
                         <div class="table-container">
-                            <table id="bookingsTable">
+                            <!-- Upcoming Bookings Table -->
+                            <h4>Upcoming Bookings</h4>
+                            <table id="upcomingBookingsTable">
                                 <thead>
                                     <tr>
                                         <th>Booking ID</th>
@@ -377,6 +447,24 @@
                                         <th>Purpose</th>
                                         <th>Status</th>
                                         <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                
+                            <!-- Ongoing/Completed Bookings Table -->
+                            <h4 style="margin-top: 30px;">Ongoing & Completed Bookings</h4>
+                            <table id="pastBookingsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Booking ID</th>
+                                        <th>Computer</th>
+                                        <th>User</th>
+                                        <th>Date</th>
+                                        <th>Start Time</th>
+                                        <th>End Time</th>
+                                        <th>Purpose</th>
+                                        <th>Status</th>
                                     </tr>
                                 </thead>
                                 <tbody></tbody>
@@ -461,12 +549,16 @@
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
+                                    <label>Date:</label>
+                                    <input type="date" id="studentBookingDate" required>
+                                </div>
+                                <div class="form-group">
                                     <label>Start Time:</label>
-                                    <input type="datetime-local" id="studentStartTime" required>
+                                    <input type="time" id="studentStartTime" required>
                                 </div>
                                 <div class="form-group">
                                     <label>End Time:</label>
-                                    <input type="datetime-local" id="studentEndTime" required>
+                                    <input type="time" id="studentEndTime" required>
                                 </div>
                             </div>
                             <div class="form-group">
@@ -522,50 +614,6 @@
                         </form>
                     </div>
                 </div>
-
-                <div id="reportIssueStudent" class="section-content hidden">
-                    <div class="card">
-                        <h3>Report Issue</h3>
-                        <form id="issueFormStudent">
-                            <div class="form-group">
-                                <label>Computer:</label>
-                                <select id="issueComputerSelectStudent" required></select>
-                            </div>
-                            <div class="form-group">
-                                <label>Description:</label>
-                                <textarea id="issueDescriptionStudent" required></textarea>
-                            </div>
-                            <button type="submit">Report Issue</button>
-                        </form>
-                    </div>
-                </div>
-
-                <div id="bookComputer" class="section-content">
-                    <div class="card">
-                        <h3>Book a Computer</h3>
-                        <form id="studentBookingForm">
-                            <div class="form-group">
-                                <label>Select Computer:</label>
-                                <select id="studentComputerSelect"></select>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label>Start Time:</label>
-                                    <input type="datetime-local" id="studentStartTime" required>
-                                </div>
-                                <div class="form-group">
-                                    <label>End Time:</label>
-                                    <input type="datetime-local" id="studentEndTime" required>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label>Purpose:</label>
-                                <textarea id="studentBookingPurpose" required></textarea>
-                            </div>
-                            <button type="submit">Book Now</button>
-                        </form>
-                    </div>
-                </div>
                  <!-- Report Issue Section for Staff -->
                 <div id="staffBookComputer" class="section-content">
                     <div class="card">
@@ -601,104 +649,34 @@
                         <form id="issueFormStaff">
                             <div class="form-group">
                                 <label>Computer:</label>
-                                <select id="issueComputerSelectStudent" required></select>
+                                <select id="issueComputerSelectStaff" required></select>
                             </div>
                             <div class="form-group">
                                 <label>Description:</label>
-                                <textarea id="issueDescriptionStudent" required></textarea>
+                                <textarea id="issueDescriptionStaff" required></textarea>
                             </div>
                             <button type="submit">Report Issue</button>
                         </form>
                     </div>
                 </div>
             </div>
-            <!-- Add this inside the <div class="details"> section, after the other section-content divs -->
+            
             <div id="thisPC" class="section-content hidden">
                 <div class="card">
-                    <h3><i class="fas fa-desktop"></i> This PC - <span id="computer-name">Loading...</span></h3>
-                    
-                    <!-- System Specifications Card -->
-                    <div class="card">
-                        <h3><i class="fas fa-microchip"></i> System Specifications</h3>
-                        <div class="specs-grid">
-                            <!-- Detected Specs -->
-                            <div class="spec-item">
-                                <div class="spec-name">Operating System</div>
-                                <div class="spec-value">
-                                    <span class="spec-text" id="os-value">--</span>
-                                    <input type="text" class="spec-input" id="os-input">
-                                </div>
-                            </div>
-                            <div class="spec-item">
-                                <div class="spec-name">Processor</div>
-                                <div class="spec-value">
-                                    <span class="spec-text" id="processor-value">--</span>
-                                    <input type="text" class="spec-input" id="processor-input">
-                                </div>
-                            </div>
-                            <div class="spec-item">
-                                <div class="spec-name">Memory</div>
-                                <div class="spec-value">
-                                    <span class="spec-text" id="memory-value">--</span>
-                                    <input type="text" class="spec-input" id="memory-input">
-                                </div>
-                            </div>
-                            <div class="spec-item">
-                                <div class="spec-name">Total Storage</div>
-                                <div class="spec-value">
-                                    <span class="spec-text" id="storage-value">--</span>
-                                    <input type="text" class="spec-input" id="storage-input">
-                                </div>
-                            </div>
-                            <div class="spec-item">
-                                <div class="spec-name">Graphics</div>
-                                <div class="spec-value">
-                                    <span class="spec-text" id="graphics-value">--</span>
-                                    <input type="text" class="spec-input" id="graphics-input">
-                                </div>
-                            </div>
-                            <div class="spec-item">
-                                <div class="spec-name">Screen Resolution</div>
-                                <div class="spec-value">
-                                    <span class="spec-text" id="resolution-value">--</span>
-                                    <input type="text" class="spec-input" id="resolution-input">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Network Speed Card -->
-                    <div class="card">
-                        <h3><i class="fas fa-wifi"></i> Network Speed</h3>
-                        <div class="speed-meters">
-                            <div class="speed-meter">
-                                <h4>Download Speed</h4>
-                                <div class="speed-value" id="download-speed">0.00</div>
-                                <div class="speed-unit">Mbps</div>
-                                <div class="progress-container">
-                                    <div class="progress-bar" id="download-progress" style="width: 0%;"></div>
-                                </div>
-                            </div>
-                            <div class="speed-meter">
-                                <h4>Upload Speed</h4>
-                                <div class="speed-value" id="upload-speed">0.00</div>
-                                <div class="speed-unit">Mbps</div>
-                                <div class="progress-container">
-                                    <div class="progress-bar" id="upload-progress" style="width: 0%;"></div>
-                                </div>
-                            </div>
-                            <div class="speed-meter">
-                                <h4>Ping</h4>
-                                <div class="speed-value" id="ping-value">0</div>
-                                <div class="speed-unit">ms</div>
-                                <div class="progress-container">
-                                    <div class="progress-bar" id="ping-progress" style="width: 0%;"></div>
-                                </div>
-                            </div>
-                        </div>
-                        <button id="test-speed-btn" class="refresh-btn">
-                            <i class="fas fa-sync-alt"></i> Test Speed
+                    <div class="pc-header">
+                        <h3><i class="fas fa-desktop"></i> This PC</h3>
+                        <button id="refreshSpecsBtn" class="refresh-btn">
+                            <i class="fas fa-sync-alt"></i> Refresh
                         </button>
+                    </div>
+                    
+                    <!-- System Specifications Container -->
+                    <div id="systemSpecsContainer" class="specs-container">
+                        <!-- Content will be dynamically populated by JavaScript -->
+                        <div class="loading-specs">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <p>Loading system specifications...</p>
+                        </div>
                     </div>
                 </div>
             </div>

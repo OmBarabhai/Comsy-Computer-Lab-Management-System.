@@ -1716,3 +1716,6 @@ document.querySelectorAll('#sortDropdown button').forEach(button => {
 document.addEventListener('click', function() {
     document.getElementById('sortDropdown').classList.add('hidden');
 });
+document.querySelector('.mobile-menu-toggle').addEventListener('click', () => {
+    document.querySelector('.navigation').classList.toggle('active');
+});

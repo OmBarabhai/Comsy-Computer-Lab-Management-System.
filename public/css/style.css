@@ -423,8 +423,8 @@ body.dark {
 
 /* Card 1: Span 3 columns and 3 rows */
 .card1 {
-    grid-column: span 3;
-    grid-row: span 3;
+    grid-column:  1 / span 3;
+    grid-row:  1 / span 2;
     display: flex;
     flex-direction: row;
     
@@ -432,24 +432,24 @@ body.dark {
 
 /* Card 2: Span 2 columns and 2 rows, positioned at column 1, row 4 */
 .card2 {
-    grid-column: 1 / span 2;
-    grid-row: 4 / span 2;
+    grid-column: 4/ span 2;
+    grid-row: 1 / span 2;
     display: flex;
     flex-direction: row;
 }
 
 /* Card 3: Span 2 columns and 2 rows, positioned at column 3, row 4 */
 .card3 {
-    grid-column: 3 / span 2;
-    grid-row: 4 / span 2;
+    grid-column: 1 / span 2;
+    grid-row: 3 / span 2;
     display: flex;
     flex-direction: row;
 }
 
 /* Card 4: Span 2 columns and 3 rows, positioned at column 4, row 1 */
 .card4 {
-    grid-column: 4 / span 2;
-    grid-row: 1 / span 2;
+    grid-column: 3 / span 3;
+    grid-row: 3 / span 2;
     display: flex;
     flex-direction: row;
 }
@@ -475,12 +475,12 @@ body.dark {
     }
     
     .card2 {
-        grid-column: 3;
+        grid-column: 3 / span 1;
         grid-row: 1 / span 2;
     }
     
     .card3 {
-        grid-column: 1;
+        grid-column: 1 / span 1;
         grid-row: 3 / span 2;
     }
     
@@ -896,7 +896,7 @@ button:hover {
     }
     
     .card4 {
-        grid-column: 3 / span 1;
+        grid-column: 3 / span 2;
     }
 }
 

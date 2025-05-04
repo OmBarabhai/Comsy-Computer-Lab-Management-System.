@@ -1,12 +1,36 @@
 import express from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import nodemailer from 'nodemailer';
 import User from '../models/User.js';
-import { authenticate, authorize } from '../middleware/authMiddleware.js'; // Use named imports
+import { authenticate, authorize } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-// User Registration
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true,
+    auth: {
+      type: 'OAuth2',
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASSWORD
+    },
+    tls: {
+      rejectUnauthorized: false
+    }
+    
+  });
+// Add this test code temporarily in your server
+transporter.verify((error, success) => {
+    if (error) {
+      console.error('SMTP connection error:', error);
+    } else {
+      console.log('SMTP connection verified:', success);
+    }
+  });
+// User Registration with Email
 router.post('/register', async (req, res) => {
     try {
         const { username, name, email, password, role } = req.body;
@@ -36,16 +60,36 @@ router.post('/register', async (req, res) => {
             });
         }
 
-        // Create new user (password will be hashed by pre-save hook)
+        // Create new user
         const newUser = new User({ username, name, email, password, role });
         await newUser.save();
+
+        // Prepare email
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: email,
+            subject: 'Your New Account Credentials',
+            html: `
+                <h2>Welcome to Comsy!</h2>
+                <p>Hey ${name}</p>
+                <p>Your account has been successfully created.</p>
+                <p><strong>Username:</strong> ${username}</p>
+                <p><strong>Password:</strong> ${password}</p>
+                <p style="color: red;">Please change your password after first login.</p>
+                <hr>
+                <p>Best regards,<br>Comsy Team</p>
+            `
+        };
+
+        // Send email
+        await transporter.sendMail(mailOptions);
 
         // Return response without password
         const userResponse = newUser.toObject();
         delete userResponse.password;
 
         res.status(201).json({
-            message: 'User registered successfully',
+            message: 'User registered successfully. Credentials sent to email.',
             user: userResponse
         });
 

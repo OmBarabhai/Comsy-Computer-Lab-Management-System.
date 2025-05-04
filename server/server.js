@@ -12,8 +12,6 @@ import computerRoutes from './routes/computerRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import bookingRoutes from './routes/bookingRoutes.js';
 import issueRoutes from './routes/issueRoutes.js';
-import labRoutes from './routes/labRoutes.js';
-import attendanceRoutes from './routes/attendanceRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 
 // Import MongoDB connection
@@ -45,8 +43,6 @@ app.use('/api/computers', computerRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/issues', issueRoutes);
-app.use('/api/labs', labRoutes);
-app.use('/api/attendance', attendanceRoutes);
 
 app.use(express.static(path.join(__dirname, '../public')));
 

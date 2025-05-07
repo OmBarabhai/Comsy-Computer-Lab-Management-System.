@@ -1535,7 +1535,7 @@ document.getElementById('attendanceForm').addEventListener('submit', async (e) =
     }
 });
 
-// Download Excel
+// Updated Download Excel handler
 document.getElementById('downloadExcel').addEventListener('click', async () => {
     const fromDate = document.getElementById('fromDate').value;
     const toDate = document.getElementById('toDate').value;
@@ -1545,10 +1545,42 @@ document.getElementById('downloadExcel').addEventListener('click', async () => {
         return;
     }
 
-    window.open(`/api/bookings/attendance/excel?from=${fromDate}&to=${toDate}`, '_blank');
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`/api/bookings/attendance?from=${fromDate}&to=${toDate}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) throw new Error('Failed to fetch attendance data');
+        const bookings = await response.json();
+
+        // Create worksheet
+        const worksheet = XLSX.utils.json_to_sheet(bookings.map(booking => ({
+            "Booking ID": booking._id,
+            "Computer": booking.computer?.name || 'N/A',
+            "User": booking.user?.username || 'Unknown',
+            "Start Time": new Date(booking.startTime).toLocaleString(),
+            "End Time": new Date(booking.endTime).toLocaleString(),
+            "Purpose": booking.purpose,
+            "Status": booking.status
+        })));
+
+        // Create workbook and add worksheet
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Attendance");
+
+        // Write file and trigger download
+        XLSX.writeFile(workbook, 'attendance.xlsx');
+        
+    } catch (error) {
+        console.error('Excel download error:', error);
+        alert(`Error: ${error.message}`);
+    }
 });
 
-// Download PDF
+// Updated Download PDF handler
 document.getElementById('downloadPDF').addEventListener('click', async () => {
     const fromDate = document.getElementById('fromDate').value;
     const toDate = document.getElementById('toDate').value;
@@ -1558,7 +1590,87 @@ document.getElementById('downloadPDF').addEventListener('click', async () => {
         return;
     }
 
-    window.open(`/api/bookings/attendance/pdf?from=${fromDate}&to=${toDate}`, '_blank');
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`/api/bookings/attendance?from=${fromDate}&to=${toDate}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) throw new Error('Failed to fetch attendance data');
+        const bookings = await response.json();
+
+        // Create PDF document
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({
+            orientation: "portrait",
+            unit: "mm",
+            format: "a4"
+        });
+
+        // Set initial position
+        let yPos = 20;
+        let pageNumber = 1;
+
+        // Add header
+        const addHeader = () => {
+            doc.setFontSize(18);
+            doc.text("Attendance Report", 14, 15);
+            doc.setFontSize(10);
+            doc.text(`Page ${pageNumber}`, 190, 10, { align: "right" });
+            doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 10);
+            yPos = 25;
+        };
+
+        addHeader();
+
+        bookings.forEach((booking, index) => {
+            // Add new page if needed
+            if (yPos > 270) {
+                doc.addPage();
+                pageNumber++;
+                addHeader();
+            }
+
+            // Content styling
+            doc.setFontSize(12);
+            doc.setFont(undefined, 'bold');
+            doc.text(`Booking ${index + 1}:`, 14, yPos);
+            doc.setFont(undefined, 'normal');
+            
+            const content = [
+                `ID: ${booking._id}`,
+                `Computer: ${booking.computer?.name || 'N/A'}`,
+                `User: ${booking.user?.username || 'Unknown'}`,
+                `Start: ${new Date(booking.startTime).toLocaleString()}`,
+                `End: ${new Date(booking.endTime).toLocaleString()}`,
+                `Purpose: ${booking.purpose}`,
+                `Status: ${booking.status}`
+            ];
+
+            // Add content lines
+            content.forEach((line, i) => {
+                doc.text(line, 20, yPos + 7 + (i * 5));
+            });
+
+            yPos += (content.length * 5) + 15;
+            
+            // Add separator line
+            if (index < bookings.length - 1) {
+                doc.setLineWidth(0.2);
+                doc.line(14, yPos - 5, 200, yPos - 5);
+                yPos += 5;
+            }
+        });
+
+        // Save PDF
+        doc.save(`attendance-${new Date().toISOString().split('T')[0]}.pdf`);
+
+    } catch (error) {
+        console.error('PDF download error:', error);
+        alert(`Error: ${error.message}`);
+    }
 });
 
 async function updateSystemSpecs() {

@@ -1535,7 +1535,6 @@ document.getElementById('attendanceForm').addEventListener('submit', async (e) =
     }
 });
 
-// Updated Download Excel handler
 document.getElementById('downloadExcel').addEventListener('click', async () => {
     const fromDate = document.getElementById('fromDate').value;
     const toDate = document.getElementById('toDate').value;
@@ -1556,8 +1555,19 @@ document.getElementById('downloadExcel').addEventListener('click', async () => {
         if (!response.ok) throw new Error('Failed to fetch attendance data');
         const bookings = await response.json();
 
-        // Create worksheet
-        const worksheet = XLSX.utils.json_to_sheet(bookings.map(booking => ({
+        // Create workbook and worksheet
+        const workbook = XLSX.utils.book_new();
+        const worksheet = XLSX.utils.json_to_sheet([]);
+        
+        // Add header rows
+        XLSX.utils.sheet_add_aoa(worksheet, [
+            ["Attendance Report", "", "", "", "", "", ""],
+            [`From: ${new Date(fromDate).toLocaleDateString()} To: ${new Date(toDate).toLocaleDateString()}`, "", "", "", "", "", ""],
+            ["Booking ID", "Computer", "User", "Start Time", "End Time", "Purpose", "Status"]
+        ], { origin: "A1" });
+
+        // Add data rows
+        XLSX.utils.sheet_add_json(worksheet, bookings.map(booking => ({
             "Booking ID": booking._id,
             "Computer": booking.computer?.name || 'N/A',
             "User": booking.user?.username || 'Unknown',
@@ -1565,14 +1575,66 @@ document.getElementById('downloadExcel').addEventListener('click', async () => {
             "End Time": new Date(booking.endTime).toLocaleString(),
             "Purpose": booking.purpose,
             "Status": booking.status
-        })));
+        })), { origin: "A4", skipHeader: true });
 
-        // Create workbook and add worksheet
-        const workbook = XLSX.utils.book_new();
+        // Add footer row
+        const footerRow = bookings.length + 5;
+        XLSX.utils.sheet_add_aoa(worksheet, [
+            ["Comsy - Computer Lab Management System", "", "", "", "", "", ""]
+        ], { origin: `A${footerRow}` });
+
+        // Define styles
+        const headerStyle = {
+            fill: { patternType: "solid", fgColor: { rgb: "295484" } },
+            font: { color: { rgb: "FFFFFF" }, bold: true }
+        };
+
+        const titleStyle = {
+            font: { sz: 16, bold: true, color: { rgb: "295484" } }
+        };
+
+        const dateStyle = {
+            font: { italic: true, color: { rgb: "666666" } }
+        };
+
+        const footerStyle = {
+            font: { italic: true, color: { rgb: "888888" } }
+        };
+
+        // Apply styles
+        worksheet["!cols"] = [
+            { wch: 25 }, { wch: 20 }, { wch: 20 }, 
+            { wch: 25 }, { wch: 25 }, { wch: 30 }, { wch: 15 }
+        ];
+
+        // Style ranges
+        worksheet["!merges"] = [
+            { s: { r: 0, c: 0 }, e: { r: 0, c: 6 } }, // Merge title row
+            { s: { r: 1, c: 0 }, e: { r: 1, c: 6 } }, // Merge date row
+            { s: { r: footerRow-1, c: 0 }, e: { r: footerRow-1, c: 6 } } // Merge footer
+        ];
+
+        // Apply cell styles
+        const styleCells = (range, style) => {
+            for(let R = range.s.r; R <= range.e.r; ++R) {
+                for(let C = range.s.c; C <= range.e.c; ++C) {
+                    const cell = XLSX.utils.encode_cell({r:R,c:C});
+                    worksheet[cell].s = style;
+                }
+            }
+        };
+
+        // Apply styles to different sections
+        styleCells({s:{r:0,c:0}, e:{r:0,c:6}}, titleStyle);
+        styleCells({s:{r:1,c:0}, e:{r:1,c:6}}, dateStyle);
+        styleCells({s:{r:2,c:0}, e:{r:2,c:6}}, headerStyle);
+        styleCells({s:{r:footerRow-1,c:0}, e:{r:footerRow-1,c:6}}, footerStyle);
+
+        // Add worksheet to workbook
         XLSX.utils.book_append_sheet(workbook, worksheet, "Attendance");
 
         // Write file and trigger download
-        XLSX.writeFile(workbook, 'attendance.xlsx');
+        XLSX.writeFile(workbook, `attendance_${fromDate}_to_${toDate}.xlsx`);
         
     } catch (error) {
         console.error('Excel download error:', error);
@@ -1580,7 +1642,6 @@ document.getElementById('downloadExcel').addEventListener('click', async () => {
     }
 });
 
-// Updated Download PDF handler
 document.getElementById('downloadPDF').addEventListener('click', async () => {
     const fromDate = document.getElementById('fromDate').value;
     const toDate = document.getElementById('toDate').value;
@@ -1601,71 +1662,62 @@ document.getElementById('downloadPDF').addEventListener('click', async () => {
         if (!response.ok) throw new Error('Failed to fetch attendance data');
         const bookings = await response.json();
 
-        // Create PDF document
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF({
-            orientation: "portrait",
+            orientation: "landscape",
             unit: "mm",
             format: "a4"
         });
 
-        // Set initial position
-        let yPos = 20;
-        let pageNumber = 1;
-
         // Add header
-        const addHeader = () => {
-            doc.setFontSize(18);
-            doc.text("Attendance Report", 14, 15);
-            doc.setFontSize(10);
-            doc.text(`Page ${pageNumber}`, 190, 10, { align: "right" });
-            doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 10);
-            yPos = 25;
-        };
+        doc.setFontSize(18);
+        doc.text("Attendance Report", 14, 20);
+        doc.setFontSize(12);
+        doc.text(`From: ${new Date(fromDate).toLocaleDateString()} To: ${new Date(toDate).toLocaleDateString()}`, 14, 28);
 
-        addHeader();
+        // Define table columns
+        const columns = [
+            { header: "Booking ID", dataKey: "id" },
+            { header: "Computer", dataKey: "computer" },
+            { header: "User", dataKey: "user" },
+            { header: "Start Time", dataKey: "start" },
+            { header: "End Time", dataKey: "end" },
+            { header: "Purpose", dataKey: "purpose" },
+            { header: "Status", dataKey: "status" }
+        ];
 
-        bookings.forEach((booking, index) => {
-            // Add new page if needed
-            if (yPos > 270) {
-                doc.addPage();
-                pageNumber++;
-                addHeader();
-            }
+        // Transform data for table
+        const tableData = bookings.map(booking => ({
+            id: booking._id,
+            computer: booking.computer?.name || 'N/A',
+            user: booking.user?.username || 'Unknown',
+            start: new Date(booking.startTime).toLocaleString(),
+            end: new Date(booking.endTime).toLocaleString(),
+            purpose: booking.purpose,
+            status: booking.status
+        }));
 
-            // Content styling
-            doc.setFontSize(12);
-            doc.setFont(undefined, 'bold');
-            doc.text(`Booking ${index + 1}:`, 14, yPos);
-            doc.setFont(undefined, 'normal');
-            
-            const content = [
-                `ID: ${booking._id}`,
-                `Computer: ${booking.computer?.name || 'N/A'}`,
-                `User: ${booking.user?.username || 'Unknown'}`,
-                `Start: ${new Date(booking.startTime).toLocaleString()}`,
-                `End: ${new Date(booking.endTime).toLocaleString()}`,
-                `Purpose: ${booking.purpose}`,
-                `Status: ${booking.status}`
-            ];
-
-            // Add content lines
-            content.forEach((line, i) => {
-                doc.text(line, 20, yPos + 7 + (i * 5));
-            });
-
-            yPos += (content.length * 5) + 15;
-            
-            // Add separator line
-            if (index < bookings.length - 1) {
-                doc.setLineWidth(0.2);
-                doc.line(14, yPos - 5, 200, yPos - 5);
-                yPos += 5;
-            }
+        // Add table using autoTable plugin
+        doc.autoTable({
+            head: [columns.map(col => col.header)],
+            body: tableData.map(row => columns.map(col => row[col.dataKey])),
+            startY: 35,
+            theme: 'grid',
+            styles: { fontSize: 10 },
+            headStyles: { fillColor: [41, 128, 185], textColor: 255 },
+            margin: { left: 14, right: 14 }
         });
 
+        // Add footer
+        const pageCount = doc.internal.getNumberOfPages();
+        for(let i = 1; i <= pageCount; i++) {
+            doc.setPage(i);
+            doc.setFontSize(10);
+            doc.text("Comsy - Computer Lab Management System", 14, doc.internal.pageSize.height - 10);
+        }
+
         // Save PDF
-        doc.save(`attendance-${new Date().toISOString().split('T')[0]}.pdf`);
+        doc.save(`attendance_${fromDate}_to_${toDate}.pdf`);
 
     } catch (error) {
         console.error('PDF download error:', error);

@@ -1287,29 +1287,35 @@ document.getElementById('studentBookingForm').addEventListener('submit', async (
         return;
     }
 
-    // Combine date and time into full datetime strings
-    const startDateTime = `${bookingDate}T${startTime}`;
-    const endDateTime = `${bookingDate}T${endTime}`;
+    // Combine date and time into full datetime strings (IST)
+    const startDateTimeIST = `${bookingDate}T${startTime}`;
+    const endDateTimeIST = `${bookingDate}T${endTime}`;
+
+    // Convert IST to UTC by subtracting 5 hours and 30 minutes
+    const startDate = new Date(startDateTimeIST);
+    const endDate = new Date(endDateTimeIST);
+
+    // Format as ISO strings for the server
+    const startDateTimeUTC = startDate.toISOString();
+    const endDateTimeUTC = endDate.toISOString();
 
     // Additional validation for current date/time
     const now = new Date();
-    const selectedStart = new Date(startDateTime);
-    const selectedEnd = new Date(endDateTime);
 
-    if (selectedStart < now) {
+    if (startDate < now) {
         alert('Cannot book for past dates/times.');
         return;
     }
 
-    if (selectedEnd <= selectedStart) {
+    if (endDate <= startDate) {
         alert('End time must be after start time.');
         return;
     }
 
     const bookingData = {
         computer: computerId,
-        startTime: startDateTime,
-        endTime: endDateTime,
+        startTime: startDateTimeUTC,
+        endTime: endDateTimeUTC,
         purpose
     };
 
@@ -1331,7 +1337,7 @@ document.getElementById('studentBookingForm').addEventListener('submit', async (
 
         alert('Computer booked successfully!');
         e.target.reset();
-        loadAvailableComputers(); // Refresh the available computers list
+        loadAvailableComputers();
     } catch (error) {
         console.error('Error booking computer:', error);
         alert(`Error: ${error.message}`);

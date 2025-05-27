@@ -853,56 +853,7 @@ async function showDetailsPopup(computer) {
         alert('Failed to load computer details');
     }
 }
-const style = document.createElement('style');
-style.textContent = `
-    .popup {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.5);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 1000;
-    }
-    .popup-content {
-        background: white;
-        padding: 20px;
-        border-radius: 10px;
-        max-width: 500px;
-        width: 100%;
-        position: relative;
-    }
-    .close-button {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        background: none;
-        border: none;
-        font-size: 20px;
-        cursor: pointer;
-        color: #000;
-    }
-    .blur {
-        filter: blur(5px);
-        pointer-events: none; /* Prevent interaction with blurred content */
-    }
-    .last-updated-warning {
-        color: var(--warning);
-        font-size: 0.8em;
-        margin-left: 8px;
-        font-style: italic;
-    }
-    .power-status.off {
-        color: var(--danger);
-    }
-    .power-status.on {
-        color: var(--success);
-    }
-`;
-document.head.appendChild(style);
+
 
 async function handleStatusChange(e) {
     try {
@@ -1310,7 +1261,15 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// Update the booking form submission handler
+document.getElementById('purpose').addEventListener('change', function() {
+    const otherPurposeContainer = document.getElementById('otherPurposeContainer');
+    if (this.value === 'Other') {
+        otherPurposeContainer.style.display = 'block';
+    } else {
+        otherPurposeContainer.style.display = 'none';
+    }
+});
+
 document.getElementById('studentBookingForm').addEventListener('submit', async (e) => {
     e.preventDefault();
 
@@ -1318,36 +1277,45 @@ document.getElementById('studentBookingForm').addEventListener('submit', async (
     const bookingDate = document.getElementById('studentBookingDate').value;
     const startTime = document.getElementById('studentStartTime').value;
     const endTime = document.getElementById('studentEndTime').value;
-    const purpose = document.getElementById('studentBookingPurpose').value;
+    const purposeSelect = document.getElementById('purpose');
+    const purpose = purposeSelect.value === 'Other' 
+        ? document.getElementById('otherPurpose').value 
+        : purposeSelect.value;
 
     if (!computerId || !bookingDate || !startTime || !endTime || !purpose) {
         alert('Please fill all fields.');
         return;
     }
 
-    // Combine date and time into full datetime strings
-    const startDateTime = `${bookingDate}T${startTime}`;
-    const endDateTime = `${bookingDate}T${endTime}`;
+    // Combine date and time into full datetime strings (IST)
+    const startDateTimeIST = `${bookingDate}T${startTime}`;
+    const endDateTimeIST = `${bookingDate}T${endTime}`;
+
+    // Convert IST to UTC by subtracting 5 hours and 30 minutes
+    const startDate = new Date(startDateTimeIST);
+    const endDate = new Date(endDateTimeIST);
+
+    // Format as ISO strings for the server
+    const startDateTimeUTC = startDate.toISOString();
+    const endDateTimeUTC = endDate.toISOString();
 
     // Additional validation for current date/time
     const now = new Date();
-    const selectedStart = new Date(startDateTime);
-    const selectedEnd = new Date(endDateTime);
 
-    if (selectedStart < now) {
+    if (startDate < now) {
         alert('Cannot book for past dates/times.');
         return;
     }
 
-    if (selectedEnd <= selectedStart) {
+    if (endDate <= startDate) {
         alert('End time must be after start time.');
         return;
     }
 
     const bookingData = {
         computer: computerId,
-        startTime: startDateTime,
-        endTime: endDateTime,
+        startTime: startDateTimeUTC,
+        endTime: endDateTimeUTC,
         purpose
     };
 
@@ -1369,7 +1337,7 @@ document.getElementById('studentBookingForm').addEventListener('submit', async (
 
         alert('Computer booked successfully!');
         e.target.reset();
-        loadAvailableComputers(); // Refresh the available computers list
+        loadAvailableComputers();
     } catch (error) {
         console.error('Error booking computer:', error);
         alert(`Error: ${error.message}`);
@@ -1567,7 +1535,6 @@ document.getElementById('attendanceForm').addEventListener('submit', async (e) =
     }
 });
 
-// Download Excel
 document.getElementById('downloadExcel').addEventListener('click', async () => {
     const fromDate = document.getElementById('fromDate').value;
     const toDate = document.getElementById('toDate').value;
@@ -1577,10 +1544,104 @@ document.getElementById('downloadExcel').addEventListener('click', async () => {
         return;
     }
 
-    window.open(`/api/bookings/attendance/excel?from=${fromDate}&to=${toDate}`, '_blank');
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`/api/bookings/attendance?from=${fromDate}&to=${toDate}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) throw new Error('Failed to fetch attendance data');
+        const bookings = await response.json();
+
+        // Create workbook and worksheet
+        const workbook = XLSX.utils.book_new();
+        const worksheet = XLSX.utils.json_to_sheet([]);
+        
+        // Add header rows
+        XLSX.utils.sheet_add_aoa(worksheet, [
+            ["Attendance Report", "", "", "", "", "", ""],
+            [`From: ${new Date(fromDate).toLocaleDateString()} To: ${new Date(toDate).toLocaleDateString()}`, "", "", "", "", "", ""],
+            ["Booking ID", "Computer", "User", "Start Time", "End Time", "Purpose", "Status"]
+        ], { origin: "A1" });
+
+        // Add data rows
+        XLSX.utils.sheet_add_json(worksheet, bookings.map(booking => ({
+            "Booking ID": booking._id,
+            "Computer": booking.computer?.name || 'N/A',
+            "User": booking.user?.username || 'Unknown',
+            "Start Time": new Date(booking.startTime).toLocaleString(),
+            "End Time": new Date(booking.endTime).toLocaleString(),
+            "Purpose": booking.purpose,
+            "Status": booking.status
+        })), { origin: "A4", skipHeader: true });
+
+        // Add footer row
+        const footerRow = bookings.length + 5;
+        XLSX.utils.sheet_add_aoa(worksheet, [
+            ["Comsy - Computer Lab Management System", "", "", "", "", "", ""]
+        ], { origin: `A${footerRow}` });
+
+        // Define styles
+        const headerStyle = {
+            fill: { patternType: "solid", fgColor: { rgb: "295484" } },
+            font: { color: { rgb: "FFFFFF" }, bold: true }
+        };
+
+        const titleStyle = {
+            font: { sz: 16, bold: true, color: { rgb: "295484" } }
+        };
+
+        const dateStyle = {
+            font: { italic: true, color: { rgb: "666666" } }
+        };
+
+        const footerStyle = {
+            font: { italic: true, color: { rgb: "888888" } }
+        };
+
+        // Apply styles
+        worksheet["!cols"] = [
+            { wch: 25 }, { wch: 20 }, { wch: 20 }, 
+            { wch: 25 }, { wch: 25 }, { wch: 30 }, { wch: 15 }
+        ];
+
+        // Style ranges
+        worksheet["!merges"] = [
+            { s: { r: 0, c: 0 }, e: { r: 0, c: 6 } }, // Merge title row
+            { s: { r: 1, c: 0 }, e: { r: 1, c: 6 } }, // Merge date row
+            { s: { r: footerRow-1, c: 0 }, e: { r: footerRow-1, c: 6 } } // Merge footer
+        ];
+
+        // Apply cell styles
+        const styleCells = (range, style) => {
+            for(let R = range.s.r; R <= range.e.r; ++R) {
+                for(let C = range.s.c; C <= range.e.c; ++C) {
+                    const cell = XLSX.utils.encode_cell({r:R,c:C});
+                    worksheet[cell].s = style;
+                }
+            }
+        };
+
+        // Apply styles to different sections
+        styleCells({s:{r:0,c:0}, e:{r:0,c:6}}, titleStyle);
+        styleCells({s:{r:1,c:0}, e:{r:1,c:6}}, dateStyle);
+        styleCells({s:{r:2,c:0}, e:{r:2,c:6}}, headerStyle);
+        styleCells({s:{r:footerRow-1,c:0}, e:{r:footerRow-1,c:6}}, footerStyle);
+
+        // Add worksheet to workbook
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Attendance");
+
+        // Write file and trigger download
+        XLSX.writeFile(workbook, `attendance_${fromDate}_to_${toDate}.xlsx`);
+        
+    } catch (error) {
+        console.error('Excel download error:', error);
+        alert(`Error: ${error.message}`);
+    }
 });
 
-// Download PDF
 document.getElementById('downloadPDF').addEventListener('click', async () => {
     const fromDate = document.getElementById('fromDate').value;
     const toDate = document.getElementById('toDate').value;
@@ -1590,7 +1651,78 @@ document.getElementById('downloadPDF').addEventListener('click', async () => {
         return;
     }
 
-    window.open(`/api/bookings/attendance/pdf?from=${fromDate}&to=${toDate}`, '_blank');
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`/api/bookings/attendance?from=${fromDate}&to=${toDate}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) throw new Error('Failed to fetch attendance data');
+        const bookings = await response.json();
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({
+            orientation: "landscape",
+            unit: "mm",
+            format: "a4"
+        });
+
+        // Add header
+        doc.setFontSize(18);
+        doc.text("Attendance Report", 14, 20);
+        doc.setFontSize(12);
+        doc.text(`From: ${new Date(fromDate).toLocaleDateString()} To: ${new Date(toDate).toLocaleDateString()}`, 14, 28);
+
+        // Define table columns
+        const columns = [
+            { header: "Booking ID", dataKey: "id" },
+            { header: "Computer", dataKey: "computer" },
+            { header: "User", dataKey: "user" },
+            { header: "Start Time", dataKey: "start" },
+            { header: "End Time", dataKey: "end" },
+            { header: "Purpose", dataKey: "purpose" },
+            { header: "Status", dataKey: "status" }
+        ];
+
+        // Transform data for table
+        const tableData = bookings.map(booking => ({
+            id: booking._id,
+            computer: booking.computer?.name || 'N/A',
+            user: booking.user?.username || 'Unknown',
+            start: new Date(booking.startTime).toLocaleString(),
+            end: new Date(booking.endTime).toLocaleString(),
+            purpose: booking.purpose,
+            status: booking.status
+        }));
+
+        // Add table using autoTable plugin
+        doc.autoTable({
+            head: [columns.map(col => col.header)],
+            body: tableData.map(row => columns.map(col => row[col.dataKey])),
+            startY: 35,
+            theme: 'grid',
+            styles: { fontSize: 10 },
+            headStyles: { fillColor: [41, 128, 185], textColor: 255 },
+            margin: { left: 14, right: 14 }
+        });
+
+        // Add footer
+        const pageCount = doc.internal.getNumberOfPages();
+        for(let i = 1; i <= pageCount; i++) {
+            doc.setPage(i);
+            doc.setFontSize(10);
+            doc.text("Comsy - Computer Lab Management System", 14, doc.internal.pageSize.height - 10);
+        }
+
+        // Save PDF
+        doc.save(`attendance_${fromDate}_to_${toDate}.pdf`);
+
+    } catch (error) {
+        console.error('PDF download error:', error);
+        alert(`Error: ${error.message}`);
+    }
 });
 
 async function updateSystemSpecs() {
@@ -1753,4 +1885,7 @@ document.querySelectorAll('#sortDropdown button').forEach(button => {
 // Close dropdown when clicking elsewhere
 document.addEventListener('click', function() {
     document.getElementById('sortDropdown').classList.add('hidden');
+});
+document.querySelector('.mobile-menu-toggle').addEventListener('click', () => {
+    document.querySelector('.navigation').classList.toggle('active');
 });

@@ -49,27 +49,23 @@ A full-stack web application designed to streamline the reporting and management
 
 ## 🏗️ Folder Structure
 comsy/
-├── client/                      # Frontend source code
-│   ├── index.html               # Main HTML file
-│   ├── styles/                  # CSS stylesheets
-│   └── scripts/                 # JavaScript files
-│       └── main.js              # Entry point for frontend logic
-│
-├── server/                      # Backend (Node.js + Express)
-│   ├── controllers/             # Route logic (e.g., issueController.js)
-│   ├── models/                  # Mongoose schemas (e.g., user.js, issue.js)
-│   ├── routes/                  # API routes (e.g., authRoutes.js)
-│   ├── middleware/              # JWT auth middleware
-│   ├── config/                  # DB config and env setup
-│   └── server.js                # Entry point (Express app)
-│
-├── electron-app/                # LAN-based desktop app (Electron.js)
-│   ├── main.js                  # Electron entry point
-│   └── preload.js               # Secure access layer between UI and backend
-│
-├── public/                      # Shared static assets (icons, logos)
-│
-├── .env.example                 # Sample environment variables
-├── README.md                    # Project documentation
-├── package.json                 # Node dependencies & scripts
-└── LICENSE                      # Open-source license
+├── client/               # Frontend (HTML, CSS, JavaScript)
+│   ├── index.html
+│   ├── styles/           # CSS files
+│   └── scripts/          # JS files
+
+├── server/               # Backend (Node.js + Express)
+│   ├── routes/           # API endpoints
+│   ├── controllers/      # Business logic
+│   ├── models/           # MongoDB schemas
+│   ├── middleware/       # Auth (JWT)
+│   └── server.js         # Main server entry point
+
+├── electron-app/         # Electron setup for LAN access
+│   └── main.js
+
+├── config/               # Database & environment config
+├── .env.example          # Sample environment variables
+├── package.json          # Project metadata
+├── README.md             # Project overview
+└── LICENSE               # Open-source license

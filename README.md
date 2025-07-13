@@ -49,3 +49,13 @@ A full-stack web application designed to streamline the reporting and management
 
 ## 🏗️ Folder Structure
 
+comsy/
+├── client/ # Frontend files (HTML, CSS, JS)
+├── server/ # Backend (Node.js, Express)
+│ ├── routes/ # API routes
+│ ├── controllers/ # Logic handling
+│ ├── models/ # MongoDB schemas
+├── electron-app/ # LAN-based offline support
+├── .env.example # Environment variables
+├── package.json # Project metadata
+

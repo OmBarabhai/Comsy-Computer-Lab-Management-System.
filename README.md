@@ -44,28 +44,3 @@ A full-stack web application designed to streamline the reporting and management
 2. **Faculty/Admin** reviews and changes status (Pending → In Progress → Resolved).
 3. **Electron app** ensures the system works within LAN labs, even without internet.
 4. **All data** is securely stored in MongoDB and fetched via REST APIs.
-
----
-
-## 🏗️ Folder Structure
-comsy/
-├── client/               # Frontend (HTML, CSS, JavaScript)
-│   ├── index.html
-│   ├── styles/           # CSS files
-│   └── scripts/          # JS files
-
-├── server/               # Backend (Node.js + Express)
-│   ├── routes/           # API endpoints
-│   ├── controllers/      # Business logic
-│   ├── models/           # MongoDB schemas
-│   ├── middleware/       # Auth (JWT)
-│   └── server.js         # Main server entry point
-
-├── electron-app/         # Electron setup for LAN access
-│   └── main.js
-
-├── config/               # Database & environment config
-├── .env.example          # Sample environment variables
-├── package.json          # Project metadata
-├── README.md             # Project overview
-└── LICENSE               # Open-source license
